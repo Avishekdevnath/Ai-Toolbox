@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { model } from '@/lib/gemini';
-import clientPromise from '@/lib/mongodb';
+import {clientPromise } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 
 export async function POST(request: NextRequest) {
   try {
@@ -136,8 +137,7 @@ Keep it concise, practical, and focused on actionable advice. Return only the JS
 
     // Save to MongoDB
     try {
-      const client = await clientPromise;
-      const db = client.db('ai-toolbox');
+      const db = await getDatabase();
       const collection = db.collection('investment-analyses');
 
       const saveData = {

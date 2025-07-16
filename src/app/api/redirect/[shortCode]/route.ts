@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import {clientPromise } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 import { isUrlExpired } from '@/lib/urlShortenerUtils';
 
 const COLLECTION_NAME = 'shortened_urls';
@@ -24,8 +25,7 @@ export async function GET(
 
     console.log('Processing redirect for shortCode:', shortCode);
 
-    const client = await clientPromise;
-    const db = client.db();
+    const db = await getDatabase();
 
     // Find the shortened URL
     const shortenedUrl = await db.collection(COLLECTION_NAME).findOne({

@@ -14,6 +14,8 @@ export default function QRGeneratorTool() {
     if (!inputText.trim()) return;
     const url = await generateQRCodeDataUrl(inputText, size);
     setQrCodeUrl(url);
+    // After QR code is generated and displayed
+    fetch('/api/tools/qr-generator/track-usage', { method: 'POST' });
   };
 
   const handleDownload = () => {

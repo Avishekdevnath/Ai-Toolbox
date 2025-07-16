@@ -36,6 +36,8 @@ export default function UnitConverterTool() {
             if (!isNaN(res)) {
               const formattedResult = formatResult(res, category, toUnit);
               setResult(formattedResult);
+              // After unit conversion is displayed
+              fetch('/api/tools/unit-converter/track-usage', { method: 'POST' });
             } else {
               setResult('');
               setError('Invalid conversion');

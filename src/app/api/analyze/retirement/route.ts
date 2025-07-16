@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { model } from '@/lib/gemini';
-import clientPromise from '@/lib/mongodb';
+import {clientPromise } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY || '');
@@ -133,8 +134,7 @@ Return only the JSON, no additional text.`;
 
     // Save to MongoDB
     try {
-      const client = await clientPromise;
-      const db = client.db('ai-toolbox');
+      const db = await getDatabase();
       const collection = db.collection('retirement-consultations');
 
       await collection.insertOne({

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import {clientPromise } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 import { calculateUrlStats } from '@/lib/urlShortenerUtils';
 
 const COLLECTION_NAME = 'shortened_urls';
@@ -13,8 +14,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    const client = await clientPromise;
-    const db = client.db();
+    const db = await getDatabase();
 
     // Build query
     const query: any = {};

@@ -73,6 +73,8 @@ export default function URLShortenerTool() {
       setCustomAlias('');
       setExpiresInDays(undefined);
       setSuccess('URL shortened successfully!');
+      // After shortened URL is created and displayed
+      fetch('/api/tools/url-shortener/track-usage', { method: 'POST' });
     } catch (err: any) {
       setError(err.message || 'Failed to shorten URL');
     } finally {

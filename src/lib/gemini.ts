@@ -44,6 +44,11 @@ export async function generateGeminiResponse(prompt: string): Promise<{ success:
   }
 }
 
+export function generateContent() {
+  // TODO: Implement or connect to Gemini API
+  return null;
+}
+
 // Export model for direct use in API routes (server-side only)
 export { model };
 

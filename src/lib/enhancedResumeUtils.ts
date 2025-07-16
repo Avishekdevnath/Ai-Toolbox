@@ -33,7 +33,6 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || 'your-folder-id';
 
 // MongoDB configuration
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-toolbox';
 
 // Initialize Google Drive API
 function getGoogleDriveAuth() {
@@ -42,17 +41,6 @@ function getGoogleDriveAuth() {
     scopes: SCOPES,
   });
   return auth;
-}
-
-// Initialize MongoDB connection
-let mongoClient: MongoClient | null = null;
-
-async function getMongoClient(): Promise<MongoClient> {
-  if (!mongoClient) {
-    mongoClient = new MongoClient(MONGODB_URI);
-    await mongoClient.connect();
-  }
-  return mongoClient;
 }
 
 // Enhanced text extraction with OCR
@@ -138,8 +126,7 @@ export async function storeResumeInDB(
   userId?: string
 ): Promise<ObjectId> {
   try {
-    const client = await getMongoClient();
-    const db = client.db();
+    const db = await getDatabase();
     const collection = db.collection('resumes');
     
     const resume: StoredResume = {
@@ -171,8 +158,7 @@ export async function storeAnalysisInDB(
   userId?: string
 ): Promise<ObjectId> {
   try {
-    const client = await getMongoClient();
-    const db = client.db();
+    const db = await getDatabase();
     const collection = db.collection('analyses');
     
     const analysisDoc: StoredAnalysis = {
@@ -196,8 +182,7 @@ export async function storeAnalysisInDB(
 // Retrieve stored analysis
 export async function getStoredAnalysis(analysisId: ObjectId): Promise<StoredAnalysis | null> {
   try {
-    const client = await getMongoClient();
-    const db = client.db();
+    const db = await getDatabase();
     const collection = db.collection('analyses');
     
     return await collection.findOne({ _id: analysisId });

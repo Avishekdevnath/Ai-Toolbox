@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { model } from '@/lib/gemini';
-import clientPromise from '@/lib/mongodb';
+import {clientPromise } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 import { buildDietPrompt, DietFormData } from '@/lib/dietPromptBuilder';
 
 // Utility function to parse height from various formats
@@ -127,8 +128,7 @@ export async function POST(request: NextRequest) {
 
     // Save to MongoDB for audit trail
     try {
-      const client = await clientPromise;
-      const db = client.db('ai-toolbox');
+      const db = await getDatabase();
       const collection = db.collection('diet-plans');
       
       await collection.insertOne({

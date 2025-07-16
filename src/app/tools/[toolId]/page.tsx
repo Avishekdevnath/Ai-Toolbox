@@ -55,20 +55,20 @@ const toolsData = {
     component: PasswordGeneratorTool
   },
   'tip-calculator': {
-    name: 'Tip & Split Calculator',
-    description: 'Calculate tips and split bills',
+    name: 'Tip Calculator',
+    description: 'Calculate tips and split bills with AI suggestions',
     icon: '🧮',
     component: TipCalculatorTool
   },
   'word-counter': {
     name: 'Word Counter',
-    description: 'Count words with readability score',
+    description: 'Count words with detailed analysis',
     icon: '📊',
     component: WordCounterTool
   },
   'unit-converter': {
     name: 'Unit Converter',
-    description: 'Convert between different units',
+    description: 'Convert between different units with live currency',
     icon: '⚖️',
     component: UnitConverterTool
   },
@@ -80,7 +80,7 @@ const toolsData = {
   },
   'url-shortener': {
     name: 'URL Shortener',
-    description: 'Shorten URLs with custom aliases',
+    description: 'Shorten URLs with custom aliases and analytics',
     icon: '🔗',
     component: URLShortenerTool
   },
@@ -123,7 +123,7 @@ export default function ToolPage() {
 
   if (!tool) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <div className="text-6xl mb-4">🔍</div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -133,7 +133,7 @@ export default function ToolPage() {
             The tool you're looking for doesn't exist.
           </p>
           <Link 
-            href="/"
+            href="/ai-tools"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             ← Back to Tools
@@ -146,20 +146,10 @@ export default function ToolPage() {
   const ToolComponent = tool.component;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Flex container for sidebar and main content */}
-      <div className="flex">
-        {/* Sidebar Navigation (fixed, does not affect main content flow) */}
-        <div className="hidden lg:block">
-          <ToolSidebar />
-        </div>
-        {/* Main Content */}
-        <main className="transition-all duration-300 pb-8 px-2 sm:px-4 md:px-6 lg:px-8 w-full max-w-6xl mx-auto mt-16">
-          <ToolComponent />
-        </main>
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 flex justify-center">
+      <div className="w-full max-w-3xl bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 md:p-10">
+        <ToolComponent />
       </div>
-      {/* Mobile Sidebar */}
-      <ToolSidebar />
     </div>
   );
 } 

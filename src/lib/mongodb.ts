@@ -1,9 +1,10 @@
 import { MongoClient } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-toolbox';
+const DB_NAME = process.env.DB_NAME || 'ai-toolbox';
 
 let client: MongoClient | null = null;
-let clientPromise: Promise<MongoClient> | null = null;
+export const clientPromise = {};
 
 export async function connectToDatabase(): Promise<MongoClient> {
   if (clientPromise) {
@@ -25,9 +26,13 @@ export async function connectToDatabase(): Promise<MongoClient> {
   }
 }
 
+export function getDatabaseName() {
+  return DB_NAME;
+}
+
 export async function getDatabase() {
   const client = await connectToDatabase();
-  return client.db();
+  return client.db(DB_NAME);
 }
 
 export async function closeConnection() {

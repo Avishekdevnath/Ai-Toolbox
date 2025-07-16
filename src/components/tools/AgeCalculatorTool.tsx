@@ -111,6 +111,8 @@ export default function AgeCalculatorTool() {
 
       const data = await response.json();
       setResult(data);
+      // After age calculation is displayed
+      fetch('/api/tools/age-calculator/track-usage', { method: 'POST' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

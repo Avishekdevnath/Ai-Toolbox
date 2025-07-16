@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
+import Header from "@/components/Header";
+import NewFooter from "@/components/NewFooter";
 
 const aiTools = [
   {
@@ -154,7 +156,9 @@ const categories = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+      <Header />
+      <main className="flex-1">
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto text-center py-24 px-4 flex flex-col items-center justify-center">
         <Image src="/file.svg" alt="AI Toolbox Logo" width={80} height={80} className="mb-4 drop-shadow-lg" />
@@ -168,7 +172,107 @@ export default function Home() {
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">AI Toolbox brings together the best of artificial intelligence and practical utilities for everyone—students, professionals, and creators. Open source, privacy-friendly, and always improving.</p>
         </div>
       </section>
-      {/* Optional: Add testimonials, feature highlights, or a footer here */}
+
+      {/* Features Section */}
+      <section className="max-w-5xl mx-auto py-16 px-4">
+        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-10">Why Choose AI Toolbox?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
+            <span className="text-4xl mb-3">🤖</span>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">AI-Powered</h3>
+            <p className="text-gray-600 dark:text-gray-300">Harness the latest in artificial intelligence for smarter, faster results.</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
+            <span className="text-4xl mb-3">🧰</span>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">All-in-One Suite</h3>
+            <p className="text-gray-600 dark:text-gray-300">From productivity to creativity, access a wide range of tools in one place.</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
+            <span className="text-4xl mb-3">🔒</span>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Privacy-First</h3>
+            <p className="text-gray-600 dark:text-gray-300">Your data stays yours. We never sell or misuse your information.</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
+            <span className="text-4xl mb-3">🌈</span>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Open Source</h3>
+            <p className="text-gray-600 dark:text-gray-300">Built by the community, for the community. Contribute or customize freely.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="max-w-4xl mx-auto py-16 px-4">
+        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-10">How It Works</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+          <div className="flex flex-col items-center">
+            <div className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-200 rounded-full w-16 h-16 flex items-center justify-center text-3xl mb-3">1</div>
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Choose a Tool</h4>
+            <p className="text-gray-600 dark:text-gray-300">Pick from a variety of AI and utility tools.</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="bg-fuchsia-100 dark:bg-fuchsia-900 text-fuchsia-600 dark:text-fuchsia-200 rounded-full w-16 h-16 flex items-center justify-center text-3xl mb-3">2</div>
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Input Your Data</h4>
+            <p className="text-gray-600 dark:text-gray-300">Enter your info, upload a file, or paste text as needed.</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200 rounded-full w-16 h-16 flex items-center justify-center text-3xl mb-3">3</div>
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Get Instant Results</h4>
+            <p className="text-gray-600 dark:text-gray-300">See your results, insights, or downloads in seconds.</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="bg-pink-100 dark:bg-pink-900 text-pink-600 dark:text-pink-200 rounded-full w-16 h-16 flex items-center justify-center text-3xl mb-3">4</div>
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Take Action</h4>
+            <p className="text-gray-600 dark:text-gray-300">Copy, share, or use your results to make smarter decisions.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="max-w-5xl mx-auto py-16 px-4">
+        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-10">What Users Say</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
+            <span className="text-3xl mb-3">⭐️⭐️⭐️⭐️⭐️</span>
+            <p className="text-gray-700 dark:text-gray-200 mb-3">“AI Toolbox has become my go-to for quick, smart solutions. The tools are intuitive and save me hours every week!”</p>
+            <span className="text-sm text-gray-500 dark:text-gray-400">— Alex, Product Manager</span>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
+            <span className="text-3xl mb-3">⭐️⭐️⭐️⭐️⭐️</span>
+            <p className="text-gray-700 dark:text-gray-200 mb-3">“I love the privacy-first approach. I can use powerful AI tools without worrying about my data.”</p>
+            <span className="text-sm text-gray-500 dark:text-gray-400">— Priya, Developer</span>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
+            <span className="text-3xl mb-3">⭐️⭐️⭐️⭐️⭐️</span>
+            <p className="text-gray-700 dark:text-gray-200 mb-3">“The all-in-one suite is a game changer. Everything I need, beautifully designed and easy to use.”</p>
+            <span className="text-sm text-gray-500 dark:text-gray-400">— Sam, Designer</span>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="max-w-3xl mx-auto py-16 px-4">
+        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-10">Frequently Asked Questions</h2>
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Is AI Toolbox free to use?</h4>
+            <p className="text-gray-600 dark:text-gray-300">Yes! All core tools are free to use. Some advanced features may require an account in the future, but the majority will always be free.</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">How is my data handled?</h4>
+            <p className="text-gray-600 dark:text-gray-300">Your privacy is our priority. We never sell your data, and most tools process information directly in your browser.</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Can I contribute or suggest a tool?</h4>
+            <p className="text-gray-600 dark:text-gray-300">Absolutely! AI Toolbox is open source. Visit our GitHub or contact us to suggest features or contribute code.</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Do I need to sign up?</h4>
+            <p className="text-gray-600 dark:text-gray-300">No sign-up is required for most tools. If you want to save data or access premium features in the future, you may need an account.</p>
+          </div>
+        </div>
+      </section>
+        </main>
+      <NewFooter />
     </div>
   );
 }

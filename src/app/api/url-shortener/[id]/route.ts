@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/mongodb';
+import { clientPromise } from '@/lib/mongodb';
 import { ShortenedUrl } from '@/lib/urlShortenerUtils';
 
 const COLLECTION_NAME = 'shortened_urls';

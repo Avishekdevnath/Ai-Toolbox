@@ -31,9 +31,10 @@ import {
   AnswerEvaluation
 } from '@/lib/interviewAI';
 import { 
-  formatTime, 
-  generateCertificateHTML 
+  formatTime
 } from '@/lib/interviewUtils';
+import { CertificateData } from '@/lib/certificateUtils';
+import CertificateDownloadModal from '../CertificateDownloadModal';
 
 interface JobPostingData {
   title: string;
@@ -321,29 +322,11 @@ export default function JobInterviewerTool() {
     }
   };
 
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
+
   const handleDownloadCertificate = () => {
     if (!state.results || !setupData.candidateName || !state.parsedJob) return;
-
-    const certificateData = {
-      candidateName: setupData.candidateName,
-      position: state.parsedJob.title,
-      industry: state.parsedJob.industry,
-      score: state.results.overallScore.totalScore,
-      maxScore: state.results.overallScore.maxPossibleScore,
-      percentage: state.results.overallScore.percentage,
-      grade: state.results.overallScore.grade,
-      date: new Date(),
-      sessionId: state.session?.id || ''
-    };
-
-    const html = generateCertificateHTML(certificateData);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `job-interview-certificate-${certificateData.sessionId}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    setShowCertificateModal(true);
   };
 
   const handleRestart = () => {
@@ -731,166 +714,184 @@ export default function JobInterviewerTool() {
   // Render results stage
   if (state.stage === 'results') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-        <div className="max-w-4xl mx-auto">
-          <Card className="mb-6">
-            <CardHeader className="text-center">
-              <div className="flex items-center justify-center mb-4">
-                <Trophy className="w-12 h-12 text-yellow-600 mr-3" />
-                <div>
-                  <CardTitle className="text-3xl font-bold">Job Interview Complete!</CardTitle>
-                  <CardDescription className="text-lg">
-                    Here are your results and job fit analysis
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {state.results && state.parsedJob && (
-            <>
-              {/* Overall Score */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-center">Overall Performance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center space-y-4">
-                    <div className="text-6xl font-bold text-blue-600">
-                      {state.results.overallScore.grade}
-                    </div>
-                    <div className="text-2xl font-semibold">
-                      {state.results.overallScore.totalScore}/{state.results.overallScore.maxPossibleScore} 
-                      ({state.results.overallScore.percentage}%)
-                    </div>
-                    <div className="text-gray-600">
-                      {state.parsedJob.title} • {state.parsedJob.industry} • {setupData.difficulty}
-                    </div>
+      <>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+          <div className="max-w-4xl mx-auto">
+            <Card className="mb-6">
+              <CardHeader className="text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <Trophy className="w-12 h-12 text-yellow-600 mr-3" />
+                  <div>
+                    <CardTitle className="text-3xl font-bold">Job Interview Complete!</CardTitle>
+                    <CardDescription className="text-lg">
+                      Here are your results and job fit analysis
+                    </CardDescription>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardHeader>
+            </Card>
 
-              {/* Job Fit Analysis */}
-              {state.results.overallScore.jobFitScore && (
+            {state.results && state.parsedJob && (
+              <>
+                {/* Overall Score */}
                 <Card className="mb-6">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Target className="w-5 h-5 mr-2" />
-                      Job Fit Analysis
-                    </CardTitle>
+                    <CardTitle className="text-center">Overall Performance</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center space-y-4">
-                      <div className="text-4xl font-bold text-green-600">
-                        {state.results.overallScore.jobFitScore}/10
+                      <div className="text-6xl font-bold text-blue-600">
+                        {state.results.overallScore.grade}
                       </div>
-                      <div className="text-lg font-semibold">Job Fit Score</div>
-                      <p className="text-gray-600">
-                        How well your responses align with the specific job requirements
-                      </p>
+                      <div className="text-2xl font-semibold">
+                        {state.results.overallScore.totalScore}/{state.results.overallScore.maxPossibleScore} 
+                        ({state.results.overallScore.percentage}%)
+                      </div>
+                      <div className="text-gray-600">
+                        {state.parsedJob.title} • {state.parsedJob.industry} • {setupData.difficulty}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              )}
 
-              {/* Category Scores */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Performance Breakdown</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(state.results.overallScore.categoryScores).map(([category, score]) => (
-                      <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                        <span className="font-medium capitalize">{category.replace(/([A-Z])/g, ' $1')}</span>
-                        <Badge variant="outline">{(score as number).toFixed(1)}/10</Badge>
+                {/* Job Fit Analysis */}
+                {state.results.overallScore.jobFitScore && (
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Target className="w-5 h-5 mr-2" />
+                        Job Fit Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center space-y-4">
+                        <div className="text-4xl font-bold text-green-600">
+                          {state.results.overallScore.jobFitScore}/10
+                        </div>
+                        <div className="text-lg font-semibold">Job Fit Score</div>
+                        <p className="text-gray-600">
+                          How well your responses align with the specific job requirements
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                )}
 
-              {/* Summary */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Performance Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 mb-4">{state.results.summary.summary}</p>
-                  
-                  {state.results.summary.jobFitAnalysis && (
-                    <div className="mb-4 p-4 bg-blue-50 rounded">
-                      <h4 className="font-semibold text-blue-800 mb-2">Job Fit Analysis:</h4>
-                      <p className="text-blue-700">{state.results.summary.jobFitAnalysis}</p>
+                {/* Category Scores */}
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Performance Breakdown</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(state.results.overallScore.categoryScores).map(([category, score]) => (
+                        <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <span className="font-medium capitalize">{category.replace(/([A-Z])/g, ' $1')}</span>
+                          <Badge variant="outline">{(score as number).toFixed(1)}/10</Badge>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </CardContent>
+                </Card>
 
-                  {state.results.summary.marketPositioning && (
-                    <div className="mb-4 p-4 bg-green-50 rounded">
-                      <h4 className="font-semibold text-green-800 mb-2">Market Positioning:</h4>
-                      <p className="text-green-700">{state.results.summary.marketPositioning}</p>
+                {/* Summary */}
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Performance Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 mb-4">{state.results.summary.summary}</p>
+                    {state.results.summary.jobFitAnalysis && (
+                      <div className="mb-4 p-4 bg-blue-50 rounded">
+                        <h4 className="font-semibold text-blue-800 mb-2">Job Fit Analysis:</h4>
+                        <p className="text-blue-700">{state.results.summary.jobFitAnalysis}</p>
+                      </div>
+                    )}
+                    {state.results.summary.marketPositioning && (
+                      <div className="mb-4 p-4 bg-green-50 rounded">
+                        <h4 className="font-semibold text-green-800 mb-2">Market Positioning:</h4>
+                        <p className="text-green-700">{state.results.summary.marketPositioning}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-semibold text-green-700 mb-2 flex items-center">
+                          <Star className="w-4 h-4 mr-2" />
+                          Key Strengths
+                        </h4>
+                        <ul className="list-disc list-inside text-sm space-y-1">
+                          {state.results.summary.strengths.map((strength: string, index: number) => (
+                            <li key={index}>{strength}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-orange-700 mb-2 flex items-center">
+                          <Target className="w-4 h-4 mr-2" />
+                          Areas for Improvement
+                        </h4>
+                        <ul className="list-disc list-inside text-sm space-y-1">
+                          {state.results.summary.areasForImprovement.map((area: string, index: number) => (
+                            <li key={index}>{area}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  )}
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-semibold text-green-700 mb-2 flex items-center">
-                        <Star className="w-4 h-4 mr-2" />
-                        Key Strengths
-                      </h4>
-                      <ul className="list-disc list-inside text-sm space-y-1">
-                        {state.results.summary.strengths.map((strength: string, index: number) => (
-                          <li key={index}>{strength}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-orange-700 mb-2 flex items-center">
-                        <Target className="w-4 h-4 mr-2" />
-                        Areas for Improvement
-                      </h4>
-                      <ul className="list-disc list-inside text-sm space-y-1">
-                        {state.results.summary.areasForImprovement.map((area: string, index: number) => (
-                          <li key={index}>{area}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Recommendations */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Recommendations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="list-disc list-inside space-y-2">
-                    {state.results.summary.recommendations.map((rec: string, index: number) => (
-                      <li key={index} className="text-gray-700">{rec}</li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+                {/* Recommendations */}
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Recommendations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="list-disc list-inside space-y-2">
+                      {state.results.summary.recommendations.map((rec: string, index: number) => (
+                        <li key={index} className="text-gray-700">{rec}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
 
-              {/* Actions */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button onClick={handleDownloadCertificate} className="flex items-center">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Certificate
-                    </Button>
-                    <Button variant="outline" onClick={handleRestart}>
-                      Start New Interview
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
+                {/* Actions */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <Button onClick={handleDownloadCertificate} className="flex items-center">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Certificate
+                      </Button>
+                      <Button variant="outline" onClick={handleRestart}>
+                        Start New Interview
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+        {/* Certificate Download Modal */}
+        {state.results && state.parsedJob && (
+          <CertificateDownloadModal
+            isOpen={showCertificateModal}
+            onClose={() => setShowCertificateModal(false)}
+            certificateData={{
+              candidateName: setupData.candidateName,
+              position: state.parsedJob.title,
+              industry: state.parsedJob.industry,
+              score: state.results.overallScore.totalScore,
+              maxScore: state.results.overallScore.maxPossibleScore,
+              percentage: state.results.overallScore.percentage,
+              grade: state.results.overallScore.grade,
+              date: new Date(),
+              sessionId: state.session?.id || '',
+              type: 'job-specific'
+            }}
+          />
+        )}
+      </>
     );
   }
 

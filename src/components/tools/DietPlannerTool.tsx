@@ -169,6 +169,7 @@ export default function DietPlannerTool() {
       if (data.success) {
         setDietPlan(data.analysis);
         setStep(3);
+        fetch('/api/tools/diet-planner/track-usage', { method: 'POST' });
       } else {
         throw new Error(data.error || 'Failed to generate diet plan');
       }

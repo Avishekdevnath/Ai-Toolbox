@@ -12,8 +12,11 @@ import {
   MapPin, 
   Send,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Heart
 } from 'lucide-react';
+
+// Heart icon is used in the contact page footer. Do not remove this import.
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({

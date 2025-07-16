@@ -113,6 +113,7 @@ export default function QuoteGeneratorTool() {
       if (data.message) setMessage(data.message);
       setQuotes(data.quotes || []);
       setFamousPeople(data.famousPeople || []);
+      fetch('/api/tools/quote-generator/track-usage', { method: 'POST' });
     } catch (e) {
       setError('Failed to generate quotes. Please try again.');
     } finally {
