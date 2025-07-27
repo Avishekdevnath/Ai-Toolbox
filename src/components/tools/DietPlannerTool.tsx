@@ -24,7 +24,6 @@ export default function DietPlannerTool() {
     previous_diets: '',
     // Muscle gain specific
     training_frequency: '',
-    current_body_fat: '',
     muscle_goals: '',
     // Keto specific
     keto_experience: '',
@@ -122,28 +121,129 @@ export default function DietPlannerTool() {
   };
 
   const validateForm = () => {
-    if (!formData.name.trim() || !formData.age || !formData.weight || !formData.height) return false;
+    // Check basic required fields
+    const basicFieldsValid = formData.name.trim() && formData.age && formData.weight && formData.height;
+    
+    if (!basicFieldsValid) {
+      console.log('Basic fields validation failed:', {
+        name: formData.name.trim(),
+        age: formData.age,
+        weight: formData.weight,
+        height: formData.height
+      });
+      return false;
+    }
+    
+    // Check diet-specific fields
+    let specificFieldsValid = false;
     
     switch (dietPlanType) {
       case 'general':
-        return formData.goal.trim() && formData.activity_level;
+        specificFieldsValid = formData.goal.trim() && formData.activity_level;
+        console.log('General validation:', { goal: formData.goal.trim(), activity_level: formData.activity_level });
+        break;
       case 'weight-loss':
-        return formData.target_weight && formData.timeline && formData.activity_level;
+        specificFieldsValid = formData.target_weight && formData.timeline && formData.activity_level;
+        console.log('Weight-loss validation:', { target_weight: formData.target_weight, timeline: formData.timeline, activity_level: formData.activity_level });
+        break;
       case 'muscle-gain':
-        return formData.training_frequency && formData.muscle_goals.trim();
+        specificFieldsValid = formData.training_frequency && formData.muscle_goals.trim();
+        console.log('Muscle-gain validation:', { training_frequency: formData.training_frequency, muscle_goals: formData.muscle_goals.trim() });
+        break;
       case 'keto':
-        return formData.keto_experience && formData.carb_preference;
+        specificFieldsValid = formData.keto_experience && formData.carb_preference;
+        console.log('Keto validation:', { keto_experience: formData.keto_experience, carb_preference: formData.carb_preference });
+        break;
       case 'vegan':
-        return formData.vegan_duration && formData.protein_concerns;
+        specificFieldsValid = formData.vegan_duration && formData.protein_concerns;
+        console.log('Vegan validation:', { vegan_duration: formData.vegan_duration, protein_concerns: formData.protein_concerns });
+        break;
       case 'diabetes':
-        return formData.diabetes_type && formData.medication;
+        specificFieldsValid = formData.diabetes_type && formData.medication;
+        console.log('Diabetes validation:', { diabetes_type: formData.diabetes_type, medication: formData.medication });
+        break;
       case 'heart-healthy':
-        return formData.heart_condition && formData.activity_level;
+        specificFieldsValid = formData.heart_condition && formData.activity_level;
+        console.log('Heart-healthy validation:', { heart_condition: formData.heart_condition, activity_level: formData.activity_level });
+        break;
       case 'athletic':
-        return formData.sport_type.trim() && formData.training_schedule;
+        specificFieldsValid = formData.sport_type.trim() && formData.training_schedule;
+        console.log('Athletic validation:', { sport_type: formData.sport_type.trim(), training_schedule: formData.training_schedule });
+        break;
       default:
+        console.log('Unknown diet plan type:', dietPlanType);
         return false;
     }
+    
+    console.log('Form validation result:', { basicFieldsValid, specificFieldsValid, dietPlanType });
+    return specificFieldsValid;
+  };
+
+  const getValidationStatus = () => {
+    const basicFields = {
+      name: !!formData.name.trim(),
+      age: !!formData.age,
+      weight: !!formData.weight,
+      height: !!formData.height
+    };
+    
+    let specificFields = {};
+    
+    switch (dietPlanType) {
+      case 'general':
+        specificFields = {
+          goal: !!formData.goal.trim(),
+          activity_level: !!formData.activity_level
+        };
+        break;
+      case 'weight-loss':
+        specificFields = {
+          target_weight: !!formData.target_weight,
+          timeline: !!formData.timeline,
+          activity_level: !!formData.activity_level
+        };
+        break;
+      case 'muscle-gain':
+        specificFields = {
+          training_frequency: !!formData.training_frequency,
+          muscle_goals: !!formData.muscle_goals.trim()
+        };
+        break;
+      case 'keto':
+        specificFields = {
+          keto_experience: !!formData.keto_experience,
+          carb_preference: !!formData.carb_preference
+        };
+        break;
+      case 'vegan':
+        specificFields = {
+          vegan_duration: !!formData.vegan_duration,
+          protein_concerns: !!formData.protein_concerns
+        };
+        break;
+      case 'diabetes':
+        specificFields = {
+          diabetes_type: !!formData.diabetes_type,
+          medication: !!formData.medication
+        };
+        break;
+      case 'heart-healthy':
+        specificFields = {
+          heart_condition: !!formData.heart_condition,
+          activity_level: !!formData.activity_level
+        };
+        break;
+      case 'athletic':
+        specificFields = {
+          sport_type: !!formData.sport_type.trim(),
+          training_schedule: !!formData.training_schedule
+        };
+        break;
+      default:
+        specificFields = {};
+    }
+    
+    return { basicFields, specificFields };
   };
 
   const generatePlan = async () => {
@@ -164,12 +264,32 @@ export default function DietPlannerTool() {
         }),
       });
 
-      const data = await response.json();
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check if response has content
+      const responseText = await response.text();
+      if (!responseText || responseText.trim() === '') {
+        throw new Error('Empty response from server');
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response:', responseText);
+        throw new Error('Invalid response format from server');
+      }
 
       if (data.success) {
         setDietPlan(data.analysis);
         setStep(3);
-        fetch('/api/tools/diet-planner/track-usage', { method: 'POST' });
+        // Track usage without blocking the main flow
+        fetch('/api/tools/diet-planner/track-usage', { method: 'POST' }).catch(err => {
+          console.error('Usage tracking failed:', err);
+        });
       } else {
         throw new Error(data.error || 'Failed to generate diet plan');
       }
@@ -188,7 +308,7 @@ export default function DietPlannerTool() {
       name: '', age: '', gender: '', weight: '', height: '', activity_level: '',
       goal: '', dietary_restrictions: '', health_conditions: '',
       target_weight: '', timeline: '', previous_diets: '',
-      training_frequency: '', current_body_fat: '', muscle_goals: '',
+      training_frequency: '', muscle_goals: '',
       keto_experience: '', carb_preference: '',
       vegan_duration: '', protein_concerns: '', supplement_preferences: '',
       diabetes_type: '', medication: '', blood_sugar_targets: '',
@@ -478,6 +598,265 @@ export default function DietPlannerTool() {
             </div>
           )}
 
+          {/* Additional fields for Muscle Building */}
+          {dietPlanType === 'muscle-gain' && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Training Frequency *
+                </label>
+                <select
+                  value={formData.training_frequency}
+                  onChange={(e) => handleInputChange('training_frequency', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select training frequency</option>
+                  <option value="3_days">3 days per week</option>
+                  <option value="4_days">4 days per week</option>
+                  <option value="5_days">5 days per week</option>
+                  <option value="6_days">6 days per week</option>
+                  <option value="7_days">7 days per week</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Muscle Goals *
+                </label>
+                <textarea
+                  value={formData.muscle_goals}
+                  onChange={(e) => handleInputChange('muscle_goals', e.target.value)}
+                  placeholder="Describe your specific muscle building goals (e.g., build chest, increase overall mass, improve strength...)"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Additional fields for Keto Diet */}
+          {dietPlanType === 'keto' && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Keto Experience *
+                </label>
+                <select
+                  value={formData.keto_experience}
+                  onChange={(e) => handleInputChange('keto_experience', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select your keto experience</option>
+                  <option value="beginner">Beginner (never tried keto)</option>
+                  <option value="intermediate">Intermediate (tried keto before)</option>
+                  <option value="advanced">Advanced (currently on keto)</option>
+                  <option value="expert">Expert (long-term keto practitioner)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Carb Preference *
+                </label>
+                <select
+                  value={formData.carb_preference}
+                  onChange={(e) => handleInputChange('carb_preference', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select your carb preference</option>
+                  <option value="strict">Strict keto (20g net carbs/day)</option>
+                  <option value="moderate">Moderate keto (30-50g net carbs/day)</option>
+                  <option value="flexible">Flexible keto (50-100g net carbs/day)</option>
+                  <option value="cyclical">Cyclical keto (carb cycling)</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Additional fields for Vegan Diet */}
+          {dietPlanType === 'vegan' && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Vegan Duration *
+                </label>
+                <select
+                  value={formData.vegan_duration}
+                  onChange={(e) => handleInputChange('vegan_duration', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select your vegan experience</option>
+                  <option value="new">New to vegan (less than 6 months)</option>
+                  <option value="intermediate">Intermediate (6 months - 2 years)</option>
+                  <option value="experienced">Experienced (2-5 years)</option>
+                  <option value="long_term">Long-term (5+ years)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Protein Concerns *
+                </label>
+                <select
+                  value={formData.protein_concerns}
+                  onChange={(e) => handleInputChange('protein_concerns', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select your protein concerns</option>
+                  <option value="adequate">Ensuring adequate protein intake</option>
+                  <option value="variety">Getting protein variety</option>
+                  <option value="absorption">Protein absorption and bioavailability</option>
+                  <option value="none">No specific concerns</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Additional fields for Diabetes Diet */}
+          {dietPlanType === 'diabetes' && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Diabetes Type *
+                </label>
+                <select
+                  value={formData.diabetes_type}
+                  onChange={(e) => handleInputChange('diabetes_type', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select diabetes type</option>
+                  <option value="type1">Type 1 Diabetes</option>
+                  <option value="type2">Type 2 Diabetes</option>
+                  <option value="gestational">Gestational Diabetes</option>
+                  <option value="prediabetes">Prediabetes</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Medication *
+                </label>
+                <select
+                  value={formData.medication}
+                  onChange={(e) => handleInputChange('medication', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select medication type</option>
+                  <option value="insulin">Insulin</option>
+                  <option value="oral">Oral medication</option>
+                  <option value="both">Both insulin and oral medication</option>
+                  <option value="none">No medication (diet controlled)</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Additional fields for Heart-Healthy Diet */}
+          {dietPlanType === 'heart-healthy' && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Heart Condition *
+                </label>
+                <select
+                  value={formData.heart_condition}
+                  onChange={(e) => handleInputChange('heart_condition', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select heart condition</option>
+                  <option value="high_blood_pressure">High Blood Pressure</option>
+                  <option value="high_cholesterol">High Cholesterol</option>
+                  <option value="heart_disease">Heart Disease</option>
+                  <option value="prevention">Prevention (no current condition)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Activity Level *
+                </label>
+                <select
+                  value={formData.activity_level}
+                  onChange={(e) => handleInputChange('activity_level', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select activity level</option>
+                  <option value="sedentary">Sedentary (little/no exercise)</option>
+                  <option value="lightly_active">Lightly Active (light exercise 1-3 days/week)</option>
+                  <option value="moderately_active">Moderately Active (moderate exercise 3-5 days/week)</option>
+                  <option value="very_active">Very Active (hard exercise 6-7 days/week)</option>
+                  <option value="extra_active">Extra Active (very hard exercise/training 2x/day)</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Additional fields for Athletic Diet */}
+          {dietPlanType === 'athletic' && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sport Type *
+                </label>
+                <input
+                  type="text"
+                  value={formData.sport_type}
+                  onChange={(e) => handleInputChange('sport_type', e.target.value)}
+                  placeholder="e.g., Running, Swimming, Football, Basketball, Tennis..."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Training Schedule *
+                </label>
+                <select
+                  value={formData.training_schedule}
+                  onChange={(e) => handleInputChange('training_schedule', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select training schedule</option>
+                  <option value="daily">Daily training</option>
+                  <option value="5_6_days">5-6 days per week</option>
+                  <option value="3_4_days">3-4 days per week</option>
+                  <option value="2_3_days">2-3 days per week</option>
+                  <option value="competition">Competition season</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Validation Status */}
+          {step === 2 && (
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Form Validation Status
+              </h4>
+              {(() => {
+                const { basicFields, specificFields } = getValidationStatus();
+                const allBasicValid = Object.values(basicFields).every(Boolean);
+                const allSpecificValid = Object.values(specificFields).every(Boolean);
+                
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${allBasicValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Basic Information: {allBasicValid ? 'Complete' : 'Incomplete'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${allSpecificValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {dietPlanType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Fields: {allSpecificValid ? 'Complete' : 'Incomplete'}
+                      </span>
+                    </div>
+                    {(!allBasicValid || !allSpecificValid) && (
+                      <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                        Please fill in all required fields marked with *
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           <div className="flex space-x-4 mt-6">
             <button
               onClick={() => setStep(1)}
@@ -502,243 +881,187 @@ export default function DietPlannerTool() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Your Personalized Diet & Fitness Plan
             </h2>
-              <button
-              onClick={resetWizard}
-              className="text-green-600 hover:text-green-700 text-sm"
-              >
-              Create New Plan
-              </button>
           </div>
 
         <div className="space-y-6">
-            {/* BMI Analysis */}
-            {dietPlan.bmi_analysis && (
+            {/* Plan Overview */}
+            {dietPlan.diet_plan && (
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-4">
-                  📊 BMI Analysis
+                  📋 {dietPlan.diet_plan.name}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-blue-600">{dietPlan.bmi_analysis.bmi_value}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">BMI Value</div>
-                  </div>
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-4">
-                    <div className="text-lg font-semibold text-blue-600">{dietPlan.bmi_analysis.bmi_category}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Category</div>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div>
-                    <h4 className="font-medium text-blue-800 dark:text-blue-200">Health Implications:</h4>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">{dietPlan.bmi_analysis.health_implications}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-blue-800 dark:text-blue-200">Recommendations:</h4>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">{dietPlan.bmi_analysis.recommendations}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* BMR Analysis */}
-            {dietPlan.bmr_analysis && (
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-4">
-                  🔥 BMR Analysis
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-purple-600">{dietPlan.bmr_analysis.bmr_value}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">BMR (calories/day)</div>
-                  </div>
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-4">
-                    <div className="text-xl font-bold text-green-600">{dietPlan.daily_calories}</div>
+                <p className="text-blue-700 dark:text-blue-300 mb-4">
+                  {dietPlan.diet_plan.description}
+                </p>
+                
+                {/* Daily Calories */}
+                <div className="bg-white dark:bg-gray-700 rounded-lg p-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600">{dietPlan.diet_plan.daily_calories}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Daily Calories</div>
                   </div>
                 </div>
-                <div className="mt-4 space-y-2">
-                  <div>
-                    <h4 className="font-medium text-purple-800 dark:text-purple-200">Daily Calorie Needs:</h4>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">{dietPlan.bmr_analysis.daily_calorie_needs}</p>
+
+                {/* Macronutrients */}
+                {dietPlan.diet_plan.macronutrients && (
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
+                      <div className="text-xl font-bold text-green-600">{dietPlan.diet_plan.macronutrients.protein}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Protein</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
+                      <div className="text-xl font-bold text-blue-600">{dietPlan.diet_plan.macronutrients.carbs}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Carbs</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
+                      <div className="text-xl font-bold text-yellow-600">{dietPlan.diet_plan.macronutrients.fat}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Fat</div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-purple-800 dark:text-purple-200">Activity Multiplier:</h4>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">{dietPlan.bmr_analysis.activity_multiplier}</p>
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
-            {/* Nutrition Overview */}
+            {/* Meals */}
+            {dietPlan.diet_plan && dietPlan.diet_plan.meals && (
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-4">
-                  Daily Nutrition Target: {dietPlan.daily_calories} calories
-                </h3>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
-                  <div className="text-xl font-bold text-green-600">{dietPlan.macros.protein}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Protein</div>
-                  </div>
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
-                  <div className="text-xl font-bold text-blue-600">{dietPlan.macros.carbs}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Carbs</div>
-                  </div>
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
-                  <div className="text-xl font-bold text-yellow-600">{dietPlan.macros.fat}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Fat</div>
-                </div>
-                </div>
-              </div>
-
-            {/* Daily Meal Plan */}
-            {dietPlan.daily_meal_plan && (
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   🍽️ Daily Meal Plan
                 </h3>
-                <div className="bg-white dark:bg-gray-600 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-orange-600 text-sm">Breakfast</h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{dietPlan.daily_meal_plan.breakfast}</p>
+                <div className="space-y-4">
+                  {dietPlan.diet_plan.meals.map((meal: any, index: number) => (
+                    <div key={index} className="bg-white dark:bg-gray-700 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-semibold text-green-800 dark:text-green-200">{meal.meal}</h4>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{meal.time}</span>
+                      </div>
+                      
+                      {meal.foods && meal.foods.length > 0 && (
+                        <div className="space-y-2 mb-3">
+                          {meal.foods.map((food: any, foodIndex: number) => (
+                            <div key={foodIndex} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-600 rounded">
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-white">{food.name}</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">{food.quantity}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-medium text-gray-900 dark:text-white">{food.calories} cal</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  P: {food.protein} | C: {food.carbs} | F: {food.fat}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-500">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{meal.notes}</span>
+                        <span className="font-semibold text-green-600">Total: {meal.total_calories} cal</span>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-green-600 text-sm">Lunch</h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{dietPlan.daily_meal_plan.lunch}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Supplements */}
+            {dietPlan.diet_plan && dietPlan.diet_plan.supplements && dietPlan.diet_plan.supplements.length > 0 && (
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-4">
+                  💊 Supplements
+                </h3>
+                <div className="space-y-3">
+                  {dietPlan.diet_plan.supplements.map((supplement: any, index: number) => (
+                    <div key={index} className="bg-white dark:bg-gray-700 rounded-lg p-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-medium text-gray-900 dark:text-white">{supplement.name}</h5>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{supplement.dosage}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{supplement.timing}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{supplement.purpose}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-blue-600 text-sm">Dinner</h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{dietPlan.daily_meal_plan.dinner}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Hydration */}
+            {dietPlan.diet_plan && dietPlan.diet_plan.hydration && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-4">
+                  💧 Hydration Guidelines
+                </h3>
+                <div className="bg-white dark:bg-gray-700 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="font-medium text-blue-800 dark:text-blue-200">Daily Water Intake</h5>
+                      <p className="text-blue-700 dark:text-blue-300">{dietPlan.diet_plan.hydration.daily_water}</p>
                     </div>
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-purple-600 text-sm">Snack 1</h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{dietPlan.daily_meal_plan.snack1}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-pink-600 text-sm">Snack 2</h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{dietPlan.daily_meal_plan.snack2}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-500">
-                    <div className="text-center">
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">
-                        Total Calories: {dietPlan.daily_meal_plan.total_calories}
-                      </span>
+                    <div>
+                      <h5 className="font-medium text-blue-800 dark:text-blue-200">Additional Fluids</h5>
+                      <p className="text-blue-700 dark:text-blue-300">{dietPlan.diet_plan.hydration.additional_fluids}</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Daily Exercise Routine */}
-            {dietPlan.daily_exercise_routine && (
+            {/* Exercise Recommendations */}
+            {dietPlan.diet_plan && dietPlan.diet_plan.exercise_recommendations && (
               <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-4">
-                  💪 Daily Exercise Routine
+                  💪 Exercise Recommendations
                 </h3>
-                
-                {/* Morning Exercises */}
-                {dietPlan.daily_exercise_routine.morning && dietPlan.daily_exercise_routine.morning.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-medium text-red-800 dark:text-red-200 mb-3">🌅 Morning ({dietPlan.daily_exercise_routine.morning.reduce((acc: number, ex: any) => acc + (ex.time || 0), 0)} min)</h4>
-                    <div className="space-y-3">
-                      {dietPlan.daily_exercise_routine.morning.map((exercise: any, index: number) => (
-                        <div key={index} className="bg-white dark:bg-gray-700 rounded-lg p-3">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h5 className="font-medium text-gray-900 dark:text-white">{exercise.exercise}</h5>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {exercise.sets} sets × {exercise.reps} • {exercise.time} min
-                              </p>
-                              {exercise.notes && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{exercise.notes}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Afternoon Exercises */}
-                {dietPlan.daily_exercise_routine.afternoon && dietPlan.daily_exercise_routine.afternoon.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-medium text-red-800 dark:text-red-200 mb-3">☀️ Afternoon ({dietPlan.daily_exercise_routine.afternoon.reduce((acc: number, ex: any) => acc + (ex.time || 0), 0)} min)</h4>
-                    <div className="space-y-3">
-                      {dietPlan.daily_exercise_routine.afternoon.map((exercise: any, index: number) => (
-                        <div key={index} className="bg-white dark:bg-gray-700 rounded-lg p-3">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h5 className="font-medium text-gray-900 dark:text-white">{exercise.exercise}</h5>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {exercise.sets} sets × {exercise.reps} • {exercise.time} min
-                              </p>
-                              {exercise.notes && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{exercise.notes}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Evening Exercises */}
-                {dietPlan.daily_exercise_routine.evening && dietPlan.daily_exercise_routine.evening.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-medium text-red-800 dark:text-red-200 mb-3">🌙 Evening ({dietPlan.daily_exercise_routine.evening.reduce((acc: number, ex: any) => acc + (ex.time || 0), 0)} min)</h4>
-                    <div className="space-y-3">
-                      {dietPlan.daily_exercise_routine.evening.map((exercise: any, index: number) => (
-                        <div key={index} className="bg-white dark:bg-gray-700 rounded-lg p-3">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h5 className="font-medium text-gray-900 dark:text-white">{exercise.exercise}</h5>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {exercise.sets} sets × {exercise.reps} • {exercise.time} min
-                              </p>
-                              {exercise.notes && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{exercise.notes}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Exercise Summary */}
                 <div className="bg-white dark:bg-gray-700 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div>
-                      <div className="text-xl font-bold text-red-600">{dietPlan.daily_exercise_routine.total_exercise_time}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Total Exercise Time</div>
+                      <h5 className="font-medium text-red-800 dark:text-red-200">Frequency</h5>
+                      <p className="text-red-700 dark:text-red-300">{dietPlan.diet_plan.exercise_recommendations.frequency}</p>
                     </div>
                     <div>
-                      <div className="text-lg font-semibold text-red-600">{dietPlan.daily_exercise_routine.rest_days}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Rest Days</div>
+                      <h5 className="font-medium text-red-800 dark:text-red-200">Duration</h5>
+                      <p className="text-red-700 dark:text-red-300">{dietPlan.diet_plan.exercise_recommendations.duration}</p>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-red-800 dark:text-red-200">Types</h5>
+                      <p className="text-red-700 dark:text-red-300">{Array.isArray(dietPlan.diet_plan.exercise_recommendations.types) ? dietPlan.diet_plan.exercise_recommendations.types.join(', ') : dietPlan.diet_plan.exercise_recommendations.types}</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Tips and Recommendations */}
-            {Array.isArray(dietPlan.nutritional_recommendations) && dietPlan.nutritional_recommendations.length > 0 && (
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-                <h4 className="font-medium text-green-800 dark:text-green-200 mb-3">
-                  🥬 Nutritional Tips
-                </h4>
+            {/* Tips */}
+            {dietPlan.diet_plan && dietPlan.diet_plan.tips && dietPlan.diet_plan.tips.length > 0 && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-4">
+                  💡 Tips & Recommendations
+                </h3>
                 <ul className="space-y-2">
-                  {dietPlan.nutritional_recommendations.map((tip: string, index: number) => (
-                    <li key={index} className="text-sm text-green-700 dark:text-green-300 flex items-start">
-                      <span className="mr-2 mt-1 text-green-500">•</span>
+                  {dietPlan.diet_plan.tips.map((tip: string, index: number) => (
+                    <li key={index} className="text-sm text-yellow-700 dark:text-yellow-300 flex items-start">
+                      <span className="mr-2 mt-1 text-yellow-500">•</span>
                       {tip}
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Fallback for old structure */}
+            {!dietPlan.diet_plan && (
+              <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-4">
+                  ⚠️ Diet Plan (Legacy Format)
+                </h3>
+                <pre className="text-sm text-orange-700 dark:text-orange-300 overflow-auto">
+                  {JSON.stringify(dietPlan, null, 2)}
+                </pre>
               </div>
             )}
       </div>
@@ -747,7 +1070,17 @@ export default function DietPlannerTool() {
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
               <strong>Disclaimer:</strong> This comprehensive diet and fitness plan is generated by AI and should not replace professional medical advice, nutritional counseling, or personal training guidance. Always consult healthcare professionals before starting any new diet or exercise program.
           </p>
-          </div>
+        </div>
+
+        {/* Create New Plan Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={resetWizard}
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
+          >
+            🆕 Create New Diet Plan
+          </button>
+        </div>
         </div>
       )}
     </div>

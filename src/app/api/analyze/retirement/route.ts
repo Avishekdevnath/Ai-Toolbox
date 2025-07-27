@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { model } from '@/lib/gemini';
-import {clientPromise } from '@/lib/mongodb';
+import { clientPromise } from '@/lib/mongodb';
 import { getDatabase } from '@/lib/mongodb';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { parseAIResponse } from '@/lib/utils';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY || '');
 
@@ -130,7 +131,7 @@ Return only the JSON, no additional text.`;
 
     // Clean and parse the JSON response (remove markdown formatting)
     const cleanResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const retirementAnalysis = JSON.parse(cleanResponse);
+    const retirementAnalysis = parseAIResponse(cleanResponse);
 
     // Save to MongoDB
     try {

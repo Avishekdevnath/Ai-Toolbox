@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { model } from '@/lib/gemini';
-import {clientPromise } from '@/lib/mongodb';
+import { clientPromise } from '@/lib/mongodb';
 import { getDatabase } from '@/lib/mongodb';
+import { parseAIResponse } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -112,8 +113,7 @@ Keep it concise, practical, and focused on actionable advice. Return only the JS
     }
 
     // Clean and parse the JSON response (remove markdown formatting)
-    const cleanResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const investmentAnalysis = JSON.parse(cleanResponse);
+    const investmentAnalysis = parseAIResponse(aiResponse);
 
     // Calculate achievability
     // FV = P * [((1 + r)^n - 1) / r]

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { parseAIResponse } from '@/lib/utils';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
 
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       throw new Error('Invalid JSON response from AI');
     }
 
-    const analysis = JSON.parse(jsonMatch[0]);
+    const analysis = parseAIResponse(jsonMatch[0]);
 
     return NextResponse.json({
       success: true,

@@ -1,38 +1,65 @@
-import { MongoClient } from 'mongodb';
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-toolbox';
-const DB_NAME = process.env.DB_NAME || 'ai-toolbox';
+import { MongoClient, Db } from 'mongodb';
+import { config } from './config';
 
 let client: MongoClient | null = null;
-export const clientPromise = {};
+let clientPromise: Promise<MongoClient> | null = null;
 
 export async function connectToDatabase(): Promise<MongoClient> {
   if (clientPromise) {
     return clientPromise;
   }
 
+  // Check if we have a valid MongoDB URI
+  if (!config.mongodb.uri || config.mongodb.uri.includes('username:password')) {
+    throw new Error('MongoDB Atlas connection string not configured. Please set MONGODB_URI in your environment variables.');
+  }
+
   try {
-    client = new MongoClient(MONGODB_URI);
+    client = new MongoClient(config.mongodb.uri, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 10000, // 10 seconds for Atlas
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      retryWrites: true,
+      retryReads: true,
+    });
+    
     clientPromise = client.connect();
     
     // Test the connection
     await clientPromise;
-    console.log('✅ Connected to MongoDB successfully');
+    console.log('✅ Connected to MongoDB Atlas successfully');
     
     return clientPromise;
   } catch (error) {
-    console.error('❌ Failed to connect to MongoDB:', error);
-    throw new Error('Failed to connect to MongoDB');
+    console.error('❌ Failed to connect to MongoDB Atlas:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('ECONNREFUSED')) {
+        throw new Error('Cannot connect to MongoDB. Please check your connection string and network access.');
+      } else if (error.message.includes('authentication')) {
+        throw new Error('MongoDB authentication failed. Please check your username and password.');
+      } else if (error.message.includes('ENOTFOUND')) {
+        throw new Error('MongoDB host not found. Please check your connection string.');
+      }
+    }
+    
+    throw new Error('Failed to connect to MongoDB Atlas. Please check your configuration.');
   }
 }
 
 export function getDatabaseName() {
-  return DB_NAME;
+  return config.mongodb.dbName;
 }
 
-export async function getDatabase() {
-  const client = await connectToDatabase();
-  return client.db(DB_NAME);
+export async function getDatabase(): Promise<Db> {
+  try {
+    const client = await connectToDatabase();
+    return client.db(config.mongodb.dbName);
+  } catch (error) {
+    console.error('❌ Failed to get database:', error);
+    throw error;
+  }
 }
 
 export async function closeConnection() {
@@ -63,10 +90,18 @@ export async function initializeCollections() {
     await analysesCollection.createIndex({ industry: 1 });
     await analysesCollection.createIndex({ jobTitle: 1 });
     
+    // Create shortened_urls collection with indexes
+    const shortenedUrlsCollection = db.collection('shortened_urls');
+    await shortenedUrlsCollection.createIndex({ shortCode: 1 }, { unique: true });
+    await shortenedUrlsCollection.createIndex({ createdAt: -1 });
+    await shortenedUrlsCollection.createIndex({ userId: 1 });
+    await shortenedUrlsCollection.createIndex({ isActive: 1 });
+    await shortenedUrlsCollection.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
+    
     console.log('✅ Database collections initialized with indexes');
   } catch (error) {
     console.error('❌ Failed to initialize collections:', error);
-    throw error;
+    // Don't throw error, just log it
   }
 }
 
@@ -74,7 +109,7 @@ export async function initializeCollections() {
 export async function checkDatabaseHealth(): Promise<boolean> {
   try {
     const client = await connectToDatabase();
-    await client.db().admin().ping();
+    await client.db(config.mongodb.dbName).admin().ping();
     return true;
   } catch (error) {
     console.error('❌ Database health check failed:', error);

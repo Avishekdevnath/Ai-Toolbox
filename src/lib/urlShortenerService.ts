@@ -1,128 +1,134 @@
-import { ShortenedUrl, CreateUrlRequest, UrlStats } from './urlShortenerUtils';
+import { 
+  ShortenedUrl, 
+  CreateUrlRequest, 
+  getAnonymousUserSession,
+  getAnonymousUserUrls
+} from './urlShortenerUtils';
 
-export interface UrlShortenerResponse {
+const API_BASE = '/api/url-shortener';
+
+export interface ApiResponse<T> {
   success: boolean;
-  data: ShortenedUrl & { shortenedUrl: string; isExpired?: boolean };
+  data: T;
+  error?: string;
 }
 
-export interface UrlListResponse {
-  success: boolean;
-  data: (ShortenedUrl & { shortenedUrl: string; isExpired?: boolean })[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    hasMore: boolean;
-  };
-}
-
-/**
- * Create a new shortened URL
- */
-export async function createShortenedUrl(request: CreateUrlRequest): Promise<UrlShortenerResponse> {
-  const response = await fetch('/api/url-shortener', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to create shortened URL');
-  }
-
-  return response.json();
-}
-
-/**
- * Get list of shortened URLs
- */
-export async function getShortenedUrls(options: {
-  userId?: string;
+export interface GetUrlsParams {
   limit?: number;
-  offset?: number;
   activeOnly?: boolean;
-} = {}): Promise<UrlListResponse> {
-  const params = new URLSearchParams();
-  
-  if (options.userId) params.append('userId', options.userId);
-  if (options.limit) params.append('limit', options.limit.toString());
-  if (options.offset) params.append('offset', options.offset.toString());
-  if (options.activeOnly) params.append('activeOnly', 'true');
+  userId?: string;
+  anonymousUserId?: string;
+}
 
-  const response = await fetch(`/api/url-shortener?${params.toString()}`, {
-    method: 'GET',
-  });
+/**
+ * Create a shortened URL
+ * @param request - URL creation request
+ * @returns Promise<ApiResponse<ShortenedUrl>>
+ */
+export async function createShortenedUrl(request: CreateUrlRequest): Promise<ApiResponse<ShortenedUrl>> {
+  try {
+    // Get anonymous user session if no userId provided
+    let anonymousUserData = {};
+    if (!request.userId && typeof window !== 'undefined') {
+      try {
+        const session = await getAnonymousUserSession();
+        anonymousUserData = {
+          anonymousUserId: session.sessionId,
+          deviceFingerprint: session.deviceFingerprint
+        };
+      } catch (error) {
+        console.warn('Failed to get anonymous session:', error);
+      }
+    }
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch shortened URLs');
+    const response = await fetch(API_BASE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...request,
+        ...anonymousUserData
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create shortened URL');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to create shortened URL');
   }
+}
 
-  return response.json();
+/**
+ * Get shortened URLs
+ * @param params - Query parameters
+ * @returns Promise<ApiResponse<ShortenedUrl[]>>
+ */
+export async function getShortenedUrls(params: GetUrlsParams = {}): Promise<ApiResponse<ShortenedUrl[]>> {
+  try {
+    // Get anonymous user session if no userId provided
+    let anonymousUserId = params.anonymousUserId;
+    if (!params.userId && !anonymousUserId && typeof window !== 'undefined') {
+      try {
+        const session = await getAnonymousUserSession();
+        anonymousUserId = session.sessionId;
+      } catch (error) {
+        console.warn('Failed to get anonymous session:', error);
+      }
+    }
+
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.activeOnly !== undefined) queryParams.append('activeOnly', params.activeOnly.toString());
+    if (params.userId) queryParams.append('userId', params.userId);
+    if (anonymousUserId) queryParams.append('anonymousUserId', anonymousUserId);
+
+    const response = await fetch(`${API_BASE}?${queryParams.toString()}`);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch shortened URLs');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to fetch shortened URLs');
+  }
 }
 
 /**
  * Delete a shortened URL
+ * @param urlId - URL ID to delete
+ * @returns Promise<ApiResponse<void>>
  */
-export async function deleteShortenedUrl(urlId: string): Promise<void> {
-  const response = await fetch(`/api/url-shortener/${urlId}`, {
-    method: 'DELETE',
-  });
+export async function deleteShortenedUrl(urlId: string): Promise<ApiResponse<void>> {
+  try {
+    const response = await fetch(`${API_BASE}/${urlId}`, {
+      method: 'DELETE',
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to delete shortened URL');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete shortened URL');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to delete shortened URL');
   }
-}
-
-/**
- * Update a shortened URL
- */
-export async function updateShortenedUrl(
-  urlId: string, 
-  updates: Partial<ShortenedUrl>
-): Promise<UrlShortenerResponse> {
-  const response = await fetch(`/api/url-shortener/${urlId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(updates),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to update shortened URL');
-  }
-
-  return response.json();
-}
-
-/**
- * Get URL statistics
- */
-export async function getUrlStats(userId?: string): Promise<UrlStats> {
-  const params = new URLSearchParams();
-  if (userId) params.append('userId', userId);
-
-  const response = await fetch(`/api/url-shortener/stats?${params.toString()}`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch URL statistics');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
 /**
  * Copy text to clipboard
+ * @param text - Text to copy
+ * @returns Promise<boolean> - Success status
  */
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
@@ -150,14 +156,10 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Generate a QR code URL for a shortened URL
- */
-export function generateQRCodeUrl(shortenedUrl: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shortenedUrl)}`;
-}
-
-/**
  * Share URL using Web Share API or fallback
+ * @param url - URL to share
+ * @param title - Share title
+ * @returns Promise<boolean> - Success status
  */
 export async function shareUrl(url: string, title: string = 'Check out this link'): Promise<boolean> {
   try {
@@ -178,5 +180,94 @@ export async function shareUrl(url: string, title: string = 'Check out this link
   } catch (error) {
     console.error('Failed to share URL:', error);
     return false;
+  }
+}
+
+/**
+ * Generate QR code URL
+ * @param url - URL to encode in QR code
+ * @returns QR code image URL
+ */
+export function generateQRCodeUrl(url: string): string {
+  const encodedUrl = encodeURIComponent(url);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}`;
+}
+
+/**
+ * Get URL statistics
+ * @param userId - Optional user ID
+ * @param anonymousUserId - Optional anonymous user ID
+ * @returns Promise<ApiResponse<any>>
+ */
+export async function getUrlStats(userId?: string, anonymousUserId?: string): Promise<ApiResponse<any>> {
+  try {
+    // Get anonymous user session if no userId provided
+    if (!userId && !anonymousUserId && typeof window !== 'undefined') {
+      try {
+        const session = await getAnonymousUserSession();
+        anonymousUserId = session.sessionId;
+      } catch (error) {
+        console.warn('Failed to get anonymous session:', error);
+      }
+    }
+
+    const queryParams = new URLSearchParams();
+    if (userId) queryParams.append('userId', userId);
+    if (anonymousUserId) queryParams.append('anonymousUserId', anonymousUserId);
+
+    const response = await fetch(`/api/url-shortener/stats?${queryParams.toString()}`);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch URL statistics');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to fetch URL statistics');
+  }
+}
+
+/**
+ * Check if user is anonymous (no signed-in user)
+ * @returns boolean
+ */
+export function isAnonymousUser(): boolean {
+  // This would typically check for authentication state
+  // For now, we'll assume anonymous if no user session exists
+  if (typeof window === 'undefined') return true;
+  
+  // Check if there's a NextAuth session or similar
+  const hasAuthSession = localStorage.getItem('next-auth.session-token') || 
+                        localStorage.getItem('__next-auth.session-token');
+  
+  return !hasAuthSession;
+}
+
+/**
+ * Get user identifier (userId for signed-in users, sessionId for anonymous)
+ * @returns Promise<string | null>
+ */
+export async function getUserIdentifier(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+
+  // Check for signed-in user first
+  const hasAuthSession = localStorage.getItem('next-auth.session-token') || 
+                        localStorage.getItem('__next-auth.session-token');
+  
+  if (hasAuthSession) {
+    // Return user ID for signed-in users
+    // This would typically come from your auth system
+    return null; // Placeholder - implement based on your auth system
+  }
+
+  // Return anonymous session ID
+  try {
+    const session = await getAnonymousUserSession();
+    return session.sessionId;
+  } catch (error) {
+    console.warn('Failed to get user identifier:', error);
+    return null;
   }
 } 

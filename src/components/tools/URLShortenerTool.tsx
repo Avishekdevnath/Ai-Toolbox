@@ -16,17 +16,29 @@ interface DisplayUrl extends ShortenedUrl {
   isExpired?: boolean;
 }
 
+interface Analytics {
+  totalUrls: number;
+  totalClicks: number;
+  activeUrls: number;
+  expiredUrls: number;
+  averageClicks: number;
+  topPerformingUrl?: DisplayUrl;
+}
+
 export default function URLShortenerTool() {
   const [originalUrl, setOriginalUrl] = useState('');
   const [customAlias, setCustomAlias] = useState('');
   const [expiresInDays, setExpiresInDays] = useState<number | undefined>(undefined);
+  const [expiresAt, setExpiresAt] = useState<string>('');
   const [shortenedUrls, setShortenedUrls] = useState<DisplayUrl[]>([]);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingUrls, setIsLoadingUrls] = useState(true);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [showQR, setShowQR] = useState<string | null>(null);
   const [baseUrl, setBaseUrl] = useState('http://localhost:3000');
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics'>('create');
 
   // Load existing URLs on component mount
   useEffect(() => {
@@ -40,15 +52,37 @@ export default function URLShortenerTool() {
   const loadShortenedUrls = async () => {
     try {
       setIsLoadingUrls(true);
-      const response = await getShortenedUrls({ limit: 20, activeOnly: false });
+      const response = await getShortenedUrls({ limit: 50, activeOnly: false });
       console.log('Loaded URLs:', response.data.length, 'URLs');
       setShortenedUrls(response.data);
+      
+      // Calculate analytics
+      calculateAnalytics(response.data);
     } catch (err) {
       console.error('Failed to load URLs:', err);
       setError('Failed to load existing URLs');
     } finally {
       setIsLoadingUrls(false);
     }
+  };
+
+  const calculateAnalytics = (urls: DisplayUrl[]) => {
+    const totalUrls = urls.length;
+    const totalClicks = urls.reduce((sum, url) => sum + url.clicks, 0);
+    const activeUrls = urls.filter(url => !url.isExpired).length;
+    const expiredUrls = urls.filter(url => url.isExpired).length;
+    const averageClicks = totalUrls > 0 ? Math.round(totalClicks / totalUrls) : 0;
+    const topPerformingUrl = urls.reduce((top, current) => 
+      current.clicks > (top?.clicks || 0) ? current : top, undefined as DisplayUrl | undefined);
+
+    setAnalytics({
+      totalUrls,
+      totalClicks,
+      activeUrls,
+      expiredUrls,
+      averageClicks,
+      topPerformingUrl
+    });
   };
 
   const shortenUrl = async () => {
@@ -65,16 +99,21 @@ export default function URLShortenerTool() {
       const response = await createShortenedUrl({
         originalUrl: originalUrl.trim(),
         customAlias: customAlias.trim() || undefined,
-        expiresInDays: expiresInDays || undefined
+        expiresAt: expiresAt || undefined,
+        expiresInDays: expiresAt ? undefined : (expiresInDays || undefined)
       });
 
       setShortenedUrls(prev => [response.data, ...prev]);
       setOriginalUrl('');
       setCustomAlias('');
       setExpiresInDays(undefined);
+      setExpiresAt('');
       setSuccess('URL shortened successfully!');
-      // After shortened URL is created and displayed
-      fetch('/api/tools/url-shortener/track-usage', { method: 'POST' });
+      
+      // Track usage
+      fetch('/api/tools/url-shortener/track-usage', { method: 'POST' }).catch(err => {
+        console.error('Usage tracking failed:', err);
+      });
     } catch (err: any) {
       setError(err.message || 'Failed to shorten URL');
     } finally {
@@ -121,7 +160,7 @@ export default function URLShortenerTool() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
       {/* Error and Success Messages */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -147,96 +186,267 @@ export default function URLShortenerTool() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Input Section */}
-        <div className="space-y-6">
+      {/* Professional Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Enter URL to Shorten
-            </label>
-            <input
-              type="url"
-              value={originalUrl}
-              onChange={(e) => setOriginalUrl(e.target.value)}
-              placeholder="https://example.com/very-long-url"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🔗 Professional URL Shortener</h1>
+            <p className="text-gray-600 dark:text-gray-400">Create, manage, and analyze your shortened links</p>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Custom Alias (Optional)
-            </label>
-            <div className="flex">
-              <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-400 text-sm rounded-l-md">
-                {baseUrl}/r/
-              </span>
-              <input
-                type="text"
-                value={customAlias}
-                onChange={(e) => setCustomAlias(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
-                placeholder="my-link"
-                maxLength={20}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              />
+          {analytics && (
+            <div className="hidden md:flex space-x-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{analytics.totalUrls}</div>
+                <div className="text-xs text-gray-500">Total URLs</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{analytics.totalClicks}</div>
+                <div className="text-xs text-gray-500">Total Clicks</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{analytics.averageClicks}</div>
+                <div className="text-xs text-gray-500">Avg Clicks</div>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Leave empty for auto-generated alias (letters, numbers, hyphens, and underscores only)
-            </p>
-          </div>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Expiration (Optional)
-            </label>
-            <select
-              value={expiresInDays || ''}
-              onChange={(e) => setExpiresInDays(e.target.value ? parseInt(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Never expire</option>
-              <option value="1">1 day</option>
-              <option value="7">7 days</option>
-              <option value="30">30 days</option>
-              <option value="90">90 days</option>
-              <option value="365">1 year</option>
-            </select>
-          </div>
-
-          <button
-            onClick={shortenUrl}
-            disabled={!originalUrl.trim() || isLoading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? 'Shortening...' : 'Shorten URL'}
-          </button>
-
-          {/* Features */}
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-            <h3 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
-              ✨ Features:
-            </h3>
-            <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-              <li>• Custom aliases for branded links</li>
-              <li>• Real click tracking and analytics</li>
-              <li>• URL expiration dates</li>
-              <li>• QR code generation</li>
-              <li>• Easy sharing and copying</li>
-              <li>• Persistent storage in database</li>
-            </ul>
+        {/* Anonymous User Notice */}
+        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-600 dark:text-yellow-400 text-lg">🔐</span>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                Anonymous Session
+              </h3>
+              <div className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+                <p>Your URLs are saved using your device fingerprint. They'll persist as long as you use the same browser.</p>
+                <p className="mt-2">
+                  <strong>💡 Pro Tip:</strong> 
+                  <a href="/auth/signin" className="text-blue-600 dark:text-blue-400 hover:underline ml-1">
+                    Sign up for free
+                  </a> 
+                  to access advanced features like unlimited URLs, detailed analytics, and cross-device sync!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Results Section */}
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'create'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              ✨ Create Link
+            </button>
+            <button
+              onClick={() => setActiveTab('manage')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'manage'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              📊 Manage Links ({shortenedUrls.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'analytics'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              📈 Analytics
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'create' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Input Section */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Enter URL to Shorten
+              </label>
+              <input
+                type="url"
+                value={originalUrl}
+                onChange={(e) => setOriginalUrl(e.target.value)}
+                placeholder="https://example.com/very-long-url"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Custom Alias (Optional)
+              </label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-400 text-sm rounded-l-md">
+                  {baseUrl}/
+                </span>
+                <input
+                  type="text"
+                  value={customAlias}
+                  onChange={(e) => setCustomAlias(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                  placeholder="my-link"
+                  maxLength={20}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Leave empty for auto-generated alias (letters, numbers, hyphens, and underscores only)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Expiration (Optional)
+              </label>
+              <select
+                value={expiresInDays || ''}
+                onChange={(e) => setExpiresInDays(e.target.value ? parseInt(e.target.value) : undefined)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">Lifetime (no expiration)</option>
+                <option value="1">1 day</option>
+                <option value="7">7 days</option>
+                <option value="30">30 days</option>
+                <option value="90">90 days</option>
+                <option value="365">1 year</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Or pick an exact expiration date & time below (takes precedence):
+              </p>
+              <input
+                type="datetime-local"
+                value={expiresAt}
+                onChange={e => setExpiresAt(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white mt-2"
+              />
+            </div>
+
+            <button
+              onClick={shortenUrl}
+              disabled={!originalUrl.trim() || isLoading}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              {isLoading ? 'Creating...' : '✨ Create Shortened URL'}
+            </button>
+
+            {/* Features */}
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-3">
+                🚀 Professional Features:
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-blue-700 dark:text-blue-300">
+                <div className="flex items-center">
+                  <span className="mr-2">✓</span> Custom branded aliases
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2">✓</span> Real-time click analytics
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2">✓</span> Flexible expiration dates
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2">✓</span> QR code generation
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2">✓</span> Link health monitoring
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2">✓</span> Professional dashboard
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                📊 Quick Overview
+              </h3>
+              {analytics ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{analytics.totalUrls}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Total URLs</div>
+                  </div>
+                  <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{analytics.totalClicks}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Total Clicks</div>
+                  </div>
+                  <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{analytics.activeUrls}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Active URLs</div>
+                  </div>
+                  <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">{analytics.averageClicks}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Avg Clicks</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p>Loading analytics...</p>
+                </div>
+              )}
+            </div>
+
+            {analytics?.topPerformingUrl && (
+              <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
+                <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-3">
+                  🏆 Top Performing Link
+                </h3>
+                <div className="space-y-2">
+                  <div className="text-sm">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Short URL:</span>
+                    <div className="text-blue-600 dark:text-blue-400 font-mono text-xs break-all">
+                      {analytics.topPerformingUrl.shortenedUrl}
+                    </div>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Clicks:</span>
+                    <span className="text-green-600 font-bold ml-2">{analytics.topPerformingUrl.clicks}</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Created:</span>
+                    <span className="text-gray-600 dark:text-gray-400 ml-2">
+                      {new Date(analytics.topPerformingUrl.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'manage' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Shortened URLs ({shortenedUrls.length})
+              📊 Manage Your Links
             </h3>
             <button
               onClick={loadShortenedUrls}
               disabled={isLoadingUrls}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm font-medium"
             >
               {isLoadingUrls ? 'Loading...' : '🔄 Refresh'}
             </button>
@@ -250,7 +460,8 @@ export default function URLShortenerTool() {
           ) : shortenedUrls.length === 0 ? (
             <div className="text-center text-gray-500 dark:text-gray-400 py-12">
               <div className="text-6xl mb-4">🔗</div>
-              <p>Your shortened URLs will appear here</p>
+              <p className="text-lg font-medium mb-2">No shortened URLs yet</p>
+              <p className="text-sm">Create your first shortened URL to get started!</p>
             </div>
           ) : (
             <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -286,21 +497,21 @@ export default function URLShortenerTool() {
                         >
                           {url.shortenedUrl}
                         </a>
-                        <div className="flex space-x-1">
-                                      <button
-              onClick={() => handleCopyToClipboard(url.shortenedUrl)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              title="Copy to clipboard"
-            >
-              📋
-            </button>
-            <button
-              onClick={() => loadShortenedUrls()}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              title="Refresh click count"
-            >
-              🔄
-            </button>
+                        <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2">
+                          <button
+                            onClick={() => handleCopyToClipboard(url.shortenedUrl)}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            title="Copy to clipboard"
+                          >
+                            📋
+                          </button>
+                          <button
+                            onClick={() => loadShortenedUrls()}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            title="Refresh click count"
+                          >
+                            🔄
+                          </button>
                           <button
                             onClick={() => handleShareUrl(url.shortenedUrl)}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -325,7 +536,7 @@ export default function URLShortenerTool() {
                         <img
                           src={generateQRCodeUrl(url.shortenedUrl)}
                           alt="QR Code"
-                          className="mx-auto"
+                          className="mx-auto max-w-full h-auto"
                         />
                       </div>
                     )}
@@ -333,7 +544,7 @@ export default function URLShortenerTool() {
                     {/* Original URL */}
                     <div>
                       <label className="text-xs text-gray-500 dark:text-gray-400">Original URL:</label>
-                      <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                      <div className="text-sm text-gray-700 dark:text-gray-300 truncate break-all max-w-full">
                         {url.originalUrl}
                       </div>
                     </div>
@@ -359,19 +570,114 @@ export default function URLShortenerTool() {
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {activeTab === 'analytics' && (
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            📈 Detailed Analytics
+          </h3>
+          
+          {analytics ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Total URLs */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-500 rounded-lg">
+                    <span className="text-white text-xl">🔗</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total URLs</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{analytics.totalUrls}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Clicks */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-500 rounded-lg">
+                    <span className="text-white text-xl">👆</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Clicks</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">{analytics.totalClicks}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active URLs */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-500 rounded-lg">
+                    <span className="text-white text-xl">✅</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Active URLs</p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{analytics.activeUrls}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Average Clicks */}
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-6 border border-orange-200 dark:border-orange-800">
+                <div className="flex items-center">
+                  <div className="p-2 bg-orange-500 rounded-lg">
+                    <span className="text-white text-xl">📊</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Avg Clicks</p>
+                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">{analytics.averageClicks}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Loading analytics...</p>
+            </div>
+          )}
+
+          {/* Performance Insights */}
+          {analytics && analytics.totalUrls > 0 && (
+            <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                💡 Performance Insights
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h5 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Engagement Rate</h5>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {analytics.totalUrls > 0 ? Math.round((analytics.totalClicks / analytics.totalUrls) * 100) / 100 : 0}
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">clicks per URL</p>
+                </div>
+                <div>
+                  <h5 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Active Rate</h5>
+                  <div className="text-3xl font-bold text-green-600">
+                    {analytics.totalUrls > 0 ? Math.round((analytics.activeUrls / analytics.totalUrls) * 100) : 0}%
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">URLs currently active</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Information */}
       <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-          🔗 About URL Shortening:
+          🔗 About Professional URL Shortening:
         </h3>
         <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
           <li>• <strong>Real URLs:</strong> These links actually redirect to the original URLs</li>
-          <li>• <strong>Click Tracking:</strong> Real analytics with click counting</li>
+          <li>• <strong>Advanced Analytics:</strong> Track clicks, engagement, and performance</li>
           <li>• <strong>Custom Aliases:</strong> Create branded, memorable links</li>
-          <li>• <strong>Expiration:</strong> Set automatic expiration dates for temporary links</li>
+          <li>• <strong>Flexible Expiration:</strong> Set automatic expiration dates for temporary links</li>
           <li>• <strong>QR Codes:</strong> Generate QR codes for easy mobile sharing</li>
+          <li>• <strong>Professional Dashboard:</strong> Monitor and manage all your links</li>
         </ul>
       </div>
     </div>

@@ -1,25 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 
 export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
-  const { slug } = params;
+  const { slug } = await params;
   if (!slug) {
     return NextResponse.json({ error: 'Missing tool slug' }, { status: 400 });
   }
+  
   try {
-    const client = await connectToDatabase();
-    const db = client.db();
-    // Find the tool by slug (or name if slug is not available)
-    const result = await db.collection('tools').findOneAndUpdate(
-      { $or: [ { slug }, { name: { $regex: new RegExp(`^${slug.replace(/-/g, ' ')}$`, 'i') } } ] },
-      { $inc: { usage: 1 } },
-      { returnDocument: 'after' }
-    );
-    if (!result.value) {
-      return NextResponse.json({ error: 'Tool not found' }, { status: 404 });
+    const db = await getDatabase();
+    
+    // Try to find existing tool first
+    let existingTool = await db.collection('tools').findOne({ slug });
+    
+    if (existingTool) {
+      // Update existing tool
+      await db.collection('tools').updateOne(
+        { slug },
+        { $inc: { usage: 1 } }
+      );
+      return NextResponse.json({ success: true, usage: (existingTool.usage || 0) + 1 });
+    } else {
+      // Create new tool
+      const toolName = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const newTool = {
+        name: toolName,
+        slug: slug,
+        usage: 1,
+        createdAt: new Date()
+      };
+      
+      await db.collection('tools').insertOne(newTool);
+      return NextResponse.json({ success: true, usage: 1 });
     }
-    return NextResponse.json({ success: true, usage: result.value.usage });
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to increment usage' }, { status: 500 });
+    console.error('Usage tracking error:', e);
+    // Don't fail the main request if usage tracking fails
+    return NextResponse.json({ success: true, usage: 0 });
   }
 } 

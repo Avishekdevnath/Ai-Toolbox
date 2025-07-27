@@ -1,20 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import {clientPromise } from '@/lib/mongodb';
 import { getDatabase } from '@/lib/mongodb';
+import { NextRequest, NextResponse } from 'next/server';
 import { isUrlExpired } from '@/lib/urlShortenerUtils';
 
 const COLLECTION_NAME = 'shortened_urls';
 
-/**
- * GET /api/redirect/[shortCode]
- * Redirect to original URL and track click
- */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ shortCode: string }> }
+  { params }: { params: { shortCode: string } }
 ) {
   try {
-    const { shortCode } = await params;
+    const { shortCode } = params;
     
     if (!shortCode) {
       return NextResponse.json(
@@ -23,32 +18,23 @@ export async function GET(
       );
     }
 
-    console.log('Processing redirect for shortCode:', shortCode);
-
     const db = await getDatabase();
-
-    // Find the shortened URL
-    const shortenedUrl = await db.collection(COLLECTION_NAME).findOne({
+    
+    // Find the URL by short code
+    const url = await db.collection(COLLECTION_NAME).findOne({ 
       shortCode,
-      isActive: true
+      isActive: true 
     });
 
-    console.log('Found URL:', { 
-      shortCode, 
-      found: !!shortenedUrl, 
-      clicks: shortenedUrl?.clicks,
-      id: shortenedUrl?._id 
-    });
-
-    if (!shortenedUrl) {
+    if (!url) {
       return NextResponse.json(
         { error: 'URL not found' },
         { status: 404 }
       );
     }
 
-    // Check if URL has expired
-    if (isUrlExpired(shortenedUrl)) {
+    // Check if URL is expired
+    if (isUrlExpired(url)) {
       return NextResponse.json(
         { error: 'URL has expired' },
         { status: 410 }
@@ -56,35 +42,18 @@ export async function GET(
     }
 
     // Increment click count
-    try {
-      const updateResult = await db.collection(COLLECTION_NAME).updateOne(
-        { _id: shortenedUrl._id },
-        { $inc: { clicks: 1 } }
-      );
-      
-      console.log('Click update result:', {
-        shortCode,
-        matchedCount: updateResult.matchedCount,
-        modifiedCount: updateResult.modifiedCount,
-        oldClicks: shortenedUrl.clicks,
-        newClicks: (shortenedUrl.clicks || 0) + 1
-      });
-    } catch (clickError) {
-      console.error('Error tracking click:', clickError);
-      // Don't fail the redirect if click tracking fails
-    }
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: url._id },
+      { $inc: { clicks: 1 } }
+    );
 
-    // Return the redirect URL in response body
-    return NextResponse.json({
-      success: true,
-      redirectUrl: shortenedUrl.originalUrl,
-      shortCode: shortenedUrl.shortCode
-    });
+    // Redirect to original URL
+    return NextResponse.redirect(url.originalUrl);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error redirecting URL:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

@@ -11,7 +11,9 @@ let model: any = null;
 if (isServer && hasApiKey) {
   try {
     genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+    // Always use Gemini 1.5 Flash for optimal performance and cost-effectiveness
     model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    console.log('✅ Gemini 1.5 Flash model initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Google AI:', error);
   }

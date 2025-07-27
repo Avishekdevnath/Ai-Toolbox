@@ -1,6 +1,6 @@
 # 🧰 AI Toolbox
 
-A comprehensive suite of AI-powered tools built with Next.js, Google Gemini AI, and MongoDB. Features 26+ tools for personal and professional productivity.
+A comprehensive suite of AI-powered tools built with Next.js, Google Gemini AI, and MongoDB Atlas. Features 26+ tools for personal and professional productivity.
 
 ## ✨ Features
 
@@ -24,7 +24,7 @@ A comprehensive suite of AI-powered tools built with Next.js, Google Gemini AI, 
 
 ### Prerequisites
 - Node.js 18+ 
-- MongoDB (local or MongoDB Atlas)
+- MongoDB Atlas account (free tier available)
 - Google AI API key (free tier available)
 
 ### Installation
@@ -35,37 +35,39 @@ A comprehensive suite of AI-powered tools built with Next.js, Google Gemini AI, 
    npm install
    ```
 
-2. **Create environment file:**
+2. **Set up MongoDB Atlas:**
+   - Follow the [MongoDB Atlas Setup Guide](./MONGODB_ATLAS_SETUP.md)
+   - Create a free cluster and get your connection string
+
+3. **Create environment file:**
    Create a `.env.local` file in the root directory:
    ```env
-   # Google AI Configuration
-   GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+   # MongoDB Atlas Configuration
+   MONGODB_URI=mongodb+srv://yourusername:yourpassword@cluster.mongodb.net/ai-toolbox?retryWrites=true&w=majority
    
-   # MongoDB Configuration  
-   MONGODB_URI=mongodb://localhost:27017/ai-toolbox
-   # For MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/ai-toolbox
-   
-   # Next.js Configuration
-   NEXTAUTH_SECRET=your_random_secret_here
+   # NextAuth Configuration
+   NEXTAUTH_SECRET=your-super-secret-key-change-this-in-production-12345
    NEXTAUTH_URL=http://localhost:3001
+   
+   # Google AI Configuration (Optional)
+   GOOGLE_AI_API_KEY=your_google_ai_api_key_here
    
    # Application Configuration
    APP_NAME="AI Toolbox"
    APP_VERSION="1.0.0"
+   NEXT_PUBLIC_BASE_URL=http://localhost:3001
    ```
 
-3. **Get your API keys:**
+4. **Get your API keys:**
    - **Google AI API Key**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey) (Free tier available!)
-   - **MongoDB**: 
-     - Local: Install MongoDB locally
-     - Cloud: Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
+   - **MongoDB Atlas**: Follow the [setup guide](./MONGODB_ATLAS_SETUP.md)
 
-4. **Start the development server:**
+5. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser:**
+6. **Open your browser:**
    ```
    http://localhost:3001
    ```
@@ -86,12 +88,12 @@ A comprehensive suite of AI-powered tools built with Next.js, Google Gemini AI, 
 
 ## 🗄️ Database Collections
 
-The app automatically creates these MongoDB collections:
+The app automatically creates these MongoDB Atlas collections:
 
+- `shortened_urls` - Stores URL shortener data
 - `swot-analyses` - Stores SWOT analysis results
-- `finance-consultations` - Stores financial advice sessions
-- `url-shortcuts` - Stores shortened URLs (future feature)
-- `user-preferences` - Stores user settings (future feature)
+- `resumes` - Stores resume analysis data
+- `analyses` - Stores general analysis data
 
 ## 🛠️ Architecture
 
@@ -99,7 +101,7 @@ The app automatically creates these MongoDB collections:
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes
 - **AI**: Google Gemini 1.5 Flash (Free)
-- **Database**: MongoDB with Mongoose
+- **Database**: MongoDB Atlas (Cloud)
 - **Deployment**: Vercel (recommended)
 
 ### Project Structure
@@ -121,8 +123,8 @@ ai-toolbox/
 │   │       └── [other tools]
 │   └── lib/
 │       ├── mongodb.ts
-│       └── openai.ts
-├── .env.local
+│       └── gemini.ts
+├── MONGODB_ATLAS_SETUP.md
 └── package.json
 ```
 

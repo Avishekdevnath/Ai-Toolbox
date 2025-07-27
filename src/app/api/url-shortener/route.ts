@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clientPromise } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 import {
   ShortenedUrl,
   CreateUrlRequest,
@@ -9,7 +9,8 @@ import {
   generateUniqueShortCode,
   generateExpirationDate,
   isUrlExpired,
-  sanitizeCreateUrlRequest
+  sanitizeCreateUrlRequest,
+  generateClickEvent
 } from '@/lib/urlShortenerUtils';
 
 const COLLECTION_NAME = 'shortened_urls';
@@ -17,6 +18,20 @@ const COLLECTION_NAME = 'shortened_urls';
 /**
  * POST /api/url-shortener
  * Create a new shortened URL
+ *
+ * Request body:
+ * {
+ *   originalUrl: string,
+ *   customAlias?: string, // Optional custom short URL (e.g. /myshorturl)
+ *   expiresInDays?: number, // Optional expiration in days (lifetime if omitted)
+ *   expiresAt?: string, // Optional exact expiration date/time
+ *   userId?: string, // For signed-in users
+ *   anonymousUserId?: string, // For anonymous users
+ *   deviceFingerprint?: string, // Device fingerprint for anonymous users
+ *   ipAddress?: string, // IP address for tracking
+ *   tags?: string[], // Optional tags for organization
+ *   description?: string // Optional description
+ * }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +48,18 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { originalUrl, customAlias, expiresInDays, userId } = sanitizedRequest;
+    const { 
+      originalUrl, 
+      customAlias, 
+      expiresInDays, 
+      expiresAt, 
+      userId, 
+      anonymousUserId,
+      deviceFingerprint,
+      ipAddress,
+      tags,
+      description
+    } = sanitizedRequest;
 
     // Validate input
     if (!originalUrl?.trim()) {
@@ -57,8 +83,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = await clientPromise;
-    const db = client.db();
+    // Get IP address if not provided
+    const clientIp = ipAddress || 
+                    request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                    request.headers.get('x-real-ip') || 
+                    'unknown';
+
+    const db = await getDatabase();
 
     // Check if custom alias already exists
     if (customAlias) {
@@ -79,6 +110,13 @@ export async function POST(request: NextRequest) {
     const shortCode = customAlias || await generateUniqueShortCode(db, COLLECTION_NAME, true);
     const normalizedUrl = normalizeUrl(originalUrl);
     
+    let expirationDate: Date | undefined = undefined;
+    if (expiresAt) {
+      expirationDate = new Date(expiresAt);
+    } else if (expiresInDays) {
+      expirationDate = generateExpirationDate(expiresInDays);
+    }
+
     // Create shortened URL document
     const shortenedUrl: ShortenedUrl = {
       originalUrl: normalizedUrl,
@@ -86,30 +124,47 @@ export async function POST(request: NextRequest) {
       customAlias: customAlias || undefined,
       clicks: 0,
       createdAt: new Date(),
-      expiresAt: expiresInDays ? generateExpirationDate(expiresInDays) : undefined,
+      expiresAt: expirationDate,
       userId: userId || undefined,
-      isActive: true
+      isActive: true,
+      healthStatus: 'unknown',
+      lastCheckedAt: undefined,
+      tags: tags || undefined,
+      description: description || undefined,
+      lastClickedAt: undefined,
+      clickHistory: [],
+      // Anonymous user tracking
+      anonymousUserId: anonymousUserId || undefined,
+      deviceFingerprint: deviceFingerprint || undefined,
+      ipAddress: clientIp
     };
 
     // Insert into database
     const result = await db.collection(COLLECTION_NAME).insertOne(shortenedUrl);
     
-    // Return the created URL
-    const createdUrl = {
+    if (!result.insertedId) {
+      return NextResponse.json(
+        { error: 'Failed to create shortened URL' },
+        { status: 500 }
+      );
+    }
+
+    // Add the generated shortened URL to the response
+    const responseData = {
       ...shortenedUrl,
       _id: result.insertedId,
-      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/r/${shortCode}`
+      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`
     };
 
     return NextResponse.json({
       success: true,
-      data: createdUrl
+      data: responseData
     });
 
   } catch (error: any) {
     console.error('Error creating shortened URL:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -117,83 +172,69 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/url-shortener
- * Get list of shortened URLs (with optional filtering)
+ * Get list of shortened URLs
+ *
+ * Query parameters:
+ * - limit: number (default: 20)
+ * - activeOnly: boolean (default: false)
+ * - userId: string (for signed-in users)
+ * - anonymousUserId: string (for anonymous users)
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '20');
     const activeOnly = searchParams.get('activeOnly') === 'true';
-
-    // Validate pagination parameters
-    if (limit < 1 || limit > 100) {
-      return NextResponse.json(
-        { error: 'Limit must be between 1 and 100' },
-        { status: 400 }
-      );
-    }
-
-    if (offset < 0) {
-      return NextResponse.json(
-        { error: 'Offset must be non-negative' },
-        { status: 400 }
-      );
-    }
-
-    const client = await clientPromise;
-    const db = client.db();
+    const userId = searchParams.get('userId');
+    const anonymousUserId = searchParams.get('anonymousUserId');
 
     // Build query
-    const query: any = {};
+    const query: any = { isActive: true };
     
     if (userId) {
       query.userId = userId;
+    } else if (anonymousUserId) {
+      query.anonymousUserId = anonymousUserId;
+    } else {
+      // If no user identifier provided, return empty list
+      return NextResponse.json({
+        success: true,
+        data: []
+      });
     }
-    
+
     if (activeOnly) {
-      query.isActive = true;
       query.$or = [
         { expiresAt: { $exists: false } },
         { expiresAt: { $gt: new Date() } }
       ];
     }
 
+    const db = await getDatabase();
+    
     // Get URLs with pagination
     const urls = await db.collection(COLLECTION_NAME)
       .find(query)
       .sort({ createdAt: -1 })
-      .skip(offset)
       .limit(limit)
       .toArray();
 
-    // Get total count
-    const totalCount = await db.collection(COLLECTION_NAME).countDocuments(query);
-
-    // Add shortened URL to each result
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const urlsWithShortened = urls.map(url => ({
+    // Add computed fields
+    const processedUrls = urls.map(url => ({
       ...url,
-      shortenedUrl: `${baseUrl}/r/${url.shortCode}`,
-      isExpired: isUrlExpired(url)
+      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`,
+      isExpired: isUrlExpired(url as ShortenedUrl)
     }));
 
     return NextResponse.json({
       success: true,
-      data: urlsWithShortened,
-      pagination: {
-        total: totalCount,
-        limit,
-        offset,
-        hasMore: offset + limit < totalCount
-      }
+      data: processedUrls
     });
 
   } catch (error: any) {
     console.error('Error fetching shortened URLs:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
