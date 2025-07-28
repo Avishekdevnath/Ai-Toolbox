@@ -1,53 +1,30 @@
-export interface QuoteRequest {
-  birthDate: string;
-  topic: string;
-  mood: string;
-  author: string;
-  count: number;
-  language: string;
-}
+// Interfaces moved to schemas/quoteSchema.ts
 
-export interface Quote {
-  quote: string;
-  author: string;
-}
+// Famous authors and fallback data moved to schemas/quoteSchema.ts
 
-export interface QuoteResponse {
-  quotes: Quote[];
-  famousPeople: string[];
-  message?: string;
-}
-
-// Famous Bengali authors for authentic quotes
+// Export famous Bengali authors for backward compatibility
 export const famousBengaliAuthors = [
-  "Rabindranath Tagore", "Kazi Nazrul Islam", "Michael Madhusudan Dutt", "Bankim Chandra Chattopadhyay",
-  "Dwijendralal Ray", "Sarat Chandra Chattopadhyay", "Jibanananda Das", "Suman Chattopadhyay",
-  "Rammohan Roy", "Iswarchandra Vidyasagar", "Krittibas Ojha", "Hemchandra Bandopadhyay",
-  "Bani Kanta Kundu", "Rashsundari Debi", "Jagadish Gupta", "Madhusree Mukherjee", "Shibram Chakraborty"
+  'Rabindranath Tagore',
+  'Kazi Nazrul Islam',
+  'Bankim Chandra Chattopadhyay',
+  'Sarat Chandra Chattopadhyay',
+  'Michael Madhusudan Dutt',
+  'Ishwar Chandra Vidyasagar',
+  'Swami Vivekananda',
+  'Sri Aurobindo',
+  'Netaji Subhas Chandra Bose',
+  'Kazi Nazrul Islam',
+  'Humayun Ahmed',
+  'Jibanananda Das',
+  'Buddhadeb Basu',
+  'Sunil Gangopadhyay',
+  'Mahasweta Devi',
+  'Anita Desai',
+  'Jhumpa Lahiri',
+  'Amitav Ghosh',
+  'Bibhutibhushan Bandyopadhyay',
+  'Manik Bandyopadhyay'
 ];
-
-// Fallback quotes for when AI is not available
-export const fallbackQuotes: (Quote & { topic: string; mood: string })[] = [
-  { quote: "Let your life lightly dance on the edges of time like dew on the tip of a leaf.", author: "Rabindranath Tagore", topic: "life", mood: "thoughtful" },
-  { quote: "Love is an endless mystery, for it has nothing else to explain it.", author: "Rabindranath Tagore", topic: "love", mood: "romantic" },
-  { quote: "You can't cross the sea merely by standing and staring at the water.", author: "Rabindranath Tagore", topic: "success", mood: "motivational" },
-  { quote: "The only way to do great work is to love what you do.", author: "Steve Jobs", topic: "success", mood: "motivational" },
-  { quote: "Where there is love there is life.", author: "Mahatma Gandhi", topic: "love", mood: "motivational" },
-  { quote: "The best way to find yourself is to lose yourself in the service of others.", author: "Mahatma Gandhi", topic: "life", mood: "thoughtful" },
-  { quote: "If you want to live a happy life, tie it to a goal, not to people or things.", author: "Albert Einstein", topic: "happiness", mood: "motivational" },
-  { quote: "A friend is someone who gives you total freedom to be yourself.", author: "Jim Morrison", topic: "friendship", mood: "thoughtful" },
-  { quote: "Let us celebrate the occasion with wine and sweet words.", author: "Plautus", topic: "birthday", mood: "celebratory" },
-  { quote: "May your birthday be the start of a year filled with good luck, good health, and much happiness.", author: "Unknown", topic: "birthday", mood: "uplifting" },
-];
-
-export const fallbackFamous: Record<string, string[]> = {
-  'March 14': ['Albert Einstein'],
-  'January 15': ['Martin Luther King Jr.'],
-  'February 12': ['Abraham Lincoln', 'Charles Darwin'],
-  'July 18': ['Nelson Mandela'],
-  'October 2': ['Mahatma Gandhi'],
-  'December 25': ['Isaac Newton', 'Humphrey Bogart'],
-};
 
 // Function to get month and day from date
 export function getMonthDay(date: string): string {
@@ -67,7 +44,7 @@ export function stripEnglishTranslation(text: string, language: string): string 
 }
 
 // Function to filter out non-authentic quotes
-export function filterAuthenticQuotes(quotes: Quote[], language: string): Quote[] {
+export function filterAuthenticQuotes(quotes: { quote: string, author: string }[], language: string): { quote: string, author: string }[] {
   const forbiddenPhrases = [
     // Bengali disclaimers
     'উপযুক্ত উক্তি যদিও নির্দিষ্ট নয়',
@@ -138,64 +115,113 @@ export function filterAuthenticQuotes(quotes: Quote[], language: string): Quote[
 }
 
 // Function to parse quotes from AI response
-export function parseQuotesFromResponse(text: string, language: string, author?: string): Quote[] {
-  const quotes: Quote[] = [];
-  const lines = text.split(/\n/).filter(line => line.trim());
+export function parseQuotesFromResponse(text: string, language: string, author?: string): { quote: string, author: string }[] {
+  const quotes: { quote: string, author: string }[] = [];
   
-  if (!author) {
-    // Parse: 1. "Quote text" — Author Name
-    for (const line of lines) {
-      const lineMatch = line.match(/^\d+\.\s*["'`]?(.+?)["'`]?\s*[—-]\s*(.+)$/);
-      if (lineMatch) {
-        let quote = lineMatch[1].trim();
-        let authorName = lineMatch[2].trim();
-        if (language && language !== 'English') {
-          quote = stripEnglishTranslation(quote, language);
-        }
-        if (quote && authorName) {
-          quotes.push({ quote, author: authorName });
-        }
-      }
+  // Split by lines and look for quote patterns
+  const lines = text.split('\n').filter(line => line.trim());
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    // Skip empty lines and common AI disclaimers
+    if (!trimmedLine || 
+        trimmedLine.startsWith('Note:') || 
+        trimmedLine.startsWith('**Note:**') ||
+        trimmedLine.includes('disclaimer') ||
+        trimmedLine.includes('উপযুক্ত উক্তি যদিও নির্দিষ্ট নয়')) {
+      continue;
     }
-  } else {
-    // Parse numbered list (e.g., 1. "..." 2. "..." ...)
-    for (const line of lines) {
-      const lineMatch = line.match(/^\d+\.\s*["'`]?(.+?)["'`]?\s*$/);
-      if (lineMatch) {
-        let quote = lineMatch[1].trim();
-        if (language && language !== 'English') {
-          quote = stripEnglishTranslation(quote, language);
-        }
-        if (quote) {
-          quotes.push({ quote, author: author || 'Unknown' });
-        }
+    
+    // Look for quote patterns: "quote" - author
+    const quoteMatch = trimmedLine.match(/^["""]([^"""]+)["""]\s*[-–—]\s*(.+)$/);
+    if (quoteMatch) {
+      const quote = stripEnglishTranslation(quoteMatch[1].trim(), language);
+      const author = stripEnglishTranslation(quoteMatch[2].trim(), language);
+      
+      if (quote && author && quote.length > 10) {
+        quotes.push({ quote, author });
+      }
+      continue;
+    }
+    
+    // Look for quote patterns: 'quote' - author
+    const singleQuoteMatch = trimmedLine.match(/^[''']([^''']+)[''']\s*[-–—]\s*(.+)$/);
+    if (singleQuoteMatch) {
+      const quote = stripEnglishTranslation(singleQuoteMatch[1].trim(), language);
+      const author = stripEnglishTranslation(singleQuoteMatch[2].trim(), language);
+      
+      if (quote && author && quote.length > 10) {
+        quotes.push({ quote, author });
+      }
+      continue;
+    }
+    
+    // Look for numbered quotes: 1. "quote" - author
+    const numberedMatch = trimmedLine.match(/^\d+\.\s*["""]([^"""]+)["""]\s*[-–—]\s*(.+)$/);
+    if (numberedMatch) {
+      const quote = stripEnglishTranslation(numberedMatch[1].trim(), language);
+      const author = stripEnglishTranslation(numberedMatch[2].trim(), language);
+      
+      if (quote && author && quote.length > 10) {
+        quotes.push({ quote, author });
+      }
+      continue;
+    }
+    
+    // Look for bullet points: • "quote" - author
+    const bulletMatch = trimmedLine.match(/^[•\-\*]\s*["""]([^"""]+)["""]\s*[-–—]\s*(.+)$/);
+    if (bulletMatch) {
+      const quote = stripEnglishTranslation(bulletMatch[1].trim(), language);
+      const author = stripEnglishTranslation(bulletMatch[2].trim(), language);
+      
+      if (quote && author && quote.length > 10) {
+        quotes.push({ quote, author });
+      }
+      continue;
+    }
+  }
+  
+  // If no quotes found with standard patterns, try to extract from plain text
+  if (quotes.length === 0) {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    for (const sentence of sentences.slice(0, 5)) { // Limit to first 5 sentences
+      const cleanSentence = stripEnglishTranslation(sentence.trim(), language);
+      if (cleanSentence.length > 20 && cleanSentence.length < 200) {
+        quotes.push({ 
+          quote: cleanSentence, 
+          author: author || 'Unknown' 
+        });
       }
     }
   }
   
-  return quotes;
+  return quotes.slice(0, 10); // Limit to 10 quotes
 }
 
-// Function to get fallback quotes based on criteria
-export function getFallbackQuotes(request: QuoteRequest): Quote[] {
-  let filtered = fallbackQuotes;
+// Function to get fallback quotes when AI is not available
+export function getFallbackQuotes(request: { topic: string; mood: string; count: number }): { quote: string; author: string }[] {
+  // Import fallback quotes from schema
+  const { fallbackQuotes } = require('@/schemas/quoteSchema');
   
-  if (request.author) {
-    filtered = filtered.filter(q => q.author.toLowerCase().includes(request.author.toLowerCase()));
-  }
-  if (request.topic) {
-    filtered = filtered.filter(q => q.topic.toLowerCase().includes(request.topic.toLowerCase()));
-  }
-  if (request.mood) {
-    filtered = filtered.filter(q => q.mood.toLowerCase().includes(request.mood.toLowerCase()));
+  const filteredQuotes = fallbackQuotes.filter((q: any) => 
+    q.topic.toLowerCase().includes(request.topic.toLowerCase()) ||
+    q.mood.toLowerCase().includes(request.mood.toLowerCase())
+  );
+  
+  // If no exact matches, return random quotes
+  if (filteredQuotes.length === 0) {
+    const shuffled = fallbackQuotes.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, Math.min(request.count, 5)).map((q: any) => ({
+      quote: q.quote,
+      author: q.author
+    }));
   }
   
-  // If birthday and topic/mood/author not found, fallback to birthday quotes
-  if (request.birthDate && filtered.length === 0) {
-    filtered = fallbackQuotes.filter(q => q.topic === 'birthday');
-  }
-  
-  // Shuffle and take up to count
-  const shuffled = filtered.sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, request.count).map(q => ({ quote: q.quote, author: q.author }));
+  // Return filtered quotes, shuffled
+  const shuffled = filteredQuotes.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, Math.min(request.count, filteredQuotes.length)).map((q: any) => ({
+    quote: q.quote,
+    author: q.author
+  }));
 } 

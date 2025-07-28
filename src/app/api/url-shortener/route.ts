@@ -3,9 +3,12 @@ import { getDatabase } from '@/lib/mongodb';
 import {
   ShortenedUrl,
   CreateUrlRequest,
+  isValidCustomAlias,
+  UrlShortenerSchema
+} from '@/schemas/urlShortenerSchema';
+import {
   isValidUrl,
   normalizeUrl,
-  isValidCustomAlias,
   generateUniqueShortCode,
   generateExpirationDate,
   isUrlExpired,
@@ -124,6 +127,7 @@ export async function POST(request: NextRequest) {
       customAlias: customAlias || undefined,
       clicks: 0,
       createdAt: new Date(),
+      updatedAt: new Date(),
       expiresAt: expirationDate,
       userId: userId || undefined,
       isActive: true,
@@ -131,7 +135,7 @@ export async function POST(request: NextRequest) {
       lastCheckedAt: undefined,
       tags: tags || undefined,
       description: description || undefined,
-      lastClickedAt: undefined,
+
       clickHistory: [],
       // Anonymous user tracking
       anonymousUserId: anonymousUserId || undefined,

@@ -19,38 +19,7 @@ import {
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-interface AgeAnalysisRequest {
-  birthDate: string;
-  gender?: 'male' | 'female';
-  lifestyle?: 'poor' | 'average' | 'excellent';
-  healthConditions?: string[];
-  retirementAge?: number;
-  currentSavings?: number;
-  monthlyIncome?: number;
-  desiredRetirementIncome?: number;
-  includeAIInsights?: boolean;
-}
-
-interface AgeAnalysisResponse {
-  ageData: AgeData;
-  lifeMilestones: LifeMilestone[];
-  healthRecommendations: HealthRecommendation[];
-  retirementPlan: RetirementPlan;
-  lifeExpectancy: LifeExpectancy;
-  ageBasedActivities: AgeBasedActivity[];
-  lifePercentage: number;
-  nextBirthday: {
-    nextBirthday: Date;
-    daysUntil: number;
-    ageAtNextBirthday: number;
-  };
-  aiInsights?: {
-    personalizedAdvice: string;
-    lifeOptimizationTips: string[];
-    motivationalMessage: string;
-    futurePlanningSuggestions: string[];
-  };
-}
+import { AgeAnalysisRequest, AgeAnalysisResponse } from '@/schemas/ageAnalysisSchema';
 
 export async function POST(request: NextRequest) {
   try {

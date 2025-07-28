@@ -1,117 +1,19 @@
-export interface ResumeRequest {
-  resumeText: string;
-  industry: string;
-  jobTitle: string;
-  experienceLevel: string;
-  fileName?: string;
-}
+// Interfaces moved to schemas/resumeSchema.ts
 
-export interface ResumeAnalysis {
-  overallScore: number;
-  scoreBreakdown: {
-    content: number;
-    structure: number;
-    keywords: number;
-    atsOptimization: number;
-  };
-  strengths: string[];
-  weaknesses: string[];
-  suggestions: Suggestion[];
-  sectionAnalysis: SectionAnalysis[];
-  keywordAnalysis: KeywordAnalysis;
-  atsOptimization: ATSOptimization;
-  actionPlan: ActionItem[];
-  summary: string;
-}
+// Industry keywords moved to schemas/resumeSchema.ts
 
-export interface Suggestion {
-  category: 'content' | 'structure' | 'keywords' | 'format';
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-  impact: string;
-}
-
-export interface SectionAnalysis {
-  section: string;
-  score: number;
-  strengths: string[];
-  weaknesses: string[];
-  suggestions: string[];
-}
-
-export interface KeywordAnalysis {
-  foundKeywords: string[];
-  missingKeywords: string[];
-  suggestedKeywords: string[];
-  keywordDensity: Record<string, number>;
-}
-
-export interface ATSOptimization {
-  score: number;
-  issues: string[];
-  recommendations: string[];
-  formatCompliance: {
-    isCompliant: boolean;
-    issues: string[];
-  };
-}
-
-export interface ActionItem {
-  priority: 'high' | 'medium' | 'low';
-  action: string;
-  timeline: string;
-  impact: string;
-}
-
-export interface ResumeResponse {
-  success: boolean;
-  analysis?: ResumeAnalysis;
-  error?: string;
-}
-
-// Industry-specific keyword suggestions
-export const industryKeywords: Record<string, string[]> = {
-  'technology': [
-    'JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes',
-    'Machine Learning', 'API', 'Database', 'Git', 'Agile', 'DevOps', 'Cloud',
-    'Frontend', 'Backend', 'Full Stack', 'Mobile Development', 'UI/UX'
-  ],
-  'healthcare': [
-    'Patient Care', 'Clinical', 'HIPAA', 'EMR', 'Nursing', 'Medical',
-    'Healthcare', 'Patient Safety', 'Quality Assurance', 'Compliance',
-    'Medical Terminology', 'Diagnosis', 'Treatment', 'Healthcare IT'
-  ],
-  'finance': [
-    'Financial Analysis', 'Excel', 'Accounting', 'Budgeting', 'Forecasting',
-    'Risk Management', 'Compliance', 'Audit', 'Financial Modeling', 'SAP',
-    'QuickBooks', 'Tax Preparation', 'Investment', 'Portfolio Management'
-  ],
-  'marketing': [
-    'Digital Marketing', 'SEO', 'SEM', 'Social Media', 'Content Marketing',
-    'Email Marketing', 'Analytics', 'Google Analytics', 'Facebook Ads',
-    'Brand Management', 'Campaign Management', 'Lead Generation', 'CRM'
-  ],
-  'sales': [
-    'Sales', 'CRM', 'Lead Generation', 'Account Management', 'Negotiation',
-    'Pipeline Management', 'Salesforce', 'B2B', 'B2C', 'Cold Calling',
-    'Relationship Building', 'Revenue Growth', 'Sales Strategy'
-  ],
-  'education': [
-    'Teaching', 'Curriculum Development', 'Student Assessment', 'Classroom Management',
-    'Educational Technology', 'Lesson Planning', 'Student Engagement', 'Parent Communication',
-    'Professional Development', 'Educational Leadership', 'Special Education'
-  ],
-  'manufacturing': [
-    'Lean Manufacturing', 'Six Sigma', 'Quality Control', 'Production Planning',
-    'Supply Chain', 'Inventory Management', 'Safety', 'Continuous Improvement',
-    'Process Optimization', 'Equipment Maintenance', 'ISO Standards'
-  ],
-  'retail': [
-    'Customer Service', 'Inventory Management', 'Sales', 'Merchandising',
-    'Point of Sale', 'Loss Prevention', 'Visual Merchandising', 'Team Leadership',
-    'Store Operations', 'Customer Experience', 'Retail Analytics'
-  ]
+// Export industry keywords for backward compatibility
+export const industryKeywords = {
+  'technology': ['software', 'programming', 'development', 'coding', 'web', 'mobile', 'AI', 'machine learning', 'data science', 'cybersecurity', 'cloud', 'devops'],
+  'healthcare': ['medical', 'healthcare', 'patient', 'clinical', 'nursing', 'pharmacy', 'therapy', 'diagnosis', 'treatment', 'hospital', 'clinic'],
+  'finance': ['financial', 'banking', 'investment', 'accounting', 'audit', 'risk', 'compliance', 'trading', 'portfolio', 'wealth management', 'insurance'],
+  'education': ['teaching', 'education', 'curriculum', 'student', 'academic', 'research', 'instruction', 'learning', 'assessment', 'pedagogy'],
+  'marketing': ['marketing', 'advertising', 'brand', 'campaign', 'social media', 'content', 'SEO', 'analytics', 'customer', 'sales', 'promotion'],
+  'consulting': ['consulting', 'strategy', 'business', 'analysis', 'project management', 'change management', 'process improvement', 'advisory'],
+  'retail': ['retail', 'sales', 'customer service', 'inventory', 'merchandising', 'e-commerce', 'store management', 'point of sale'],
+  'manufacturing': ['manufacturing', 'production', 'quality control', 'supply chain', 'operations', 'engineering', 'maintenance', 'safety'],
+  'government': ['government', 'public service', 'policy', 'administration', 'regulatory', 'compliance', 'public affairs', 'legislation'],
+  'nonprofit': ['nonprofit', 'charity', 'volunteer', 'fundraising', 'advocacy', 'community', 'social impact', 'grant writing']
 };
 
 // Experience level expectations

@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { model } from '@/lib/gemini';
 import { 
   QuoteRequest, 
-  QuoteResponse, 
+  QuoteResponse,
+  fallbackFamous
+} from '@/schemas/quoteSchema';
+import { 
   filterAuthenticQuotes, 
   parseQuotesFromResponse, 
   getFallbackQuotes, 
-  getMonthDay, 
-  fallbackFamous 
+  getMonthDay
 } from '@/lib/quoteUtils';
 import { buildQuotePrompt, buildFallbackPrompt, buildFamousPeoplePrompt } from '@/lib/quotePromptBuilder';
 

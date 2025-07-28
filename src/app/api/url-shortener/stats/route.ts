@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { calculateUrlStats } from '@/lib/urlShortenerUtils';
+import { UrlShortenerSchema } from '@/schemas/urlShortenerSchema';
 
 const COLLECTION_NAME = 'shortened_urls';
 

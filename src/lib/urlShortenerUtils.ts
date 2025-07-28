@@ -1,64 +1,17 @@
 import { ObjectId } from 'mongodb';
+import { 
+  ShortenedUrl, 
+  CreateUrlRequest, 
+  ClickEvent, 
+  UrlStats,
+  RESERVED_PATHS,
+  generateProfessionalCode,
+  extractDomain,
+  isAnonymousUser,
+  getUserIdentifier
+} from '@/schemas/urlShortenerSchema';
 
-export interface ShortenedUrl {
-  _id?: ObjectId;
-  originalUrl: string;
-  shortCode: string;
-  customAlias?: string;
-  clicks: number;
-  createdAt: Date;
-  expiresAt?: Date;
-  userId?: string;
-  isActive: boolean;
-  healthStatus?: 'unknown' | 'ok' | 'broken'; // Link health
-  lastCheckedAt?: Date; // Last time health was checked
-  tags?: string[]; // For organization
-  description?: string; // Optional description
-  lastClickedAt?: Date; // Last time URL was clicked
-  clickHistory?: ClickEvent[]; // Detailed click tracking
-  // Anonymous user tracking
-  anonymousUserId?: string; // Device fingerprint or session ID
-  deviceFingerprint?: string; // Unique device identifier
-  ipAddress?: string; // IP address for tracking
-}
-
-export interface ClickEvent {
-  timestamp: Date;
-  userAgent?: string;
-  referrer?: string;
-  ip?: string;
-  country?: string;
-  device?: 'mobile' | 'desktop' | 'tablet';
-}
-
-export interface CreateUrlRequest {
-  originalUrl: string;
-  customAlias?: string;
-  expiresInDays?: number;
-  expiresAt?: string;
-  userId?: string;
-  tags?: string[];
-  description?: string;
-  // Anonymous user data
-  anonymousUserId?: string;
-  deviceFingerprint?: string;
-  ipAddress?: string;
-}
-
-export interface UrlStats {
-  totalUrls: number;
-  totalClicks: number;
-  activeUrls: number;
-  expiredUrls: number;
-  averageClicks: number;
-  topPerformingUrls: ShortenedUrl[];
-  recentActivity: ClickEvent[];
-  healthStatus: {
-    ok: number;
-    broken: number;
-    unknown: number;
-  };
-}
+// Interfaces are now imported from schemas
 
 export interface BulkUrlRequest {
   urls: Array<{

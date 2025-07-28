@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   processResumeFile, 
   storeAnalysisInDB, 
-  getStoredAnalysis,
+  getStoredAnalysis
+} from '@/lib/enhancedResumeUtils';
+import {
   ResumeRequest,
   ResumeResponse,
   ResumeAnalysis
-} from '@/lib/enhancedResumeUtils';
+} from '@/schemas/resumeSchema';
 import { buildResumeAnalysisPrompt } from '@/lib/resumePromptBuilder';
 import { generateGeminiResponse } from '@/lib/gemini';
 

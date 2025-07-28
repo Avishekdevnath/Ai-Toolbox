@@ -1,6 +1,7 @@
 import { getDatabase } from '@/lib/mongodb';
 import { NextRequest, NextResponse } from 'next/server';
 import { isUrlExpired } from '@/lib/urlShortenerUtils';
+import { UrlShortenerSchema } from '@/schemas/urlShortenerSchema';
 
 const COLLECTION_NAME = 'shortened_urls';
 

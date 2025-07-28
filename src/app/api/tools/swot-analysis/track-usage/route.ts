@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const client = await connectToDatabase();
-    const db = client.db();
-    // Find the SWOT tool by name (or use a unique identifier if available)
-    const result = await db.collection('tools').findOneAndUpdate(
-      { name: 'SWOT Analysis' },
-      { $inc: { usage: 1 } },
-      { returnDocument: 'after' }
+    const db = await getDatabase();
+    
+    // Track SWOT analysis usage
+    await db.collection('tool_usage').updateOne(
+      { toolName: 'swot-analysis' },
+      {
+        $inc: { usageCount: 1 },
+        $set: { lastUsed: new Date() }
+      },
+      { upsert: true }
     );
-    if (!result.value) {
-      return NextResponse.json({ error: 'SWOT tool not found' }, { status: 404 });
-    }
-    return NextResponse.json({ success: true, usage: result.value.usage });
-  } catch (e) {
-    return NextResponse.json({ error: 'Failed to increment usage' }, { status: 500 });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Usage tracking error:', error);
+    return NextResponse.json({ success: false });
   }
 } 

@@ -50,7 +50,7 @@ export function Tabs({ defaultValue, children, className = '' }: TabsProps) {
   );
 }
 
-export function TabsList({ children, className = '', ...props }: TabsListProps & any) {
+export function TabsList({ children, className = '', activeTab, onTabChange, ...props }: TabsListProps & any) {
   return (
     <div
       {...props}
@@ -59,8 +59,8 @@ export function TabsList({ children, className = '', ...props }: TabsListProps &
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
           return React.cloneElement(child, {
-            activeTab: props.activeTab,
-            onTabChange: props.onTabChange
+            activeTab: activeTab,
+            onTabChange: onTabChange
           });
         }
         return child;

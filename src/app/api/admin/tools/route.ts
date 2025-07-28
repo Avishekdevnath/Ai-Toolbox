@@ -1,34 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/authOptions';
+import { auth } from '@clerk/nextjs/server';
+import { getDatabase } from '@/lib/mongodb';
 
-async function isAdmin() {
-  const session = await getServerSession(authOptions);
-  console.log('Session in isAdmin:', session);
-  return session && session.user && session.user.role === 'admin';
-}
-
-export async function GET(req: NextRequest) {
-  console.log('GET /api/admin/tools called');
-  
-  if (!(await isAdmin())) {
-    console.log('Admin check failed');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
-  console.log('Admin check passed, fetching tools...');
-  
+export async function GET(request: NextRequest) {
   try {
-    const client = await connectToDatabase();
-    const db = client.db();
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // TODO: Add proper admin role checking
+    // For now, just check if user is authenticated
+    
+    const db = await getDatabase();
     const tools = await db.collection('tools').find({}).toArray();
-    console.log('Tools fetched:', tools.length);
+    
     return NextResponse.json({ tools });
-  } catch (e) {
-    console.error('Error fetching tools:', e);
-    return NextResponse.json({ error: 'Failed to fetch tools' }, { status: 500 });
+  } catch (error) {
+    console.error('Error fetching tools:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

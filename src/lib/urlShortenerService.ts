@@ -238,36 +238,23 @@ export function isAnonymousUser(): boolean {
   // For now, we'll assume anonymous if no user session exists
   if (typeof window === 'undefined') return true;
   
-  // Check if there's a NextAuth session or similar
-  const hasAuthSession = localStorage.getItem('next-auth.session-token') || 
-                        localStorage.getItem('__next-auth.session-token');
-  
-  return !hasAuthSession;
-}
+  // Check if user is authenticated (using Clerk)
+  const isAuthenticated = () => {
+    // For client-side, we'll check if there's a Clerk session
+    // This is a simplified check - in a real app, you'd use Clerk's useAuth hook
+    return typeof window !== 'undefined' && 
+           (localStorage.getItem('clerk-db') || 
+            document.cookie.includes('__session'));
+  };
 
-/**
- * Get user identifier (userId for signed-in users, sessionId for anonymous)
- * @returns Promise<string | null>
- */
-export async function getUserIdentifier(): Promise<string | null> {
-  if (typeof window === 'undefined') return null;
-
-  // Check for signed-in user first
-  const hasAuthSession = localStorage.getItem('next-auth.session-token') || 
-                        localStorage.getItem('__next-auth.session-token');
-  
-  if (hasAuthSession) {
-    // Return user ID for signed-in users
-    // This would typically come from your auth system
-    return null; // Placeholder - implement based on your auth system
-  }
-
-  // Return anonymous session ID
-  try {
-    const session = await getAnonymousUserSession();
-    return session.sessionId;
-  } catch (error) {
-    console.warn('Failed to get user identifier:', error);
-    return null;
-  }
+  // Get user identifier for anonymous tracking
+  const getUserIdentifier = () => {
+    if (isAuthenticated()) {
+      // TODO: Get actual user ID from Clerk
+      return 'authenticated-user';
+    }
+    
+    // For anonymous users, use device fingerprint
+    return getDeviceFingerprint();
+  };
 } 

@@ -1,34 +1,4 @@
-export interface DietFormData {
-  name: string;
-  age: string;
-  gender?: string;
-  height: string;
-  weight: string;
-  weight_unit?: string;
-  activity_level: string;
-  goal?: string;
-  dietary_restrictions?: string;
-  health_conditions?: string;
-  target_weight?: string;
-  timeline?: string;
-  previous_diets?: string;
-  training_frequency?: string;
-  muscle_goals?: string;
-  keto_experience?: string;
-  carb_preference?: string;
-  vegan_duration?: string;
-  protein_concerns?: string;
-  supplement_preferences?: string;
-  diabetes_type?: string;
-  medication?: string;
-  blood_sugar_targets?: string;
-  heart_condition?: string;
-  cholesterol_levels?: string;
-  blood_pressure?: string;
-  sport_type?: string;
-  competition_goals?: string;
-  training_schedule?: string;
-}
+import { DietFormData } from '@/schemas/aiAnalysisSchema';
 
 function getDietSpecificPrompt(dietPlanType: string, formData: DietFormData): string {
   switch (dietPlanType) {

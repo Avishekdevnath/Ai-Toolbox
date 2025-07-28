@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateContent } from '@/lib/gemini';
 import { buildResumeAnalysisPrompt } from '@/lib/resumePromptBuilder';
-import { ResumeRequest, ResumeResponse, ResumeAnalysis } from '@/lib/resumeUtils';
+import { ResumeRequest, ResumeResponse, ResumeAnalysis } from '@/schemas/resumeSchema';
 
 export async function POST(request: NextRequest) {
   try {

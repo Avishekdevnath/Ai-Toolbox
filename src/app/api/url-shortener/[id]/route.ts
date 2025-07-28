@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { isValidUrl, normalizeUrl, generateExpirationDate, isUrlExpired } from '@/lib/urlShortenerUtils';
+import { UrlShortenerSchema } from '@/schemas/urlShortenerSchema';
 
 const COLLECTION_NAME = 'shortened_urls';
 
