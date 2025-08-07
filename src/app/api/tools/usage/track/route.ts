@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { toolUsageService } from '@/lib/toolUsageService';
-import { userService } from '@/lib/userService';
-import { trackToolUsage } from '@/lib/authMiddleware';
-import { determineProvider } from '@/lib/utils/providerUtils';
+import { createHash } from 'crypto';
+
+// Generate anonymous user ID
+function generateAnonymousUserId(ipAddress: string, userAgent: string): string {
+  const hash = createHash('sha256')
+    .update(`${ipAddress}-${userAgent}`)
+    .digest('hex');
+  return `anon_${hash.substring(0, 16)}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await trackToolUsage();
-    const user = await userService.getUserById(userId);
+    // Generate anonymous user ID for tracking
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     request.headers.get('x-client-ip') ||
+                     'unknown';
+    const userAgent = request.headers.get('user-agent') || '';
+    const userId = generateAnonymousUserId(ipAddress, userAgent);
     
     const body = await request.json();
     const {
@@ -30,13 +41,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get client information
-    const userAgent = request.headers.get('user-agent') || '';
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     request.headers.get('x-client-ip') ||
-                     'unknown';
-
     // Track usage with enhanced data
     const usageData = {
       userId: userId || undefined,
@@ -52,25 +56,14 @@ export async function POST(request: NextRequest) {
       ipAddress,
       metadata: {
         ...metadata,
-        authenticated: !!userId,
-        provider: user ? determineProvider(user) : 'anonymous',
+        authenticated: false, // Always false since we're not using authentication
+        provider: 'anonymous',
         timestamp: new Date().toISOString()
       }
     };
 
     // Track usage
     const usage = await toolUsageService.trackUsage(usageData);
-
-    // Update user statistics if authenticated
-    if (userId) {
-      await userService.incrementUserStats(userId, 'totalToolsUsed');
-      await userService.incrementToolUsage(userId, toolName);
-      
-      // Update specific tool usage based on action
-      if (action === 'generate' || action === 'analyze') {
-        await userService.incrementUserStats(userId, 'totalAnalyses');
-      }
-    }
 
     // Return success response
     return NextResponse.json({
@@ -83,7 +76,7 @@ export async function POST(request: NextRequest) {
         action,
         success,
         timestamp: usage.createdAt,
-        authenticated: !!userId
+        authenticated: false
       }
     });
 
@@ -102,19 +95,19 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await trackToolUsage();
+    // Generate anonymous user ID for tracking
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     request.headers.get('x-client-ip') ||
+                     'unknown';
+    const userAgent = request.headers.get('user-agent') || '';
+    const userId = generateAnonymousUserId(ipAddress, userAgent);
+    
     const { searchParams } = new URL(request.url);
     
     const toolSlug = searchParams.get('toolSlug');
     const period = parseInt(searchParams.get('period') || '30');
     const limit = parseInt(searchParams.get('limit') || '50');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
 
     let stats;
     
