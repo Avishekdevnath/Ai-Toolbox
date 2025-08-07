@@ -1,17 +1,36 @@
-export function validateEnvironment() {
-  const required = [
-    'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
-    'CLERK_SECRET_KEY',
-    'MONGODB_URI',
-    'GEMINI_API_KEY'
-  ];
+// Environment variable validation
+const requiredEnvVars = [
+  'MONGODB_URI',
+  'JWT_SECRET',
+  'GOOGLE_AI_API_KEY'
+];
 
-  const missing = required.filter(key => !process.env[key]);
-  
-  if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
-  }
-}
+const optionalEnvVars = [
+  'NODE_ENV',
+  'PORT',
+  'NEXT_PUBLIC_BASE_URL'
+];
+
+export const validateEnvironmentVariables = () => {
+  const missing: string[] = [];
+  const warnings: string[] = [];
+
+  // Check required variables
+  requiredEnvVars.forEach(varName => {
+    if (!process.env[varName]) {
+      missing.push(varName);
+    }
+  });
+
+  // Check optional variables
+  optionalEnvVars.forEach(varName => {
+    if (!process.env[varName]) {
+      warnings.push(`${varName} is not set (optional)`);
+    }
+  });
+
+  return { missing, warnings };
+};
 
 export function validateProductionEnvironment() {
   if (process.env.NODE_ENV === 'production') {

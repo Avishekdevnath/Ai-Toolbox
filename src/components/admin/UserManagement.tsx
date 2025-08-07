@@ -1,296 +1,199 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { 
-  Users, 
   Search, 
   Filter, 
-  Plus, 
-  Edit, 
+  Download, 
   Trash2, 
+  Edit, 
   Eye, 
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
-  User,
-  Shield,
-  Crown,
-  Activity,
-  Calendar,
-  Mail,
-  AlertCircle,
-  CheckCircle,
-  XCircle
+  RefreshCw
 } from 'lucide-react';
-import UserEditModal from './UserEditModal';
-import UserCreateModal from './UserCreateModal';
-import Modal, { ModalHeader, ModalContent, ModalFooter } from '@/components/ui/modal';
 
 interface User {
   _id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  status: string;
-  clerkId: string;
-  createdAt: string;
-  updatedAt: string;
-  activity?: {
-    toolUsageCount: number;
-    lastActivity: string | null;
-    toolsUsed: number;
-    isActive: boolean;
-  };
-  isAdmin?: boolean; // Added for admin users
-  permissions?: string[]; // Added for admin users
-  lastLoginAt?: string; // Added for admin users
-}
-
-interface AdminUser {
-  _id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'super_admin' | 'admin' | 'moderator';
-  permissions: string[];
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  role: 'user' | 'admin';
   isActive: boolean;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
   createdAt: string;
   updatedAt: string;
-  lastLoginAt?: string;
+  lastSignInAt?: string;
+  stats?: {
+    totalLogins: number;
+    toolsUsed: number;
+    totalAnalyses: number;
+    favoriteTools: number;
+  };
 }
 
-interface Pagination {
-  currentPage: number;
-  totalPages: number;
-  totalUsers: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-  limit: number;
+interface UserManagementProps {
+  // Add any props if needed
 }
 
-export default function UserManagement() {
+export default function UserManagement({}: UserManagementProps) {
   const [users, setUsers] = useState<User[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<string>('');
 
-  const fetchUsers = async (page = 1) => {
+  const fetchUsers = async (page: number = 1) => {
     try {
       setLoading(true);
-      setError('');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
         search: searchTerm,
-        status: statusFilter,
-        role: roleFilter,
-        sortBy,
-        sortOrder
+        role: roleFilter !== 'all' ? roleFilter : '',
+        status: statusFilter !== 'all' ? statusFilter : ''
       });
 
       const response = await fetch(`/api/admin/users?${params}`);
       const data = await response.json();
 
       if (data.success) {
-        // Combine regular users and admin users
-        const regularUsers = data.data.users || [];
-        const adminUsers = data.data.adminUsers || [];
-        
-        // Transform admin users to match user format
-        const transformedAdminUsers = adminUsers.map((adminUser: any) => ({
-          _id: adminUser._id,
-          email: adminUser.email,
-          firstName: adminUser.firstName || '',
-          lastName: adminUser.lastName || '',
-          role: adminUser.role,
-          status: adminUser.isActive ? 'active' : 'inactive',
-          clerkId: adminUser._id.toString(),
-          createdAt: adminUser.createdAt,
-          updatedAt: adminUser.updatedAt,
-          isAdmin: true, // Flag to identify admin users
-          permissions: adminUser.permissions || [],
-          lastLoginAt: adminUser.lastLoginAt,
-          activity: {
-            toolUsageCount: 0,
-            lastActivity: adminUser.lastLoginAt,
-            toolsUsed: 0,
-            isActive: adminUser.isActive
-          }
-        }));
-
-        // Combine and sort all users by creation date
-        const allUsers = [...regularUsers, ...transformedAdminUsers].sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        setUsers(allUsers);
-        setPagination(data.data.pagination);
+        setUsers(data.users);
+        setTotalPages(data.pagination.pages);
+        setTotalUsers(data.pagination.total);
+        setCurrentPage(page);
       } else {
         setError(data.error || 'Failed to fetch users');
       }
     } catch (error) {
+      setError('Failed to fetch users');
       console.error('Error fetching users:', error);
-      setError('Failed to fetch users. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers(currentPage);
-  }, [currentPage, searchTerm, statusFilter, roleFilter, sortBy, sortOrder]);
+    fetchUsers();
+  }, [searchTerm, roleFilter, statusFilter]);
 
-  const handleSearch = () => {
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
     setCurrentPage(1);
-    fetchUsers(1);
   };
 
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('');
-    setRoleFilter('');
-    setSortBy('createdAt');
-    setSortOrder('desc');
+  const handleRoleFilter = (value: string) => {
+    setRoleFilter(value);
     setCurrentPage(1);
+  };
+
+  const handleStatusFilter = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchUsers(page);
+  };
+
+  const handleUserSelection = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.length === users.length) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(users.map(user => user._id));
+    }
+  };
+
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedUsers.length === 0) return;
+
+    try {
+      const response = await fetch('/api/admin/users/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: bulkAction,
+          userIds: selectedUsers
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSelectedUsers([]);
+        setBulkAction('');
+        fetchUsers(currentPage);
+      } else {
+        setError(data.error || 'Bulk action failed');
+      }
+    } catch (error) {
+      setError('Bulk action failed');
+      console.error('Error performing bulk action:', error);
+    }
   };
 
   const handleUserAction = async (userId: string, action: string) => {
     try {
-      setError('');
-      setSuccessMessage('');
-      
-      if (action === 'suspend' || action === 'activate') {
-        const response = await fetch(`/api/admin/users/${userId}/actions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action })
-        });
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: action === 'delete' ? 'DELETE' : 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: action !== 'delete' ? JSON.stringify({ action }) : undefined
+      });
 
-        const data = await response.json();
-
-        if (data.success) {
-          setSuccessMessage(data.message);
-          fetchUsers(currentPage); // Refresh the list
-        } else {
-          setError(data.error || 'Action failed');
-        }
+      const data = await response.json();
+      if (data.success) {
+        fetchUsers(currentPage);
       } else {
-        // Handle other actions (delete, etc.)
-        let response;
-        
-        switch (action) {
-          case 'delete':
-            if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
-            response = await fetch(`/api/admin/users/${userId}`, {
-              method: 'DELETE'
-            });
-            break;
-          default:
-            setError('Invalid action');
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-          setSuccessMessage(`User ${action === 'delete' ? 'deleted' : action} successfully`);
-          fetchUsers(currentPage);
-        } else {
-          setError(data.error || 'Action failed');
-        }
+        setError(data.error || 'Action failed');
       }
     } catch (error) {
+      setError('Action failed');
       console.error('Error performing user action:', error);
-      setError('Failed to perform action. Please try again.');
     }
   };
 
-  const handleEditUser = async (userId: string, userData: any) => {
+  const exportUsers = async () => {
     try {
-      setError('');
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setSuccessMessage('User updated successfully');
-        fetchUsers(currentPage);
-        setTimeout(() => setSuccessMessage(''), 3000);
-      } else {
-        throw new Error(data.error || 'Failed to update user');
-      }
-    } catch (error: any) {
-      throw new Error(error.message || 'Failed to update user');
-    }
-  };
-
-  const handleCreateUser = async (userData: any) => {
-    try {
-      setError('');
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setSuccessMessage('User created successfully');
-        fetchUsers(currentPage);
-        setTimeout(() => setSuccessMessage(''), 3000);
-      } else {
-        throw new Error(data.error || 'Failed to create user');
-      }
-    } catch (error: any) {
-      throw new Error(error.message || 'Failed to create user');
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'super_admin':
-        return <Crown className="w-4 h-4 text-yellow-500" />;
-      case 'admin':
-        return <Shield className="w-4 h-4 text-green-500" />;
-      case 'moderator':
-        return <Shield className="w-4 h-4 text-blue-500" />;
-      default:
-        return <User className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
-      case 'inactive':
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Inactive</Badge>;
-      case 'suspended':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Suspended</Badge>;
-      case 'deleted':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Deleted</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status}</Badge>;
+      const response = await fetch('/api/admin/users/export');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'users-export.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      setError('Export failed');
+      console.error('Error exporting users:', error);
     }
   };
 
@@ -298,15 +201,16 @@ export default function UserManagement() {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   if (loading && users.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Loading users...</span>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -316,84 +220,72 @@ export default function UserManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="w-6 h-6 text-blue-600" />
-            User Management
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Manage all registered users, roles, and permissions
+          <h1 className="text-2xl font-bold">User Management</h1>
+          <p className="text-muted-foreground">
+            Manage {totalUsers} users across the platform
           </p>
         </div>
-        <Button 
-          className="flex items-center gap-2"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus className="w-4 h-4" />
-          Add User
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={() => fetchUsers(currentPage)}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+          <Button onClick={exportUsers}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+        </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <div className="p-4 bg-green-100 border border-green-300 rounded-lg flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-600" />
-          <span className="text-green-700">{successMessage}</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="p-4 bg-red-100 border border-red-300 rounded-lg flex items-center gap-2">
-          <XCircle className="w-5 h-5 text-red-600" />
-          <span className="text-red-700">{error}</span>
-        </div>
-      )}
-
-      {/* Search and Filters */}
+      {/* Filters and Search */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search users..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10"
               />
             </div>
-            
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-              <option value="deleted">Deleted</option>
-            </select>
-
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Roles</option>
-              <option value="user">Regular User</option>
-              <option value="moderator">Moderator</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
-
-            <div className="flex gap-2">
-              <Button onClick={handleSearch} variant="outline" size="sm">
-                Search
-              </Button>
-              <Button onClick={handleClearFilters} variant="outline" size="sm">
-                Clear
-              </Button>
+            <Select value={roleFilter} onValueChange={handleRoleFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={handleStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex items-center space-x-2">
+              <Select value={bulkAction} onValueChange={setBulkAction}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Bulk actions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="activate">Activate</SelectItem>
+                  <SelectItem value="deactivate">Deactivate</SelectItem>
+                  <SelectItem value="delete">Delete</SelectItem>
+                </SelectContent>
+              </Select>
+              {bulkAction && selectedUsers.length > 0 && (
+                <Button onClick={handleBulkAction} size="sm">
+                  Apply
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -402,301 +294,143 @@ export default function UserManagement() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            All Users
-            <Badge variant="secondary" className="ml-2">
-              {users.length}
-            </Badge>
-          </CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage all users including regular users and administrators
-          </p>
+          <CardTitle>Users</CardTitle>
         </CardHeader>
         <CardContent>
-          {users.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-              <p className="text-gray-500 mb-4">
-                {searchTerm || statusFilter || roleFilter 
-                  ? 'Try adjusting your search or filters'
-                  : 'Get started by creating your first user'
-                }
-              </p>
-              {!searchTerm && !statusFilter && !roleFilter && (
-                <Button onClick={() => setShowCreateModal(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First User
-                </Button>
-              )}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600">{error}</p>
             </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-semibold">User</th>
-                      <th className="text-left py-3 px-4 font-semibold">Role</th>
-                      <th className="text-left py-3 px-4 font-semibold">Status</th>
-                      <th className="text-left py-3 px-4 font-semibold">Activity</th>
-                      <th className="text-left py-3 px-4 font-semibold">Joined</th>
-                      <th className="text-left py-3 px-4 font-semibold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <div>
-                            <div className="font-medium flex items-center gap-2">
-                              {user.firstName} {user.lastName}
-                              {user.isAdmin && (
-                                <Badge variant="outline" className="text-xs">
-                                  Admin
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-500 flex items-center gap-1">
-                              <Mail className="w-3 h-3" />
-                              {user.email}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            {getRoleIcon(user.role)}
-                            <span className="capitalize">{user.role.replace('_', ' ')}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          {getStatusBadge(user.status)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm">
-                            <div className="flex items-center gap-1">
-                              <Activity className="w-3 h-3" />
-                              {user.activity?.toolUsageCount || 0} tools used
-                            </div>
-                            {user.activity?.lastActivity && (
-                              <div className="text-gray-500 text-xs">
-                                Last: {formatDate(user.activity.lastActivity)}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-500">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(user.createdAt)}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setShowUserModal(true);
-                              }}
-                              title="View Details"
-                            >
-                              <Eye className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setShowEditModal(true);
-                              }}
-                              title="Edit User"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            {/* Suspend/Activate button for all users */}
-                            {user.status === 'active' ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUserAction(user._id, 'suspend')}
-                                title="Suspend User"
-                                className="text-orange-600 hover:text-orange-700"
-                              >
-                                Suspend
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUserAction(user._id, 'activate')}
-                                title="Activate User"
-                                className="text-green-600 hover:text-green-700"
-                              >
-                                Activate
-                              </Button>
-                            )}
-                            {/* Delete button only for non-admin users */}
-                            {!user.isAdmin && user.role !== 'super_admin' && user.role !== 'admin' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUserAction(user._id, 'delete')}
-                                title="Delete User"
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {pagination && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-500">
-                    Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{' '}
-                    {Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} of{' '}
-                    {pagination.totalUsers} users
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                      disabled={!pagination.hasPrevPage}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Previous
-                    </Button>
-                    <span className="text-sm">
-                      Page {pagination.currentPage} of {pagination.totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                      disabled={!pagination.hasNextPage}
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
           )}
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.length === users.length && users.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded"
+                    />
+                  </th>
+                  <th className="text-left p-2">User</th>
+                  <th className="text-left p-2">Role</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Verified</th>
+                  <th className="text-left p-2">2FA</th>
+                  <th className="text-left p-2">Joined</th>
+                  <th className="text-left p-2">Last Login</th>
+                  <th className="text-left p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user._id} className="border-b hover:bg-gray-50">
+                    <td className="p-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(user._id)}
+                        onChange={() => handleUserSelection(user._id)}
+                        className="rounded"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <div>
+                        <div className="font-medium">{user.name}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                        {user.username && (
+                          <div className="text-xs text-muted-foreground">@{user.username}</div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                        {user.role}
+                      </Badge>
+                    </td>
+                    <td className="p-2">
+                      <Badge variant={user.isActive ? 'default' : 'destructive'}>
+                        {user.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </td>
+                    <td className="p-2">
+                      <Badge variant={user.emailVerified ? 'default' : 'secondary'}>
+                        {user.emailVerified ? 'Verified' : 'Unverified'}
+                      </Badge>
+                    </td>
+                    <td className="p-2">
+                      <Badge variant={user.twoFactorEnabled ? 'default' : 'secondary'}>
+                        {user.twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                      </Badge>
+                    </td>
+                    <td className="p-2 text-sm">
+                      {formatDate(user.createdAt)}
+                    </td>
+                    <td className="p-2 text-sm">
+                      {user.lastSignInAt ? formatDate(user.lastSignInAt) : 'Never'}
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUserAction(user._id, 'view')}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUserAction(user._id, 'edit')}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUserAction(user._id, 'delete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalUsers)} of {totalUsers} users
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
-
-      {/* User Detail Modal */}
-      {showUserModal && selectedUser && (
-        <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)}>
-          <ModalHeader className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">User Details</h2>
-            <Button variant="outline" size="sm" onClick={() => setShowUserModal(false)}>
-              ×
-            </Button>
-          </ModalHeader>
-          <ModalContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Name</label>
-                  <p>{selectedUser.firstName} {selectedUser.lastName}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Email</label>
-                  <p>{selectedUser.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Role</label>
-                  <div className="flex items-center gap-2">
-                    {getRoleIcon(selectedUser.role)}
-                    <span className="capitalize">{selectedUser.role.replace('_', ' ')}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Status</label>
-                  <div>{getStatusBadge(selectedUser.status)}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Joined</label>
-                  <p>{formatDate(selectedUser.createdAt)}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Last Updated</label>
-                  <p>{formatDate(selectedUser.updatedAt)}</p>
-                </div>
-              </div>
-
-              {selectedUser.activity && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Activity (Last 7 Days)</label>
-                  <div className="grid grid-cols-3 gap-4 mt-2">
-                    <div className="text-center p-3 bg-gray-50 rounded">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {selectedUser.activity.toolUsageCount}
-                      </div>
-                      <div className="text-sm text-gray-500">Tools Used</div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded">
-                      <div className="text-2xl font-bold text-green-600">
-                        {selectedUser.activity.toolsUsed}
-                      </div>
-                      <div className="text-sm text-gray-500">Unique Tools</div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded">
-                      <div className="text-2xl font-bold text-orange-600">
-                        {selectedUser.activity.isActive ? 'Yes' : 'No'}
-                      </div>
-                      <div className="text-sm text-gray-500">Active</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ModalContent>
-          <ModalFooter>
-            <Button variant="outline" onClick={() => setShowUserModal(false)}>
-              Close
-            </Button>
-            <Button
-              onClick={() => {
-                setShowUserModal(false);
-                setShowEditModal(true);
-              }}
-            >
-              Edit User
-            </Button>
-          </ModalFooter>
-        </Modal>
-      )}
-
-      {/* User Edit Modal */}
-      <UserEditModal
-        user={selectedUser}
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedUser(null);
-        }}
-        onSave={handleEditUser}
-      />
-
-      {/* User Create Modal */}
-      <UserCreateModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onCreate={handleCreateUser}
-      />
     </div>
   );
 } 

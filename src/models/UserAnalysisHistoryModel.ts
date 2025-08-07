@@ -1,49 +1,27 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { connectToDatabase } from '@/lib/mongodb';
 
 export interface IUserAnalysisHistory extends Document {
   userId: string;
-  clerkId: string;
-  analysisType: string;
   toolSlug: string;
   toolName: string;
-  inputData: Record<string, any>;
-  result: Record<string, any>;
+  analysisType: string;
+  parameters: any;
+  result: any;
+  duration: number;
+  success: boolean;
+  error?: string;
   metadata: {
-    processingTime: number;
-    tokensUsed?: number;
-    model?: string;
-    cost?: number;
-    userAgent?: string;
-    ipAddress?: string;
+    userAgent: string;
+    ipAddress: string;
+    timestamp: Date;
+    sessionId?: string;
   };
-  status: 'completed' | 'failed' | 'processing';
-  isAnonymous: boolean;
   createdAt: Date;
   updatedAt: Date;
-  
-  // New fields for duplicate detection
-  parameterHash: string;
-  isDuplicate: boolean;
-  originalAnalysisId?: string;
-  regenerationCount: number;
-  lastAccessed: Date;
-  accessCount: number;
-  normalizedParameters: Record<string, any>;
 }
 
 const UserAnalysisHistorySchema = new Schema<IUserAnalysisHistory>({
   userId: {
-    type: String,
-    required: true,
-    index: true
-  },
-  clerkId: {
-    type: String,
-    required: true,
-    index: true
-  },
-  analysisType: {
     type: String,
     required: true,
     index: true
@@ -57,7 +35,11 @@ const UserAnalysisHistorySchema = new Schema<IUserAnalysisHistory>({
     type: String,
     required: true
   },
-  inputData: {
+  analysisType: {
+    type: String,
+    required: true
+  },
+  parameters: {
     type: Schema.Types.Mixed,
     required: true
   },
@@ -65,357 +47,178 @@ const UserAnalysisHistorySchema = new Schema<IUserAnalysisHistory>({
     type: Schema.Types.Mixed,
     required: true
   },
+  duration: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  success: {
+    type: Boolean,
+    required: true,
+    default: true
+  },
+  error: {
+    type: String
+  },
   metadata: {
-    processingTime: {
-      type: Number,
+    userAgent: {
+      type: String,
       required: true
     },
-    tokensUsed: Number,
-    model: String,
-    cost: Number,
-    userAgent: String,
-    ipAddress: String
-  },
-  status: {
-    type: String,
-    enum: ['completed', 'failed', 'processing'],
-    default: 'completed',
-    index: true
-  },
-  isAnonymous: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
-  
-  // New fields for duplicate detection
-  parameterHash: {
-    type: String,
-    required: true,
-    index: true
-  },
-  isDuplicate: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
-  originalAnalysisId: {
-    type: Schema.Types.ObjectId,
-    ref: 'UserAnalysisHistory',
-    index: true
-  },
-  regenerationCount: {
-    type: Number,
-    default: 0,
-    index: true
-  },
-  lastAccessed: {
-    type: Date,
-    default: Date.now,
-    index: true
-  },
-  accessCount: {
-    type: Number,
-    default: 1,
-    index: true
-  },
-  normalizedParameters: {
-    type: Schema.Types.Mixed,
-    required: true
+    ipAddress: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    },
+    sessionId: {
+      type: String
+    }
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  collection: 'useranalysishistories'
 });
 
-// Compound indexes for efficient queries
-UserAnalysisHistorySchema.index({ userId: 1, parameterHash: 1 });
-UserAnalysisHistorySchema.index({ toolSlug: 1, parameterHash: 1 });
-UserAnalysisHistorySchema.index({ userId: 1, toolSlug: 1, createdAt: -1 });
-UserAnalysisHistorySchema.index({ parameterHash: 1, createdAt: -1 });
+// Indexes
+UserAnalysisHistorySchema.index({ userId: 1 });
+UserAnalysisHistorySchema.index({ toolSlug: 1 });
+UserAnalysisHistorySchema.index({ createdAt: 1 });
+UserAnalysisHistorySchema.index({ userId: 1, toolSlug: 1 });
+UserAnalysisHistorySchema.index({ success: 1 });
 
 // Static methods
 UserAnalysisHistorySchema.statics = {
-  // Find analysis by parameter hash
-  async findByParameterHash(userId: string, parameterHash: string) {
-    try {
-      return await this.findOne({ userId, parameterHash }).sort({ createdAt: -1 }).maxTimeMS(5000);
-    } catch (error) {
-      console.error('Error in findByParameterHash:', error);
-      return null;
-    }
-  },
-
-  // Find duplicate analyses
-  async findDuplicates(userId: string, parameterHash: string) {
-    try {
-      return await this.find({ 
-        userId, 
-        parameterHash,
-        isDuplicate: true 
-      }).sort({ createdAt: -1 }).maxTimeMS(5000);
-    } catch (error) {
-      console.error('Error in findDuplicates:', error);
-      return [];
-    }
-  },
-
-  // Get user history with duplicate information
-  async getUserHistory(userId: string, limit = 20, offset = 0) {
+  // Get analysis history for a user
+  async getUserHistory(userId: string, limit: number = 50) {
     try {
       return await this.find({ userId })
         .sort({ createdAt: -1 })
-        .skip(offset)
         .limit(limit)
-        .maxTimeMS(5000)
-        .lean(); // Use lean() for better performance
+        .maxTimeMS(5000);
     } catch (error) {
-      console.error('Error in getUserHistory:', error);
+      console.error('Error getting user history:', error);
       return [];
     }
   },
 
-  async getUserStats(userId: string) {
+  // Get analysis history for a specific tool
+  async getToolHistory(userId: string, toolSlug: string, limit: number = 20) {
     try {
-      await connectToDatabase();
-      
-      // Use simple count operations with shorter timeout
-      const totalAnalyses = await this.countDocuments({ userId }).maxTimeMS(3000);
-      const successfulAnalyses = await this.countDocuments({ userId, status: 'completed' }).maxTimeMS(3000);
-      
-      // Calculate success rate
-      const successRate = totalAnalyses > 0 ? (successfulAnalyses / totalAnalyses) * 100 : 0;
-      
-      return {
-        totalAnalyses,
-        successfulAnalyses,
-        uniqueTools: 5, // Default value to avoid complex query
-        successRate: Math.round(successRate * 100) / 100,
-        averageProcessingTime: 2.3, // Default value for now
-        lastActivityAt: new Date().toISOString()
-      };
+      return await this.find({ userId, toolSlug })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .maxTimeMS(5000);
     } catch (error) {
-      console.error('Error in getUserStats:', error);
-      // Return default stats when database fails
-      return {
-        totalAnalyses: 0,
-        successfulAnalyses: 0,
-        uniqueTools: 0,
-        successRate: 0,
-        averageProcessingTime: 0,
-        lastActivityAt: new Date().toISOString()
-      };
+      console.error('Error getting tool history:', error);
+      return [];
     }
   },
 
-  async getToolUsageStats(userId: string) {
+  // Get recent analyses across all users
+  async getRecentAnalyses(limit: number = 100) {
     try {
-      await connectToDatabase();
-      
-      // Simplified query with shorter timeout
-      const analyses = await this.find({ userId })
+      return await this.find()
         .sort({ createdAt: -1 })
-        .limit(20) // Reduced limit
-        .maxTimeMS(3000) // Shorter timeout
-        .lean();
-      
-      if (analyses.length === 0) {
-        // Return default tool stats if no data
-        return [
-          {
-            toolSlug: 'swot-analysis',
-            toolName: 'SWOT Analysis',
-            totalUsage: 0,
-            uniqueUsers: 1,
-            successRate: 0,
-            lastUsed: new Date()
-          },
-          {
-            toolSlug: 'qr-generator',
-            toolName: 'QR Generator',
-            totalUsage: 0,
-            uniqueUsers: 1,
-            successRate: 0,
-            lastUsed: new Date()
-          }
-        ];
-      }
-      
-      // Group by tool slug
-      const toolStats = analyses.reduce((acc, analysis) => {
-        const toolSlug = analysis.toolSlug;
-        if (!acc[toolSlug]) {
-          acc[toolSlug] = {
-            toolSlug,
-            toolName: analysis.toolName || toolSlug,
-            totalUsage: 0,
-            uniqueUsers: 1,
-            successRate: 0,
-            lastUsed: analysis.createdAt
-          };
-        }
-        acc[toolSlug].totalUsage++;
-        if (analysis.status === 'completed') {
-          acc[toolSlug].successRate++;
-        }
-        return acc;
-      }, {});
-      
-      // Convert to array and calculate success rates
-      return Object.values(toolStats).map((tool: any) => ({
-        ...tool,
-        successRate: tool.totalUsage > 0 ? Math.round((tool.successRate / tool.totalUsage) * 100) : 0
-      }));
+        .limit(limit)
+        .maxTimeMS(5000);
     } catch (error) {
-      console.error('Error in getToolUsageStats:', error);
-      // Return default tool stats when database fails
-      return [
+      console.error('Error getting recent analyses:', error);
+      return [];
+    }
+  },
+
+  // Get analysis statistics
+  async getAnalysisStats(userId?: string) {
+    try {
+      const match = userId ? { userId } : {};
+      
+      const stats = await this.aggregate([
+        { $match: match },
         {
-          toolSlug: 'swot-analysis',
-          toolName: 'SWOT Analysis',
-          totalUsage: 0,
-          uniqueUsers: 1,
-          successRate: 0,
-          lastUsed: new Date()
+          $group: {
+            _id: null,
+            totalAnalyses: { $sum: 1 },
+            successfulAnalyses: { $sum: { $cond: ['$success', 1, 0] } },
+            failedAnalyses: { $sum: { $cond: ['$success', 0, 1] } },
+            averageDuration: { $avg: '$duration' },
+            totalDuration: { $sum: '$duration' }
+          }
+        }
+      ]);
+
+      const toolStats = await this.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: '$toolSlug',
+            count: { $sum: 1 },
+            toolName: { $first: '$toolName' }
+          }
         },
-        {
-          toolSlug: 'qr-generator',
-          toolName: 'QR Generator',
-          totalUsage: 0,
-          uniqueUsers: 1,
-          successRate: 0,
-          lastUsed: new Date()
-        }
-      ];
+        { $sort: { count: -1 } }
+      ]);
+
+      return {
+        overall: stats[0] || {
+          totalAnalyses: 0,
+          successfulAnalyses: 0,
+          failedAnalyses: 0,
+          averageDuration: 0,
+          totalDuration: 0
+        },
+        byTool: toolStats
+      };
+    } catch (error) {
+      console.error('Error getting analysis stats:', error);
+      return {
+        overall: {
+          totalAnalyses: 0,
+          successfulAnalyses: 0,
+          failedAnalyses: 0,
+          averageDuration: 0,
+          totalDuration: 0
+        },
+        byTool: []
+      };
     }
   },
 
-  async getRecentActivity(userId: string, limit = 5) {
+  // Delete old analyses
+  async deleteOldAnalyses(daysOld: number = 90) {
     try {
-      await connectToDatabase();
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
       
-      const activities = await this.find({ userId })
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .maxTimeMS(3000) // Shorter timeout
-        .lean();
+      const result = await this.deleteMany({
+        createdAt: { $lt: cutoffDate }
+      });
       
-      if (activities.length === 0) {
-        // Return default activity if no data
-        return [
-          {
-            _id: 'default-activity',
-            userId,
-            toolSlug: 'swot-analysis',
-            toolName: 'SWOT Analysis',
-            analysisType: 'swot',
-            status: 'completed',
-            createdAt: new Date(),
-            result: { message: 'No recent activity' }
-          }
-        ];
-      }
-      
-      return activities;
+      return result.deletedCount;
     } catch (error) {
-      console.error('Error in getRecentActivity:', error);
-      // Return default activity when database fails
-      return [
-        {
-          _id: 'default-activity',
-          userId,
-          toolSlug: 'swot-analysis',
-          toolName: 'SWOT Analysis',
-          analysisType: 'swot',
-          status: 'completed',
-          createdAt: new Date(),
-          result: { message: 'No recent activity' }
-        }
-      ];
-    }
-  },
-
-  // Find analysis by ID
-  async getAnalysisById(analysisId: string) {
-    try {
-      return await this.findById(analysisId)
-        .populate('originalAnalysisId', 'toolName createdAt result inputData')
-        .maxTimeMS(3000);
-    } catch (error) {
-      console.error('Error in getAnalysisById:', error);
-      return null;
-    }
-  },
-
-  // Delete analysis
-  async deleteAnalysis(analysisId: string, userId: string) {
-    try {
-      const result = await this.deleteOne({ _id: analysisId, userId }).maxTimeMS(3000);
-      return { deletedCount: result.deletedCount || 0 };
-    } catch (error) {
-      console.error('Error in deleteAnalysis:', error);
-      return { deletedCount: 0 };
-    }
-  },
-
-  // Export user data
-  async exportUserData(userId: string) {
-    try {
-      return await this.find({ userId })
-        .select('-__v')
-        .sort({ createdAt: -1 })
-        .maxTimeMS(10000)
-        .lean();
-    } catch (error) {
-      console.error('Error in exportUserData:', error);
-      return [];
-    }
-  },
-
-  // Update access count and last accessed
-  async updateAccess(analysisId: string) {
-    try {
-      return await this.findByIdAndUpdate(analysisId, {
-        $inc: { accessCount: 1 },
-        lastAccessed: new Date()
-      }, { maxTimeMS: 3000 });
-    } catch (error) {
-      console.error('Error in updateAccess:', error);
-      return null;
-    }
-  },
-
-  // Mark as duplicate
-  async markAsDuplicate(analysisId: string, originalAnalysisId: string) {
-    try {
-      return await this.findByIdAndUpdate(analysisId, {
-        isDuplicate: true,
-        originalAnalysisId,
-        $inc: { regenerationCount: 1 }
-      }, { maxTimeMS: 3000 });
-    } catch (error) {
-      console.error('Error in markAsDuplicate:', error);
-      return null;
-    }
-  },
-
-  // Find similar analyses by parameters (simplified)
-  async findSimilarAnalyses(userId: string, normalizedParameters: Record<string, any>, toolSlug: string) {
-    try {
-      // Simplified similarity search - just find analyses with same tool
-      return await this.find({
-        userId,
-        toolSlug
-      })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .maxTimeMS(5000)
-      .lean();
-    } catch (error) {
-      console.error('Error in findSimilarAnalyses:', error);
-      return [];
+      console.error('Error deleting old analyses:', error);
+      return 0;
     }
   }
 };
 
-export const UserAnalysisHistory = mongoose.models.UserAnalysisHistory || 
-  mongoose.model<IUserAnalysisHistory>('UserAnalysisHistory', UserAnalysisHistorySchema); 
+// Instance methods
+UserAnalysisHistorySchema.methods = {
+  // Mark analysis as failed
+  async markAsFailed(error: string) {
+    this.success = false;
+    this.error = error;
+    return await this.save();
+  },
+
+  // Update duration
+  async updateDuration(duration: number) {
+    this.duration = duration;
+    return await this.save();
+  }
+};
+
+// Export the model
+export const UserAnalysisHistoryModel = mongoose.models.UserAnalysisHistory || mongoose.model<IUserAnalysisHistory>('UserAnalysisHistory', UserAnalysisHistorySchema); 

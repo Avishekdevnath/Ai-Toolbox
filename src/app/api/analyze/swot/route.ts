@@ -1,247 +1,167 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/mongodb';
-import { model } from '@/lib/gemini';
-import { parseAIResponse } from '@/lib/utils';
-import { UserAnalysisHistory } from '@/models/UserAnalysisHistoryModel';
-import { DuplicateDetectionService } from '@/lib/duplicateDetectionService';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { connectToDatabase } from '@/lib/mongodb';
+import { UserAnalysisHistoryModel } from '@/models/UserAnalysisHistoryModel';
+import { ToolUsageModel } from '@/models/ToolUsageModel';
+import { createHash } from 'crypto';
+
+// Initialize Google AI
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-  let userId: string | null = null;
-  let clerkId: string | null = null;
-
   try {
-    // Get user authentication
-    try {
-      // Assuming you have a custom admin auth or no auth for anonymous users
-      // For now, we'll proceed as anonymous if Clerk auth fails
-      // In a real application, you'd implement your own auth logic here
-      // For this example, we'll simulate an anonymous user for demonstration
-      // In a production environment, you'd get userId from Clerk.userId
-      // For now, we'll set it to a placeholder or null
-      userId = 'anonymous_user_id'; // Placeholder for anonymous user
-      clerkId = 'anonymous_clerk_id'; // Placeholder for anonymous user
-    } catch (authError) {
-      // User not authenticated, continue as anonymous
-      console.log('User not authenticated, proceeding as anonymous');
-    }
+    // Connect to database
+    await connectToDatabase();
 
-    const { swotType, formData, forceRegenerate = false } = await request.json();
+    // Parse request body
+    const body = await request.json();
+    const { organization, industry, description, includeRecommendations = true } = body;
 
-    if (!swotType || !formData) {
+    // Validate input
+    if (!organization || !industry || !description) {
       return NextResponse.json(
-        { error: 'SWOT type and form data are required' },
+        { error: 'Organization, industry, and description are required' },
         { status: 400 }
       );
     }
 
-    // Check for duplicates if user is authenticated and not forcing regeneration
-    if (userId && !forceRegenerate) {
-      const duplicateCheck = await DuplicateDetectionService.checkForDuplicates({
-        userId,
-        clerkId: clerkId!,
+    // Generate anonymous user ID
+    const ipAddress = request.ip || '127.0.0.1';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const userId = createHash('sha256')
+      .update(`${ipAddress}-${userAgent}`)
+      .digest('hex')
+      .substring(0, 16);
+
+    // Track tool usage
+    try {
+      await ToolUsageModel.create({
+        userId: `anon_${userId}`,
         toolSlug: 'swot-analysis',
         toolName: 'SWOT Analysis',
-        analysisType: 'swot',
-        parameters: { swotType, formData }
+        usageType: 'generate',
+        metadata: {
+          organization,
+          industry,
+          includeRecommendations
+        },
+        timestamp: new Date()
       });
-
-      // If duplicate found, return cached result
-      if (duplicateCheck.isDuplicate && duplicateCheck.existingAnalysis) {
-        console.log('Duplicate analysis found, returning cached result');
-        
-        return NextResponse.json({
-          success: true,
-          result: duplicateCheck.existingAnalysis.result,
-          metadata: {
-            processingTime: Date.now() - startTime,
-            tokensUsed: duplicateCheck.existingAnalysis.metadata.tokensUsed || 0,
-            model: duplicateCheck.existingAnalysis.metadata.model || 'cached',
-            cost: duplicateCheck.existingAnalysis.metadata.cost || 0,
-            userAgent: request.headers.get('user-agent') || 'Unknown',
-            ipAddress: request.headers.get('x-forwarded-for') || request.ip || 'Unknown'
-          },
-          isDuplicate: true,
-          existingAnalysisId: duplicateCheck.existingAnalysis._id,
-          similarity: duplicateCheck.similarity,
-          differences: duplicateCheck.differences,
-          parameterHash: duplicateCheck.parameterHash
-        });
-      }
+    } catch (error) {
+      console.error('Error tracking tool usage:', error);
     }
 
-    // Generate SWOT analysis using AI
-    const prompt = `Analyze the following ${swotType} scenario and provide a comprehensive SWOT analysis:
+    // Generate SWOT analysis
+    const prompt = `
+      Please provide a comprehensive SWOT analysis for the following organization:
 
-${swotType.toUpperCase()} ANALYSIS
-${Object.entries(formData).map(([key, value]) => `${key}: ${value}`).join('\n')}
+      Organization: ${organization}
+      Industry: ${industry}
+      Description: ${description}
 
-Please provide a detailed SWOT analysis in the following JSON format:
-{
-  "strengths": ["Strength 1", "Strength 2", "Strength 3"],
-  "weaknesses": ["Weakness 1", "Weakness 2", "Weakness 3"],
-  "opportunities": ["Opportunity 1", "Opportunity 2", "Opportunity 3"],
-  "threats": ["Threat 1", "Threat 2", "Threat 3"],
-  "aiTips": {
-    "leverageStrengths": ["Tip 1", "Tip 2"],
-    "addressWeaknesses": ["Strategy 1", "Strategy 2"],
-    "capitalizeOpportunities": ["Way 1", "Way 2"],
-    "mitigateThreats": ["Method 1", "Method 2"],
-    "strategicRecommendations": ["Rec 1", "Rec 2"],
-    "motivationalSummary": "Encouraging summary message"
-  }
-}
+      Please structure your response as follows:
 
-Focus on practical, actionable insights specific to ${swotType} analysis.`;
+      STRENGTHS:
+      - [List 5-7 key strengths]
 
-    let analysis;
-    let tokensUsed = 0;
-    let modelUsed = 'fallback';
-    
-    if (model) {
-      try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        
-        // Parse the JSON response
-        try {
-          analysis = parseAIResponse(text);
-          modelUsed = 'gemini';
-          // Estimate tokens (rough calculation)
-          tokensUsed = Math.ceil((prompt.length + text.length) / 4);
-        } catch (parseError) {
-          console.error('Failed to parse AI response:', parseError);
-          // Use fallback analysis
-          analysis = getFallbackAnalysis(swotType, formData);
+      WEAKNESSES:
+      - [List 5-7 key weaknesses]
+
+      OPPORTUNITIES:
+      - [List 5-7 key opportunities]
+
+      THREATS:
+      - [List 5-7 key threats]
+
+      ${includeRecommendations ? `
+      STRATEGIC RECOMMENDATIONS:
+      - [Provide 3-5 strategic recommendations based on the SWOT analysis]
+      ` : ''}
+
+      Please be specific, actionable, and relevant to the organization's context.
+    `;
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const swotAnalysis = response.text();
+
+    // Parse the SWOT analysis
+    const parsedAnalysis = parseSWOTAnalysis(swotAnalysis);
+
+    // Save analysis to history
+    try {
+      await UserAnalysisHistoryModel.create({
+        userId: `anon_${userId}`,
+        toolSlug: 'swot-analysis',
+        toolName: 'SWOT Analysis',
+        analysisType: 'comprehensive',
+        parameters: {
+          organization,
+          industry,
+          description,
+          includeRecommendations
+        },
+        result: parsedAnalysis,
+        duration: 0, // Will be calculated if needed
+        success: true,
+        metadata: {
+          userAgent,
+          ipAddress,
+          timestamp: new Date()
         }
-      } catch (aiError) {
-        console.error('AI generation failed:', aiError);
-        // Use fallback analysis
-        analysis = getFallbackAnalysis(swotType, formData);
-      }
-    } else {
-      // Use fallback analysis if AI is not available
-      analysis = getFallbackAnalysis(swotType, formData);
-    }
-
-    const processingTime = Date.now() - startTime;
-    const metadata = {
-      processingTime,
-      tokensUsed,
-      model: modelUsed,
-      cost: tokensUsed * 0.000001, // Rough cost estimation
-      userAgent: request.headers.get('user-agent') || 'Unknown',
-      ipAddress: request.headers.get('x-forwarded-for') || request.ip || 'Unknown'
-    };
-
-    // Save to user history if authenticated
-    let analysisId: string | undefined;
-    if (userId) {
-      try {
-        // Check if this is a duplicate of an existing analysis
-        const duplicateCheck = await DuplicateDetectionService.checkForDuplicates({
-          userId,
-          clerkId: clerkId!,
-          toolSlug: 'swot-analysis',
-          toolName: 'SWOT Analysis',
-          analysisType: 'swot',
-          parameters: { swotType, formData }
-        });
-
-        // Save with duplicate detection info
-        analysisId = await DuplicateDetectionService.saveAnalysisResult(
-          {
-            userId,
-            clerkId: clerkId!,
-            toolSlug: 'swot-analysis',
-            toolName: 'SWOT Analysis',
-            analysisType: 'swot',
-            parameters: { swotType, formData }
-          },
-          analysis,
-          metadata,
-          duplicateCheck.isDuplicate,
-          duplicateCheck.existingAnalysis?._id
-        );
-
-        console.log('Analysis saved to history with ID:', analysisId);
-      } catch (historyError) {
-        console.error('Failed to save to history:', historyError);
-        // Continue without saving to history
-      }
+      });
+    } catch (error) {
+      console.error('Error saving analysis history:', error);
     }
 
     return NextResponse.json({
       success: true,
-      result: analysis,
-      metadata,
-      analysisId,
-      isDuplicate: false
+      analysis: parsedAnalysis,
+      rawText: swotAnalysis
     });
 
   } catch (error) {
-    console.error('SWOT analysis error:', error);
+    console.error('SWOT Analysis error:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to generate SWOT analysis',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Failed to generate SWOT analysis' },
       { status: 500 }
     );
   }
 }
 
-function getFallbackAnalysis(swotType: string, formData: any) {
-  const name = formData.name || 'Your Analysis';
-  
-  return {
-    strengths: [
-      `Strong ${swotType} foundation`,
-      `Clear ${swotType} objectives`,
-      `Experienced approach to ${swotType}`,
-      `Well-defined ${swotType} strategy`
-    ],
-    weaknesses: [
-      `Limited ${swotType} resources`,
-      `Need for ${swotType} improvement`,
-      `${swotType} challenges to address`,
-      `Areas for ${swotType} growth`
-    ],
-    opportunities: [
-      `${swotType} expansion potential`,
-      `New ${swotType} opportunities`,
-      `${swotType} market growth`,
-      `Technology adoption in ${swotType}`
-    ],
-    threats: [
-      `${swotType} competition`,
-      `Market changes affecting ${swotType}`,
-      `External factors impacting ${swotType}`,
-      `${swotType} regulatory challenges`
-    ],
-    aiTips: {
-      leverageStrengths: [
-        `Focus on your ${swotType} strengths`,
-        `Build upon your ${swotType} advantages`
-      ],
-      addressWeaknesses: [
-        `Develop ${swotType} improvement plans`,
-        `Seek ${swotType} support and resources`
-      ],
-      capitalizeOpportunities: [
-        `Act on ${swotType} opportunities`,
-        `Expand your ${swotType} reach`
-      ],
-      mitigateThreats: [
-        `Monitor ${swotType} threats`,
-        `Develop ${swotType} contingency plans`
-      ],
-      strategicRecommendations: [
-        `Create a comprehensive ${swotType} plan`,
-        `Focus on ${swotType} priorities`
-      ],
-      motivationalSummary: `You have a solid foundation for ${swotType} success. Focus on leveraging your strengths while addressing areas for improvement.`
-    }
+function parseSWOTAnalysis(text: string) {
+  const sections = {
+    strengths: [] as string[],
+    weaknesses: [] as string[],
+    opportunities: [] as string[],
+    threats: [] as string[],
+    recommendations: [] as string[]
   };
+
+  const lines = text.split('\n');
+  let currentSection = '';
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    if (trimmedLine.toUpperCase().includes('STRENGTHS')) {
+      currentSection = 'strengths';
+    } else if (trimmedLine.toUpperCase().includes('WEAKNESSES')) {
+      currentSection = 'weaknesses';
+    } else if (trimmedLine.toUpperCase().includes('OPPORTUNITIES')) {
+      currentSection = 'opportunities';
+    } else if (trimmedLine.toUpperCase().includes('THREATS')) {
+      currentSection = 'threats';
+    } else if (trimmedLine.toUpperCase().includes('RECOMMENDATIONS')) {
+      currentSection = 'recommendations';
+    } else if (trimmedLine.startsWith('-') && currentSection) {
+      const content = trimmedLine.substring(1).trim();
+      if (content) {
+        sections[currentSection as keyof typeof sections].push(content);
+      }
+    }
+  }
+
+  return sections;
 } 

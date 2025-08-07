@@ -1,77 +1,36 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { connectToDatabase } from '@/lib/mongodb';
 
 export interface IUserSettings extends Document {
   userId: string;
-  clerkId: string;
-  
-  // Profile Settings
-  profile: {
-    displayName: string;
-    bio: string;
-    avatar: string;
-    timezone: string;
-    language: string;
-    dateFormat: string;
-  };
-  
-  // Notification Settings
+  theme: 'light' | 'dark' | 'auto';
+  language: string;
+  timezone: string;
   notifications: {
-    email: {
-      analysisResults: boolean;
-      weeklyReports: boolean;
-      systemUpdates: boolean;
-      marketing: boolean;
-    };
-    push: {
-      analysisComplete: boolean;
-      newFeatures: boolean;
-      reminders: boolean;
-    };
-    frequency: 'immediate' | 'daily' | 'weekly';
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+    marketing: boolean;
+    updates: boolean;
+    security: boolean;
   };
-  
-  // Privacy Settings
   privacy: {
     profileVisibility: 'public' | 'private' | 'friends';
-    shareAnalytics: boolean;
-    allowDataCollection: boolean;
-    showUsageStats: boolean;
+    dataSharing: boolean;
+    analytics: boolean;
+    thirdParty: boolean;
   };
-  
-  // Application Settings
-  application: {
-    theme: 'light' | 'dark' | 'auto';
-    compactMode: boolean;
-    autoSave: boolean;
+  accessibility: {
+    highContrast: boolean;
+    largeText: boolean;
+    screenReader: boolean;
+    reducedMotion: boolean;
+  };
+  preferences: {
     defaultTool: string;
-    resultsPerPage: number;
+    autoSave: boolean;
+    showTutorials: boolean;
+    compactMode: boolean;
   };
-  
-  // API & Integration Settings
-  integrations: {
-    exportFormat: 'json' | 'csv' | 'pdf';
-    autoExport: boolean;
-    webhookUrl?: string;
-    apiKey?: string;
-  };
-  
-  // Security Settings
-  security: {
-    twoFactorEnabled: boolean;
-    sessionTimeout: number;
-    loginNotifications: boolean;
-    deviceManagement: boolean;
-  };
-  
-  // Data Management
-  dataManagement: {
-    autoDeleteOldAnalyses: boolean;
-    retentionPeriod: number; // days
-    backupFrequency: 'daily' | 'weekly' | 'monthly';
-    exportData: boolean;
-  };
-  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -83,445 +42,320 @@ const UserSettingsSchema = new Schema<IUserSettings>({
     unique: true,
     index: true
   },
-  clerkId: {
+  theme: {
     type: String,
-    required: true,
-    index: true
+    enum: ['light', 'dark', 'auto'],
+    default: 'auto'
   },
-  
-  // Profile Settings
-  profile: {
-    displayName: {
-      type: String,
-      default: '',
-      maxlength: 100,
-      trim: true
-    },
-    bio: {
-      type: String,
-      default: '',
-      maxlength: 500,
-      trim: true
-    },
-    avatar: {
-      type: String,
-      default: ''
-    },
-    timezone: {
-      type: String,
-      default: 'UTC'
-    },
-    language: {
-      type: String,
-      default: 'en',
-      enum: ['en', 'es', 'fr', 'de', 'zh', 'ja', 'ko']
-    },
-    dateFormat: {
-      type: String,
-      default: 'MM/DD/YYYY',
-      enum: ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']
-    }
+  language: {
+    type: String,
+    default: 'en'
   },
-  
-  // Notification Settings
+  timezone: {
+    type: String,
+    default: 'UTC'
+  },
   notifications: {
     email: {
-      analysisResults: {
-        type: Boolean,
-        default: true
-      },
-      weeklyReports: {
-        type: Boolean,
-        default: false
-      },
-      systemUpdates: {
-        type: Boolean,
-        default: true
-      },
-      marketing: {
-        type: Boolean,
-        default: false
-      }
+      type: Boolean,
+      default: true
     },
     push: {
-      analysisComplete: {
-        type: Boolean,
-        default: true
-      },
-      newFeatures: {
-        type: Boolean,
-        default: true
-      },
-      reminders: {
-        type: Boolean,
-        default: false
-      }
+      type: Boolean,
+      default: true
     },
-    frequency: {
-      type: String,
-      default: 'immediate',
-      enum: ['immediate', 'daily', 'weekly']
+    sms: {
+      type: Boolean,
+      default: false
+    },
+    marketing: {
+      type: Boolean,
+      default: false
+    },
+    updates: {
+      type: Boolean,
+      default: true
+    },
+    security: {
+      type: Boolean,
+      default: true
     }
   },
-  
-  // Privacy Settings
   privacy: {
     profileVisibility: {
       type: String,
-      default: 'private',
-      enum: ['public', 'private', 'friends']
+      enum: ['public', 'private', 'friends'],
+      default: 'public'
     },
-    shareAnalytics: {
+    dataSharing: {
       type: Boolean,
       default: false
     },
-    allowDataCollection: {
+    analytics: {
       type: Boolean,
       default: true
     },
-    showUsageStats: {
+    thirdParty: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
-  
-  // Application Settings
-  application: {
-    theme: {
-      type: String,
-      default: 'auto',
-      enum: ['light', 'dark', 'auto']
-    },
-    compactMode: {
+  accessibility: {
+    highContrast: {
       type: Boolean,
       default: false
+    },
+    largeText: {
+      type: Boolean,
+      default: false
+    },
+    screenReader: {
+      type: Boolean,
+      default: false
+    },
+    reducedMotion: {
+      type: Boolean,
+      default: false
+    }
+  },
+  preferences: {
+    defaultTool: {
+      type: String,
+      default: 'swot-analysis'
     },
     autoSave: {
       type: Boolean,
       default: true
     },
-    defaultTool: {
-      type: String,
-      default: 'swot-analysis'
-    },
-    resultsPerPage: {
-      type: Number,
-      default: 20,
-      min: 5,
-      max: 100
-    }
-  },
-  
-  // Integration Settings
-  integrations: {
-    exportFormat: {
-      type: String,
-      default: 'json',
-      enum: ['json', 'csv', 'pdf']
-    },
-    autoExport: {
-      type: Boolean,
-      default: false
-    },
-    webhookUrl: {
-      type: String,
-      default: ''
-    },
-    apiKey: {
-      type: String,
-      default: ''
-    }
-  },
-  
-  // Security Settings
-  security: {
-    twoFactorEnabled: {
-      type: Boolean,
-      default: false
-    },
-    sessionTimeout: {
-      type: Number,
-      default: 24, // hours
-      min: 1,
-      max: 168 // 1 week
-    },
-    loginNotifications: {
+    showTutorials: {
       type: Boolean,
       default: true
     },
-    deviceManagement: {
-      type: Boolean,
-      default: true
-    }
-  },
-  
-  // Data Management
-  dataManagement: {
-    autoDeleteOldAnalyses: {
-      type: Boolean,
-      default: false
-    },
-    retentionPeriod: {
-      type: Number,
-      default: 365, // days
-      min: 30,
-      max: 2555 // 7 years
-    },
-    backupFrequency: {
-      type: String,
-      default: 'weekly',
-      enum: ['daily', 'weekly', 'monthly']
-    },
-    exportData: {
+    compactMode: {
       type: Boolean,
       default: false
     }
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  collection: 'usersettings'
 });
 
-// Create indexes for better query performance
-UserSettingsSchema.index({ 'profile.displayName': 1 });
-UserSettingsSchema.index({ 'application.theme': 1 });
-UserSettingsSchema.index({ 'privacy.profileVisibility': 1 });
+// Indexes
+UserSettingsSchema.index({ userId: 1 }, { unique: true });
+UserSettingsSchema.index({ theme: 1 });
+UserSettingsSchema.index({ language: 1 });
+UserSettingsSchema.index({ createdAt: 1 });
 
 // Static methods
 UserSettingsSchema.statics = {
-  // Get user settings by userId
-  async getUserSettings(userId: string) {
+  // Get settings by user ID
+  async getSettingsByUserId(userId: string) {
     try {
-      await connectToDatabase();
-      let settings = await this.findOne({ userId }).lean();
-      
-      if (!settings) {
-        // Create default settings if none exist
-        settings = await this.create({
-          userId,
-          clerkId: userId,
-          profile: {
-            displayName: '',
-            bio: '',
-            avatar: '',
-            timezone: 'UTC',
-            language: 'en',
-            dateFormat: 'MM/DD/YYYY'
-          },
-          notifications: {
-            email: {
-              analysisResults: true,
-              weeklyReports: false,
-              systemUpdates: true,
-              marketing: false
-            },
-            push: {
-              analysisComplete: true,
-              newFeatures: true,
-              reminders: false
-            },
-            frequency: 'immediate'
-          },
-          privacy: {
-            profileVisibility: 'private',
-            shareAnalytics: false,
-            allowDataCollection: true,
-            showUsageStats: true
-          },
-          application: {
-            theme: 'auto',
-            compactMode: false,
-            autoSave: true,
-            defaultTool: '',
-            resultsPerPage: 20
-          },
-          integrations: {
-            exportFormat: 'json',
-            autoExport: false,
-            webhookUrl: '',
-            apiKey: ''
-          },
-          security: {
-            twoFactorEnabled: false,
-            sessionTimeout: 24,
-            loginNotifications: true,
-            deviceManagement: true
-          },
-          dataManagement: {
-            autoDeleteOldAnalyses: false,
-            retentionPeriod: 365,
-            backupFrequency: 'weekly',
-            exportData: false
-          }
-        });
-      }
-      
-      return settings;
+      return await this.findOne({ userId }).maxTimeMS(3000);
     } catch (error) {
-      console.error('Error getting user settings:', error);
-      
-      // Return default settings if database is unavailable
-      return {
-        userId,
-        clerkId: userId,
-        profile: {
-          displayName: '',
-          bio: '',
-          avatar: '',
-          timezone: 'UTC',
-          language: 'en',
-          dateFormat: 'MM/DD/YYYY'
-        },
-        notifications: {
-          email: {
-            analysisResults: true,
-            weeklyReports: false,
-            systemUpdates: true,
-            marketing: false
-          },
-          push: {
-            analysisComplete: true,
-            newFeatures: true,
-            reminders: false
-          },
-          frequency: 'immediate'
-        },
-        privacy: {
-          profileVisibility: 'private',
-          shareAnalytics: false,
-          allowDataCollection: true,
-          showUsageStats: true
-        },
-        application: {
-          theme: 'auto',
-          compactMode: false,
-          autoSave: true,
-          defaultTool: '',
-          resultsPerPage: 20
-        },
-        integrations: {
-          exportFormat: 'json',
-          autoExport: false,
-          webhookUrl: '',
-          apiKey: ''
-        },
-        security: {
-          twoFactorEnabled: false,
-          sessionTimeout: 24,
-          loginNotifications: true,
-          deviceManagement: true
-        },
-        dataManagement: {
-          autoDeleteOldAnalyses: false,
-          retentionPeriod: 365,
-          backupFrequency: 'weekly',
-          exportData: false
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      console.error('Error getting settings by userId:', error);
+      return null;
     }
   },
 
-  // Update user settings
-  async updateUserSettings(userId: string, updates: Partial<IUserSettings>) {
+  // Create default settings for a user
+  async createDefaultSettings(userId: string) {
+    try {
+      const defaultSettings = new this({
+        userId,
+        theme: 'auto',
+        language: 'en',
+        timezone: 'UTC',
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          marketing: false,
+          updates: true,
+          security: true
+        },
+        privacy: {
+          profileVisibility: 'public',
+          dataSharing: false,
+          analytics: true,
+          thirdParty: false
+        },
+        accessibility: {
+          highContrast: false,
+          largeText: false,
+          screenReader: false,
+          reducedMotion: false
+        },
+        preferences: {
+          defaultTool: 'swot-analysis',
+          autoSave: true,
+          showTutorials: true,
+          compactMode: false
+        }
+      });
+
+      return await defaultSettings.save();
+    } catch (error) {
+      console.error('Error creating default settings:', error);
+      return null;
+    }
+  },
+
+  // Update settings
+  async updateSettings(userId: string, updates: Partial<IUserSettings>) {
     try {
       const result = await this.findOneAndUpdate(
         { userId },
         { $set: updates },
-        { new: true, upsert: true, maxTimeMS: 5000 }
+        { new: true, upsert: true }
       );
       return result;
     } catch (error) {
-      console.error('Error updating user settings:', error);
+      console.error('Error updating settings:', error);
       return null;
     }
   },
 
-  // Update specific settings section
-  async updateSettingsSection(userId: string, section: string, updates: any) {
+  // Delete settings
+  async deleteSettings(userId: string) {
     try {
-      const updateObj = {};
-      updateObj[section] = updates;
-      
-      const result = await this.findOneAndUpdate(
-        { userId },
-        { $set: updateObj },
-        { new: true, upsert: true, maxTimeMS: 5000 }
-      );
-      return result;
+      const result = await this.deleteOne({ userId });
+      return result.deletedCount > 0;
     } catch (error) {
-      console.error(`Error updating ${section} settings:`, error);
-      return null;
+      console.error('Error deleting settings:', error);
+      return false;
     }
   },
 
-  // Delete user settings
-  async deleteUserSettings(userId: string) {
+  // Get all settings with pagination
+  async getAllSettings(page: number = 1, limit: number = 10) {
     try {
-      const result = await this.deleteOne({ userId }).maxTimeMS(3000);
-      return { deletedCount: result.deletedCount || 0 };
+      const skip = (page - 1) * limit;
+      const settings = await this.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .maxTimeMS(5000);
+
+      const total = await this.countDocuments();
+
+      return {
+        settings,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      };
     } catch (error) {
-      console.error('Error deleting user settings:', error);
-      return { deletedCount: 0 };
+      console.error('Error getting all settings:', error);
+      return { settings: [], pagination: { page, limit, total: 0, pages: 0 } };
     }
   },
 
-  // Get settings by clerkId
-  async getSettingsByClerkId(clerkId: string) {
+  // Get settings statistics
+  async getSettingsStats() {
     try {
-      return await this.findOne({ clerkId }).maxTimeMS(3000);
+      const totalSettings = await this.countDocuments();
+      const themeStats = await this.aggregate([
+        { $group: { _id: '$theme', count: { $sum: 1 } } }
+      ]);
+      const languageStats = await this.aggregate([
+        { $group: { _id: '$language', count: { $sum: 1 } } }
+      ]);
+
+      return {
+        totalSettings,
+        themeStats,
+        languageStats
+      };
     } catch (error) {
-      console.error('Error getting settings by clerkId:', error);
-      return null;
+      console.error('Error getting settings stats:', error);
+      return { totalSettings: 0, themeStats: [], languageStats: [] };
     }
   }
 };
 
 // Instance methods
 UserSettingsSchema.methods = {
-  // Update profile settings
-  async updateProfile(profileUpdates: any) {
-    try {
-      this.profile = { ...this.profile, ...profileUpdates };
-      return await this.save();
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      return null;
-    }
+  // Update theme
+  async updateTheme(theme: 'light' | 'dark' | 'auto') {
+    this.theme = theme;
+    return await this.save();
+  },
+
+  // Update language
+  async updateLanguage(language: string) {
+    this.language = language;
+    return await this.save();
+  },
+
+  // Update timezone
+  async updateTimezone(timezone: string) {
+    this.timezone = timezone;
+    return await this.save();
   },
 
   // Update notification settings
-  async updateNotifications(notificationUpdates: any) {
-    try {
-      this.notifications = { ...this.notifications, ...notificationUpdates };
-      return await this.save();
-    } catch (error) {
-      console.error('Error updating notifications:', error);
-      return null;
-    }
+  async updateNotifications(notifications: Partial<IUserSettings['notifications']>) {
+    this.notifications = { ...this.notifications, ...notifications };
+    return await this.save();
   },
 
   // Update privacy settings
-  async updatePrivacy(privacyUpdates: any) {
-    try {
-      this.privacy = { ...this.privacy, ...privacyUpdates };
-      return await this.save();
-    } catch (error) {
-      console.error('Error updating privacy:', error);
-      return null;
-    }
+  async updatePrivacy(privacy: Partial<IUserSettings['privacy']>) {
+    this.privacy = { ...this.privacy, ...privacy };
+    return await this.save();
   },
 
-  // Update application settings
-  async updateApplication(appUpdates: any) {
-    try {
-      this.application = { ...this.application, ...appUpdates };
-      return await this.save();
-    } catch (error) {
-      console.error('Error updating application settings:', error);
-      return null;
-    }
+  // Update accessibility settings
+  async updateAccessibility(accessibility: Partial<IUserSettings['accessibility']>) {
+    this.accessibility = { ...this.accessibility, ...accessibility };
+    return await this.save();
+  },
+
+  // Update preferences
+  async updatePreferences(preferences: Partial<IUserSettings['preferences']>) {
+    this.preferences = { ...this.preferences, ...preferences };
+    return await this.save();
+  },
+
+  // Reset to default settings
+  async resetToDefaults() {
+    this.theme = 'auto';
+    this.language = 'en';
+    this.timezone = 'UTC';
+    this.notifications = {
+      email: true,
+      push: true,
+      sms: false,
+      marketing: false,
+      updates: true,
+      security: true
+    };
+    this.privacy = {
+      profileVisibility: 'public',
+      dataSharing: false,
+      analytics: true,
+      thirdParty: false
+    };
+    this.accessibility = {
+      highContrast: false,
+      largeText: false,
+      screenReader: false,
+      reducedMotion: false
+    };
+    this.preferences = {
+      defaultTool: 'swot-analysis',
+      autoSave: true,
+      showTutorials: true,
+      compactMode: false
+    };
+    return await this.save();
   }
 };
 
-export const UserSettings = mongoose.models.UserSettings || mongoose.model<IUserSettings>('UserSettings', UserSettingsSchema); 
+// Export the model
+export const UserSettingsModel = mongoose.models.UserSettings || mongoose.model<IUserSettings>('UserSettings', UserSettingsSchema); 

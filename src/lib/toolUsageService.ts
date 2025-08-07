@@ -1,62 +1,53 @@
-import { getDatabase } from './mongodb';
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
+import { ToolUsageModel } from '@/models/ToolUsageModel';
+import { createHash } from 'crypto';
 
-export interface ToolUsage {
-  _id?: ObjectId;
-  userId?: string; // Clerk user ID (optional for anonymous users)
-  anonymousUserId?: string; // For anonymous users
+export interface TrackUsageRequest {
   toolSlug: string;
   toolName: string;
-  action: string; // 'view', 'use', 'generate', 'analyze', etc.
-  inputData?: any; // Input data (sanitized)
-  outputData?: any; // Output data (sanitized)
-  processingTime?: number; // Time taken in milliseconds
-  success: boolean;
-  errorMessage?: string;
-  userAgent?: string;
-  ipAddress?: string;
-  createdAt: Date;
-  metadata?: Record<string, any>;
+  usageType: 'view' | 'generate' | 'download' | 'share';
+  metadata?: any;
+  userId?: string; // Optional user ID for anonymous users
 }
 
 export interface ToolUsageStats {
   totalUsage: number;
   uniqueUsers: number;
-  successRate: number;
-  averageProcessingTime: number;
-  usageByAction: Record<string, number>;
-  usageByDay: Array<{
-    date: string;
-    count: number;
-  }>;
-  topUsers: Array<{
-    userId: string;
+  usageByType: {
+    view: number;
+    generate: number;
+    download: number;
+    share: number;
+  };
+  recentUsage: number;
+  popularTools: Array<{
+    toolSlug: string;
+    toolName: string;
     usage: number;
   }>;
+  userEngagement: {
+    averageUsagePerUser: number;
+    mostActiveUsers: Array<{
+      userId: string;
+      usage: number;
+    }>;
+  };
 }
 
-export interface CreateToolUsageData {
-  userId?: string;
-  anonymousUserId?: string;
+export interface ToolUsageRecord {
+  _id: string;
+  userId: string;
   toolSlug: string;
   toolName: string;
-  action: string;
-  inputData?: any;
-  outputData?: any;
-  processingTime?: number;
-  success: boolean;
-  errorMessage?: string;
-  userAgent?: string;
-  ipAddress?: string;
-  metadata?: Record<string, any>;
+  usageType: 'view' | 'generate' | 'download' | 'share';
+  metadata: any;
+  timestamp: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-/**
- * Tool Usage Service - Handles all tool usage tracking and analytics
- */
 export class ToolUsageService {
   private static instance: ToolUsageService;
-  private collectionName = 'toolusages'; // Fixed collection name
 
   private constructor() {}
 
@@ -68,536 +59,498 @@ export class ToolUsageService {
   }
 
   /**
+   * Generate a unique user ID for anonymous users
+   */
+  private generateAnonymousUserId(ipAddress: string, userAgent: string): string {
+    const hash = createHash('sha256')
+      .update(`${ipAddress}-${userAgent}`)
+      .digest('hex');
+    return `anon_${hash.substring(0, 16)}`;
+  }
+
+  /**
    * Track tool usage
    */
-  async trackUsage(usageData: CreateToolUsageData): Promise<ToolUsage> {
+  public async trackUsage(request: TrackUsageRequest, ipAddress?: string, userAgent?: string): Promise<void> {
     try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
+      let userId = request.userId;
 
-      // Validate data size to prevent memory issues
-      const maxDataSize = 1024 * 1024; // 1MB limit
-      
-      if (usageData.inputData && JSON.stringify(usageData.inputData).length > maxDataSize) {
-        console.warn(`⚠️ Input data too large for user ${usageData.userId}, truncating`);
-        usageData.inputData = { 
-          truncated: true, 
-          originalSize: JSON.stringify(usageData.inputData).length,
-          message: 'Data truncated due to size limit'
-        };
+      // Generate anonymous user ID if no user ID provided
+      if (!userId && ipAddress && userAgent) {
+        userId = this.generateAnonymousUserId(ipAddress, userAgent);
+      } else if (!userId) {
+        userId = 'unknown_user';
       }
 
-      if (usageData.outputData && JSON.stringify(usageData.outputData).length > maxDataSize) {
-        console.warn(`⚠️ Output data too large for user ${usageData.userId}, truncating`);
-        usageData.outputData = { 
-          truncated: true, 
-          originalSize: JSON.stringify(usageData.outputData).length,
-          message: 'Data truncated due to size limit'
-        };
-      }
-
-      const usage: ToolUsage = {
-        ...usageData,
-        createdAt: new Date(),
-      };
-
-      // Sanitize sensitive data
-      if (usage.inputData) {
-        usage.inputData = this.sanitizeData(usage.inputData);
-      }
-      if (usage.outputData) {
-        usage.outputData = this.sanitizeData(usage.outputData);
-      }
-
-      const result = await collection.insertOne(usage);
-      usage._id = result.insertedId;
-
-      console.log(`✅ Tool usage tracked: ${usageData.toolSlug} - ${usageData.action}`);
-      return usage;
-    } catch (error: any) {
-      console.error('❌ Error tracking tool usage:', error);
-      // Don't throw error for usage tracking as it's not critical
-      throw new Error(`Failed to track usage: ${error.message}`);
-    }
-  }
-
-  /**
-   * Get tool usage statistics
-   */
-  async getToolUsageStats(
-    toolSlug?: string,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<ToolUsageStats> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
-
-      // Build query
-      const query: any = {};
-      if (toolSlug) {
-        query.toolSlug = toolSlug;
-      }
-      if (startDate || endDate) {
-        query.createdAt = {};
-        if (startDate) query.createdAt.$gte = startDate;
-        if (endDate) query.createdAt.$lte = endDate;
-      }
-
-      // Get total usage
-      const totalUsage = await collection.countDocuments(query);
-
-      // Get unique users
-      const uniqueUsers = await collection.distinct('userId', query);
-
-      // Get success rate
-      const successCount = await collection.countDocuments({
-        ...query,
-        success: true,
+      const usageRecord = new ToolUsageModel({
+        userId,
+        toolSlug: request.toolSlug,
+        toolName: request.toolName,
+        usageType: request.usageType,
+        metadata: request.metadata || {},
+        timestamp: new Date()
       });
-      const successRate = totalUsage > 0 ? (successCount / totalUsage) * 100 : 0;
 
-      // Get average processing time
-      const avgProcessingTime = await collection
-        .aggregate([
-          { $match: query },
-          { $group: { _id: null, avg: { $avg: '$processingTime' } } },
-        ])
-        .toArray();
-      const averageProcessingTime = avgProcessingTime[0]?.avg || 0;
+      await usageRecord.save();
+    } catch (error) {
+      console.error('Error tracking tool usage:', error);
+    }
+  }
 
-      // Get usage by action
-      const usageByAction = await collection
-        .aggregate([
-          { $match: query },
-          { $group: { _id: '$action', count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-        ])
-        .toArray();
-
-      // Get usage by day (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  /**
+   * Get usage statistics for all tools
+   */
+  public async getUsageStats(timeRange?: { start: Date; end: Date }): Promise<ToolUsageStats> {
+    try {
+      const matchStage: any = {};
       
-      const usageByDay = await collection
-        .aggregate([
-          {
-            $match: {
-              ...query,
-              createdAt: { $gte: thirtyDaysAgo },
-            },
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
-              },
-              count: { $sum: 1 },
-            },
-          },
-          { $sort: { _id: 1 } },
-        ])
-        .toArray();
+      if (timeRange) {
+        matchStage.timestamp = {
+          $gte: timeRange.start,
+          $lte: timeRange.end
+        };
+      }
 
-      // Get top users
-      const topUsers = await collection
-        .aggregate([
-          { $match: { ...query, userId: { $exists: true, $ne: null } } },
-          { $group: { _id: '$userId', usage: { $sum: 1 } } },
-          { $sort: { usage: -1 } },
-          { $limit: 10 },
-        ])
-        .toArray();
+      const pipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: null,
+            totalUsage: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$userId' }
+          }
+        },
+        {
+          $project: {
+            totalUsage: 1,
+            uniqueUsers: { $size: '$uniqueUsers' }
+          }
+        }
+      ];
 
-      return {
-        totalUsage,
-        uniqueUsers: uniqueUsers.length,
-        successRate,
-        averageProcessingTime,
-        usageByAction: usageByAction.reduce((acc, item) => {
-          acc[item._id] = item.count;
-          return acc;
-        }, {} as Record<string, number>),
-        usageByDay: usageByDay.map((item) => ({
-          date: item._id,
-          count: item.count,
-        })),
-        topUsers: topUsers.map((item) => ({
-          userId: item._id,
-          usage: item.usage,
-        })),
+      const overallStats = await ToolUsageModel.aggregate(pipeline);
+      const stats = overallStats[0] || { totalUsage: 0, uniqueUsers: 0 };
+
+      // Get usage by type
+      const usageByTypePipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: '$usageType',
+            count: { $sum: 1 }
+          }
+        }
+      ];
+
+      const usageByTypeResult = await ToolUsageModel.aggregate(usageByTypePipeline);
+      const usageByType = {
+        view: 0,
+        generate: 0,
+        download: 0,
+        share: 0
       };
-    } catch (error: any) {
-      console.error('❌ Error getting tool usage stats:', error);
-      return {
-        totalUsage: 0,
-        uniqueUsers: 0,
-        successRate: 0,
-        averageProcessingTime: 0,
-        usageByAction: {},
-        usageByDay: [],
-        topUsers: [],
-      };
-    }
-  }
 
-  /**
-   * Get user's tool usage history
-   */
-  async getUserToolUsage(
-    userId: string,
-    limit = 50,
-    skip = 0
-  ): Promise<ToolUsage[]> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
+      usageByTypeResult.forEach(item => {
+        usageByType[item._id as keyof typeof usageByType] = item.count;
+      });
 
-      const usage = await collection
-        .find({ userId })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .toArray();
-
-      return usage as ToolUsage[];
-    } catch (error: any) {
-      console.error('❌ Error getting user tool usage:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get tool usage by tool slug
-   */
-  async getToolUsageBySlug(
-    toolSlug: string,
-    limit = 100,
-    skip = 0
-  ): Promise<ToolUsage[]> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
-
-      const usage = await collection
-        .find({ toolSlug })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .toArray();
-
-      return usage as ToolUsage[];
-    } catch (error: any) {
-      console.error('❌ Error getting tool usage by slug:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get popular tools (most used)
-   */
-  async getPopularTools(limit = 10): Promise<Array<{
-    toolSlug: string;
-    toolName: string;
-    usageCount: number;
-    uniqueUsers: number;
-  }>> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
-
-      const popularTools = await collection
-        .aggregate([
-          {
-            $group: {
-              _id: '$toolSlug',
-              toolName: { $first: '$toolName' },
-              usageCount: { $sum: 1 },
-              uniqueUsers: { $addToSet: '$userId' },
-            },
-          },
-          {
-            $project: {
-              toolSlug: '$_id',
-              toolName: 1,
-              usageCount: 1,
-              uniqueUsers: { $size: '$uniqueUsers' },
-            },
-          },
-          { $sort: { usageCount: -1 } },
-          { $limit: limit },
-        ])
-        .toArray();
-
-      return popularTools;
-    } catch (error: any) {
-      console.error('❌ Error getting popular tools:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get recent tool usage
-   */
-  async getRecentUsage(limit = 20): Promise<ToolUsage[]> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
-
-      const recentUsage = await collection
-        .find({})
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .toArray();
-
-      return recentUsage as ToolUsage[];
-    } catch (error: any) {
-      console.error('❌ Error getting recent usage:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get usage analytics for admin dashboard
-   */
-  async getAdminAnalytics(): Promise<{
-    totalUsage: number;
-    totalUsers: number;
-    popularTools: Array<{
-      toolSlug: string;
-      toolName: string;
-      usageCount: number;
-    }>;
-    recentActivity: ToolUsage[];
-    dailyUsage: Array<{
-      date: string;
-      count: number;
-    }>;
-  }> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
-
-      // Get total usage
-      const totalUsage = await collection.countDocuments();
-
-      // Get total unique users
-      const totalUsers = await collection.distinct('userId');
-
-      // Get popular tools
-      const popularTools = await collection
-        .aggregate([
-          {
-            $group: {
-              _id: '$toolSlug',
-              toolName: { $first: '$toolName' },
-              usageCount: { $sum: 1 },
-            },
-          },
-          { $sort: { usageCount: -1 } },
-          { $limit: 5 },
-        ])
-        .toArray();
-
-      // Get recent activity
-      const recentActivity = await collection
-        .find({})
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .toArray();
-
-      // Get daily usage (last 7 days)
+      // Get recent usage (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-      const dailyUsage = await collection
-        .aggregate([
-          {
-            $match: {
-              createdAt: { $gte: sevenDaysAgo },
-            },
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
-              },
-              count: { $sum: 1 },
-            },
-          },
-          { $sort: { _id: 1 } },
-        ])
-        .toArray();
-
-      return {
-        totalUsage,
-        totalUsers: totalUsers.length,
-        popularTools: popularTools.map((tool) => ({
-          toolSlug: tool._id,
-          toolName: tool.toolName,
-          usageCount: tool.usageCount,
-        })),
-        recentActivity: recentActivity as ToolUsage[],
-        dailyUsage: dailyUsage.map((day) => ({
-          date: day._id,
-          count: day.count,
-        })),
-      };
-    } catch (error: any) {
-      console.error('❌ Error getting admin analytics:', error);
-      return {
-        totalUsage: 0,
-        totalUsers: 0,
-        popularTools: [],
-        recentActivity: [],
-        dailyUsage: [],
-      };
-    }
-  }
-
-  /**
-   * Clean up old usage data (for GDPR compliance)
-   */
-  async cleanupOldUsage(daysToKeep = 365): Promise<number> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
-
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-
-      const result = await collection.deleteMany({
-        createdAt: { $lt: cutoffDate },
+      
+      const recentUsage = await ToolUsageModel.countDocuments({
+        timestamp: { $gte: sevenDaysAgo }
       });
 
-      console.log(`✅ Cleaned up ${result.deletedCount} old usage records`);
-      return result.deletedCount;
-    } catch (error: any) {
-      console.error('❌ Error cleaning up old usage:', error);
-      return 0;
-    }
-  }
+      // Get popular tools
+      const popularToolsPipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: '$toolSlug',
+            toolName: { $first: '$toolName' },
+            usage: { $sum: 1 }
+          }
+        },
+        { $sort: { usage: -1 } },
+        { $limit: 10 }
+      ];
 
-  /**
-   * Delete user's usage data (for GDPR compliance)
-   */
-  async deleteUserUsage(userId: string): Promise<number> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
+      const popularTools = await ToolUsageModel.aggregate(popularToolsPipeline);
 
-      const result = await collection.deleteMany({ userId });
+      // Get user engagement
+      const userEngagementPipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: '$userId',
+            usage: { $sum: 1 }
+          }
+        },
+        { $sort: { usage: -1 } },
+        { $limit: 10 }
+      ];
 
-      console.log(`✅ Deleted ${result.deletedCount} usage records for user: ${userId}`);
-      return result.deletedCount;
-    } catch (error: any) {
-      console.error('❌ Error deleting user usage:', error);
-      return 0;
-    }
-  }
+      const mostActiveUsers = await ToolUsageModel.aggregate(userEngagementPipeline);
 
-  /**
-   * Sanitize sensitive data before storing
-   */
-  private sanitizeData(data: any): any {
-    if (!data || typeof data !== 'object') {
-      return data;
-    }
-
-    const sensitiveFields = [
-      'password',
-      'token',
-      'apiKey',
-      'secret',
-      'key',
-      'authorization',
-      'cookie',
-      'session',
-    ];
-
-    const sanitized = { ...data };
-
-    for (const field of sensitiveFields) {
-      if (sanitized[field]) {
-        sanitized[field] = '[REDACTED]';
-      }
-    }
-
-    // Recursively sanitize nested objects
-    for (const key in sanitized) {
-      if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
-        sanitized[key] = this.sanitizeData(sanitized[key]);
-      }
-    }
-
-    return sanitized;
-  }
-
-  /**
-   * Get usage summary for a specific tool
-   */
-  async getToolSummary(toolSlug: string): Promise<{
-    totalUsage: number;
-    uniqueUsers: number;
-    successRate: number;
-    averageProcessingTime: number;
-    lastUsed: Date | null;
-  }> {
-    try {
-      const db = await getDatabase();
-      const collection = db.collection(this.collectionName);
-
-      const [stats, lastUsage] = await Promise.all([
-        collection
-          .aggregate([
-            { $match: { toolSlug } },
-            {
-              $group: {
-                _id: null,
-                totalUsage: { $sum: 1 },
-                uniqueUsers: { $addToSet: '$userId' },
-                successCount: {
-                  $sum: { $cond: ['$success', 1, 0] },
-                },
-                avgProcessingTime: { $avg: '$processingTime' },
-              },
-            },
-          ])
-          .toArray(),
-        collection
-          .find({ toolSlug })
-          .sort({ createdAt: -1 })
-          .limit(1)
-          .toArray(),
-      ]);
-
-      const stat = stats[0];
-      if (!stat) {
-        return {
-          totalUsage: 0,
-          uniqueUsers: 0,
-          successRate: 0,
-          averageProcessingTime: 0,
-          lastUsed: null,
-        };
-      }
+      const averageUsagePerUser = stats.totalUsage > 0 && stats.uniqueUsers > 0 
+        ? stats.totalUsage / stats.uniqueUsers 
+        : 0;
 
       return {
-        totalUsage: stat.totalUsage,
-        uniqueUsers: stat.uniqueUsers.length,
-        successRate: (stat.successCount / stat.totalUsage) * 100,
-        averageProcessingTime: stat.avgProcessingTime || 0,
-        lastUsed: lastUsage[0]?.createdAt || null,
+        totalUsage: stats.totalUsage,
+        uniqueUsers: stats.uniqueUsers,
+        usageByType,
+        recentUsage,
+        popularTools: popularTools.map(tool => ({
+          toolSlug: tool._id,
+          toolName: tool.toolName,
+          usage: tool.usage
+        })),
+        userEngagement: {
+          averageUsagePerUser,
+          mostActiveUsers: mostActiveUsers.map(user => ({
+            userId: user._id,
+            usage: user.usage
+          }))
+        }
       };
-    } catch (error: any) {
-      console.error('❌ Error getting tool summary:', error);
+    } catch (error) {
+      console.error('Error getting usage stats:', error);
       return {
         totalUsage: 0,
         uniqueUsers: 0,
-        successRate: 0,
-        averageProcessingTime: 0,
-        lastUsed: null,
+        usageByType: { view: 0, generate: 0, download: 0, share: 0 },
+        recentUsage: 0,
+        popularTools: [],
+        userEngagement: {
+          averageUsagePerUser: 0,
+          mostActiveUsers: []
+        }
       };
+    }
+  }
+
+  /**
+   * Get usage statistics for a specific tool
+   */
+  public async getToolUsageStats(toolSlug: string, timeRange?: { start: Date; end: Date }): Promise<{
+    toolSlug: string;
+    toolName: string;
+    totalUsage: number;
+    uniqueUsers: number;
+    usageByType: {
+      view: number;
+      generate: number;
+      download: number;
+      share: number;
+    };
+    recentUsage: number;
+    usageTrend: Array<{
+      date: string;
+      usage: number;
+    }>;
+  }> {
+    try {
+      const matchStage: any = { toolSlug };
+      
+      if (timeRange) {
+        matchStage.timestamp = {
+          $gte: timeRange.start,
+          $lte: timeRange.end
+        };
+      }
+
+      // Get basic stats
+      const basicStatsPipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: null,
+            totalUsage: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$userId' },
+            toolName: { $first: '$toolName' }
+          }
+        },
+        {
+          $project: {
+            totalUsage: 1,
+            uniqueUsers: { $size: '$uniqueUsers' },
+            toolName: 1
+          }
+        }
+      ];
+
+      const basicStats = await ToolUsageModel.aggregate(basicStatsPipeline);
+      const stats = basicStats[0] || { totalUsage: 0, uniqueUsers: 0, toolName: toolSlug };
+
+      // Get usage by type
+      const usageByTypePipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: '$usageType',
+            count: { $sum: 1 }
+          }
+        }
+      ];
+
+      const usageByTypeResult = await ToolUsageModel.aggregate(usageByTypePipeline);
+      const usageByType = {
+        view: 0,
+        generate: 0,
+        download: 0,
+        share: 0
+      };
+
+      usageByTypeResult.forEach(item => {
+        usageByType[item._id as keyof typeof usageByType] = item.count;
+      });
+
+      // Get recent usage (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const recentUsage = await ToolUsageModel.countDocuments({
+        toolSlug,
+        timestamp: { $gte: sevenDaysAgo }
+      });
+
+      // Get usage trend (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const trendPipeline = [
+        {
+          $match: {
+            toolSlug,
+            timestamp: { $gte: thirtyDaysAgo }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$timestamp'
+              }
+            },
+            usage: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ];
+
+      const usageTrend = await ToolUsageModel.aggregate(trendPipeline);
+
+      return {
+        toolSlug,
+        toolName: stats.toolName,
+        totalUsage: stats.totalUsage,
+        uniqueUsers: stats.uniqueUsers,
+        usageByType,
+        recentUsage,
+        usageTrend: usageTrend.map(item => ({
+          date: item._id,
+          usage: item.usage
+        }))
+      };
+    } catch (error) {
+      console.error('Error getting tool usage stats:', error);
+      return {
+        toolSlug,
+        toolName: toolSlug,
+        totalUsage: 0,
+        uniqueUsers: 0,
+        usageByType: { view: 0, generate: 0, download: 0, share: 0 },
+        recentUsage: 0,
+        usageTrend: []
+      };
+    }
+  }
+
+  /**
+   * Get user's tool usage
+   */
+  public async getUserToolUsage(userId: string, timeRange?: { start: Date; end: Date }): Promise<{
+    totalUsage: number;
+    toolsUsed: number;
+    usageByTool: Array<{
+      toolSlug: string;
+      toolName: string;
+      usage: number;
+      lastUsed: Date;
+    }>;
+    usageByType: {
+      view: number;
+      generate: number;
+      download: number;
+      share: number;
+    };
+  }> {
+    try {
+      const matchStage: any = { userId };
+      
+      if (timeRange) {
+        matchStage.timestamp = {
+          $gte: timeRange.start,
+          $lte: timeRange.end
+        };
+      }
+
+      // Get basic stats
+      const basicStatsPipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: null,
+            totalUsage: { $sum: 1 },
+            toolsUsed: { $addToSet: '$toolSlug' }
+          }
+        },
+        {
+          $project: {
+            totalUsage: 1,
+            toolsUsed: { $size: '$toolsUsed' }
+          }
+        }
+      ];
+
+      const basicStats = await ToolUsageModel.aggregate(basicStatsPipeline);
+      const stats = basicStats[0] || { totalUsage: 0, toolsUsed: 0 };
+
+      // Get usage by tool
+      const usageByToolPipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: '$toolSlug',
+            toolName: { $first: '$toolName' },
+            usage: { $sum: 1 },
+            lastUsed: { $max: '$timestamp' }
+          }
+        },
+        { $sort: { usage: -1 } }
+      ];
+
+      const usageByTool = await ToolUsageModel.aggregate(usageByToolPipeline);
+
+      // Get usage by type
+      const usageByTypePipeline = [
+        { $match: matchStage },
+        {
+          $group: {
+            _id: '$usageType',
+            count: { $sum: 1 }
+          }
+        }
+      ];
+
+      const usageByTypeResult = await ToolUsageModel.aggregate(usageByTypePipeline);
+      const usageByType = {
+        view: 0,
+        generate: 0,
+        download: 0,
+        share: 0
+      };
+
+      usageByTypeResult.forEach(item => {
+        usageByType[item._id as keyof typeof usageByType] = item.count;
+      });
+
+      return {
+        totalUsage: stats.totalUsage,
+        toolsUsed: stats.toolsUsed,
+        usageByTool: usageByTool.map(tool => ({
+          toolSlug: tool._id,
+          toolName: tool.toolName,
+          usage: tool.usage,
+          lastUsed: tool.lastUsed
+        })),
+        usageByType
+      };
+    } catch (error) {
+      console.error('Error getting user tool usage:', error);
+      return {
+        totalUsage: 0,
+        toolsUsed: 0,
+        usageByTool: [],
+        usageByType: { view: 0, generate: 0, download: 0, share: 0 }
+      };
+    }
+  }
+
+  /**
+   * Get all usage records with pagination
+   */
+  public async getUsageRecords(page: number = 1, limit: number = 50, filters?: {
+    toolSlug?: string;
+    userId?: string;
+    usageType?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
+    records: ToolUsageRecord[];
+    total: number;
+    page: number;
+    pages: number;
+  }> {
+    try {
+      const skip = (page - 1) * limit;
+      const matchStage: any = {};
+
+      if (filters) {
+        if (filters.toolSlug) matchStage.toolSlug = filters.toolSlug;
+        if (filters.userId) matchStage.userId = filters.userId;
+        if (filters.usageType) matchStage.usageType = filters.usageType;
+        if (filters.startDate || filters.endDate) {
+          matchStage.timestamp = {};
+          if (filters.startDate) matchStage.timestamp.$gte = filters.startDate;
+          if (filters.endDate) matchStage.timestamp.$lte = filters.endDate;
+        }
+      }
+
+      const [records, total] = await Promise.all([
+        ToolUsageModel.find(matchStage)
+          .sort({ timestamp: -1 })
+          .skip(skip)
+          .limit(limit),
+        ToolUsageModel.countDocuments(matchStage)
+      ]);
+
+      return {
+        records,
+        total,
+        page,
+        pages: Math.ceil(total / limit)
+      };
+    } catch (error) {
+      console.error('Error getting usage records:', error);
+      return {
+        records: [],
+        total: 0,
+        page,
+        pages: 0
+      };
+    }
+  }
+
+  /**
+   * Delete old usage records
+   */
+  public async deleteOldRecords(daysOld: number = 90): Promise<number> {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+      const result = await ToolUsageModel.deleteMany({
+        timestamp: { $lt: cutoffDate }
+      });
+
+      return result.deletedCount;
+    } catch (error) {
+      console.error('Error deleting old usage records:', error);
+      return 0;
     }
   }
 }

@@ -1,36 +1,34 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { 
-  X, 
-  Save, 
-  User, 
-  Shield, 
-  Crown,
-  Mail,
-  Calendar,
-  Activity
-} from 'lucide-react';
-import Modal, { ModalHeader, ModalContent, ModalFooter } from '@/components/ui/modal';
+import { X } from 'lucide-react';
 
 interface User {
   _id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  status: string;
-  clerkId: string;
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  role: 'user' | 'admin';
+  isActive: boolean;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
   createdAt: string;
   updatedAt: string;
-  activity?: {
-    toolUsageCount: number;
-    lastActivity: string | null;
+  lastSignInAt?: string;
+  stats?: {
+    totalLogins: number;
     toolsUsed: number;
-    isActive: boolean;
+    totalAnalyses: number;
+    favoriteTools: number;
   };
 }
 
@@ -38,33 +36,31 @@ interface UserEditModalProps {
   user: User | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userId: string, userData: any) => Promise<void>;
+  onSave: (userData: Partial<User>) => void;
 }
 
 export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEditModalProps) {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    role: 'user',
-    status: 'active'
-  });
+  const [formData, setFormData] = useState<Partial<User>>({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       setFormData({
+        email: user.email,
+        name: user.name,
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email,
+        username: user.username,
         role: user.role,
-        status: user.status
+        isActive: user.isActive,
+        emailVerified: user.emailVerified,
+        twoFactorEnabled: user.twoFactorEnabled
       });
     }
   }, [user]);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof User, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -73,53 +69,24 @@ export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEdi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
-      await onSave(user._id, formData);
+      await onSave(formData);
       onClose();
-    } catch (error: any) {
-      setError(error.message || 'Failed to update user');
+    } catch (error) {
+      setError('Failed to save user');
+      console.error('Error saving user:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'super_admin':
-        return <Crown className="w-4 h-4 text-yellow-500" />;
-      case 'admin':
-        return <Shield className="w-4 h-4 text-green-500" />;
-      case 'moderator':
-        return <Shield className="w-4 h-4 text-blue-500" />;
-      default:
-        return <User className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case 'inactive':
-        return <Badge className="bg-gray-100 text-gray-800">Inactive</Badge>;
-      case 'suspended':
-        return <Badge className="bg-red-100 text-red-800">Suspended</Badge>;
-      case 'deleted':
-        return <Badge className="bg-red-100 text-red-800">Deleted</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -129,199 +96,206 @@ export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEdi
   if (!isOpen || !user) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalHeader className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Edit User</h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onClose}
-          className="h-8 w-8 p-0"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </ModalHeader>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded text-red-700">
-          {error}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold">Edit User</h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* User Info Section */}
-        <ModalContent>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-              <User className="w-5 h-5" />
-              User Information
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
-                </label>
-                <Input
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  placeholder="First name"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name
-                </label>
-                <Input
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  placeholder="Last name"
-                  required
-                />
-              </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Email address"
-                  required
-                />
-              </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600">{error}</p>
             </div>
-          </div>
+          )}
 
-          {/* Role and Status Section */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Role & Status
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
-                </label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => handleInputChange('role', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="user">User</option>
-                  <option value="moderator">Moderator</option>
-                  <option value="admin">Admin</option>
-                  <option value="super_admin">Super Admin</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="suspended">Suspended</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Current User Info */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Current Information
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Email:</span>
-                <span>{user.email}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Current Role:</span>
-                <div className="flex items-center gap-1">
-                  {getRoleIcon(user.role)}
-                  <span className="capitalize">{user.role.replace('_', ' ')}</span>
+          {/* User Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>User Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email || ''}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name || ''}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName || ''}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName || ''}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    value={formData.username || ''}
+                    onChange={(e) => handleInputChange('username', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={formData.role || 'user'}
+                    onValueChange={(value) => handleInputChange('role', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Joined:</span>
-                <span>{formatDate(user.createdAt)}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">Status:</span>
-                {getStatusBadge(user.status)}
-              </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {user.activity && (
-              <div className="mt-4 pt-4 border-t border-blue-200">
-                <h4 className="font-medium mb-2">Activity (Last 7 Days)</h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-2 bg-white rounded">
-                    <div className="text-lg font-bold text-blue-600">
-                      {user.activity.toolUsageCount}
-                    </div>
-                    <div className="text-xs text-gray-500">Tools Used</div>
+          {/* Account Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="isActive">Active Account</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Enable or disable user access
+                  </p>
+                </div>
+                <Switch
+                  id="isActive"
+                  checked={formData.isActive || false}
+                  onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="emailVerified">Email Verified</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Mark email as verified
+                  </p>
+                </div>
+                <Switch
+                  id="emailVerified"
+                  checked={formData.emailVerified || false}
+                  onCheckedChange={(checked) => handleInputChange('emailVerified', checked)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="twoFactorEnabled">Two-Factor Authentication</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Enable 2FA for this user
+                  </p>
+                </div>
+                <Switch
+                  id="twoFactorEnabled"
+                  checked={formData.twoFactorEnabled || false}
+                  onCheckedChange={(checked) => handleInputChange('twoFactorEnabled', checked)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* User Statistics */}
+          {user.stats && (
+            <Card>
+              <CardHeader>
+                <CardTitle>User Statistics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{user.stats.totalLogins}</div>
+                    <div className="text-sm text-muted-foreground">Total Logins</div>
                   </div>
-                  <div className="text-center p-2 bg-white rounded">
-                    <div className="text-lg font-bold text-green-600">
-                      {user.activity.toolsUsed}
-                    </div>
-                    <div className="text-xs text-gray-500">Unique Tools</div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{user.stats.toolsUsed}</div>
+                    <div className="text-sm text-muted-foreground">Tools Used</div>
                   </div>
-                  <div className="text-center p-2 bg-white rounded">
-                    <div className="text-lg font-bold text-orange-600">
-                      {user.activity.isActive ? 'Yes' : 'No'}
-                    </div>
-                    <div className="text-xs text-gray-500">Active</div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{user.stats.totalAnalyses}</div>
+                    <div className="text-sm text-muted-foreground">Analyses</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{user.stats.favoriteTools}</div>
+                    <div className="text-sm text-muted-foreground">Favorites</div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </ModalContent>
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Action Buttons */}
-        <ModalFooter className="flex justify-end gap-3 pt-4 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {loading ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </ModalFooter>
-      </form>
-    </Modal>
+          {/* Account Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">User ID:</span>
+                <span className="text-sm font-mono">{user._id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Joined:</span>
+                <span className="text-sm">{formatDate(user.createdAt)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Last Updated:</span>
+                <span className="text-sm">{formatDate(user.updatedAt)}</span>
+              </div>
+              {user.lastSignInAt && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Last Login:</span>
+                  <span className="text-sm">{formatDate(user.lastSignInAt)}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end space-x-2 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 } 

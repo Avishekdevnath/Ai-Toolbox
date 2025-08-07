@@ -1,363 +1,371 @@
-import { UserAnalysisHistory } from '@/models/UserAnalysisHistoryModel';
-import { 
-  generateParameterHash, 
-  createParameterHashObject, 
-  compareParameters,
-  normalizeParameters,
-  ParameterComparison 
-} from './parameterHashUtils';
+import mongoose from 'mongoose';
+import { UserAnalysisHistoryModel } from '@/models/UserAnalysisHistoryModel';
+import { createHash } from 'crypto';
 
-export interface DuplicateCheckResult {
-  isDuplicate: boolean;
-  existingAnalysis?: any;
-  similarity: number;
-  differences: string[];
-  shouldShowWarning: boolean;
-  parameterHash: string;
-}
-
-export interface AnalysisRequest {
+export interface DuplicateDetectionRequest {
   userId: string;
-  clerkId: string;
   toolSlug: string;
   toolName: string;
   analysisType: string;
-  parameters: Record<string, any>;
+  parameters: any;
   isAnonymous?: boolean;
 }
 
-export interface AnalysisResult {
-  success: boolean;
-  analysisId?: string;
-  isDuplicate?: boolean;
+export interface DuplicateDetectionResult {
+  isDuplicate: boolean;
+  confidence: number;
   existingAnalysis?: any;
-  result?: any;
-  metadata?: any;
-  error?: string;
+  similarityScore?: number;
+  timeDifference?: number;
 }
 
-/**
- * Duplicate Detection Service
- * 
- * This service handles checking for duplicate analysis requests and
- * managing cached results to prevent unnecessary regeneration.
- */
+export interface DuplicateAnalysis {
+  _id: string;
+  userId: string;
+  toolSlug: string;
+  toolName: string;
+  analysisType: string;
+  parameters: any;
+  result: any;
+  duration: number;
+  success: boolean;
+  error?: string;
+  metadata: {
+    userAgent: string;
+    ipAddress: string;
+    timestamp: Date;
+    sessionId?: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class DuplicateDetectionService {
-  
-  /**
-   * Check if an analysis request is a duplicate
-   */
-  static async checkForDuplicates(request: AnalysisRequest): Promise<DuplicateCheckResult> {
-    try {
-      const { userId, toolSlug, parameters } = request;
-      
-      // Generate parameter hash
-      const parameterHash = generateParameterHash(parameters, toolSlug, userId);
-      
-      // Check for exact match in database
-      const existingAnalysis = await UserAnalysisHistory.findByParameterHash(userId, parameterHash);
-      
-      if (existingAnalysis) {
-        // Update access count
-        await UserAnalysisHistory.updateAccess(existingAnalysis._id);
-        
-        return {
-          isDuplicate: true,
-          existingAnalysis,
-          similarity: 1.0,
-          differences: [],
-          shouldShowWarning: true,
-          parameterHash
-        };
-      }
-      
-      // Check for similar analyses
-      const normalizedParams = normalizeParameters(parameters);
-      const similarAnalyses = await UserAnalysisHistory.findSimilarAnalyses(
-        userId, 
-        normalizedParams, 
-        toolSlug
-      );
-      
-      if (similarAnalyses.length > 0) {
-        // Find the most similar analysis
-        let bestMatch = null;
-        let highestSimilarity = 0;
-        
-        for (const analysis of similarAnalyses) {
-          const comparison = compareParameters(
-            parameters,
-            analysis.inputData,
-            toolSlug,
-            analysis.toolSlug,
-            userId,
-            analysis.userId
-          );
-          
-          if (comparison.similarity > highestSimilarity) {
-            highestSimilarity = comparison.similarity;
-            bestMatch = analysis;
-          }
-        }
-        
-        // If similarity is very high (>90%), consider it a duplicate
-        if (highestSimilarity > 0.9) {
-          return {
-            isDuplicate: true,
-            existingAnalysis: bestMatch,
-            similarity: highestSimilarity,
-            differences: bestMatch ? findKeyDifferences(parameters, bestMatch.inputData) : [],
-            shouldShowWarning: true,
-            parameterHash
-          };
-        }
-      }
-      
-      return {
-        isDuplicate: false,
-        similarity: 0,
-        differences: [],
-        shouldShowWarning: false,
-        parameterHash
-      };
-      
-    } catch (error) {
-      console.error('Error checking for duplicates:', error);
-      return {
-        isDuplicate: false,
-        similarity: 0,
-        differences: [],
-        shouldShowWarning: false,
-        parameterHash: ''
-      };
+  private static instance: DuplicateDetectionService;
+  private cache: Map<string, { result: DuplicateDetectionResult; timestamp: number }> = new Map();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  private constructor() {}
+
+  public static getInstance(): DuplicateDetectionService {
+    if (!DuplicateDetectionService.instance) {
+      DuplicateDetectionService.instance = new DuplicateDetectionService();
     }
+    return DuplicateDetectionService.instance;
   }
-  
+
   /**
-   * Save analysis result with duplicate detection info
+   * Generate a hash for the analysis parameters
    */
-  static async saveAnalysisResult(
-    request: AnalysisRequest,
-    result: any,
-    metadata: any,
-    isDuplicate: boolean = false,
-    originalAnalysisId?: string
-  ): Promise<string> {
+  private generateParameterHash(parameters: any): string {
+    const sortedParams = this.sortObjectKeys(parameters);
+    const paramString = JSON.stringify(sortedParams);
+    return createHash('sha256').update(paramString).digest('hex');
+  }
+
+  /**
+   * Sort object keys recursively for consistent hashing
+   */
+  private sortObjectKeys(obj: any): any {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.sortObjectKeys(item));
+    }
+
+    const sorted: any = {};
+    Object.keys(obj).sort().forEach(key => {
+      sorted[key] = this.sortObjectKeys(obj[key]);
+    });
+
+    return sorted;
+  }
+
+  /**
+   * Calculate similarity between two parameter objects
+   */
+  private calculateSimilarity(params1: any, params2: any): number {
+    const hash1 = this.generateParameterHash(params1);
+    const hash2 = this.generateParameterHash(params2);
+    
+    if (hash1 === hash2) {
+      return 1.0; // Exact match
+    }
+
+    // For non-exact matches, calculate similarity based on common keys
+    const keys1 = this.getAllKeys(params1);
+    const keys2 = this.getAllKeys(params2);
+    
+    const commonKeys = keys1.filter(key => keys2.includes(key));
+    const totalKeys = new Set([...keys1, ...keys2]).size;
+    
+    if (totalKeys === 0) return 0;
+    
+    return commonKeys.length / totalKeys;
+  }
+
+  /**
+   * Get all keys from an object recursively
+   */
+  private getAllKeys(obj: any, prefix: string = ''): string[] {
+    const keys: string[] = [];
+    
+    if (obj === null || typeof obj !== 'object') {
+      return keys;
+    }
+
+    Object.keys(obj).forEach(key => {
+      const fullKey = prefix ? `${prefix}.${key}` : key;
+      keys.push(fullKey);
+      
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        keys.push(...this.getAllKeys(obj[key], fullKey));
+      }
+    });
+
+    return keys;
+  }
+
+  /**
+   * Check for exact duplicates
+   */
+  private async checkExactDuplicates(request: DuplicateDetectionRequest): Promise<DuplicateAnalysis[]> {
     try {
-      const { userId, clerkId, toolSlug, toolName, analysisType, parameters, isAnonymous = false } = request;
+      const parameterHash = this.generateParameterHash(request.parameters);
       
-      // Generate parameter hash and normalized parameters
-      const parameterHash = generateParameterHash(parameters, toolSlug, userId);
-      const normalizedParams = normalizeParameters(parameters);
-      
-      // Create analysis record
-      const analysis = new UserAnalysisHistory({
-        userId,
-        clerkId,
-        analysisType,
-        toolSlug,
-        toolName,
-        inputData: parameters,
-        result,
-        metadata: {
-          ...metadata,
-          userAgent: metadata.userAgent || 'Unknown',
-          ipAddress: metadata.ipAddress || 'Unknown'
-        },
-        status: 'completed',
-        isAnonymous,
-        parameterHash,
-        isDuplicate,
-        originalAnalysisId,
-        regenerationCount: isDuplicate ? 1 : 0,
-        normalizedParameters: normalizedParams
+      const duplicates = await UserAnalysisHistoryModel.find({
+        userId: request.userId,
+        toolSlug: request.toolSlug,
+        analysisType: request.analysisType,
+        success: true
+      }).sort({ createdAt: -1 }).limit(10);
+
+      // Filter by parameter hash
+      const exactDuplicates = duplicates.filter(analysis => {
+        const existingHash = this.generateParameterHash(analysis.parameters);
+        return existingHash === parameterHash;
       });
-      
-      await analysis.save();
-      return analysis._id.toString();
-      
+
+      return exactDuplicates;
     } catch (error) {
-      console.error('Error saving analysis result:', error);
-      throw new Error('Failed to save analysis result');
-    }
-  }
-  
-  /**
-   * Get cached result for duplicate analysis
-   */
-  static async getCachedResult(analysisId: string, userId: string): Promise<any> {
-    try {
-      const analysis = await UserAnalysisHistory.getAnalysisById(analysisId);
-      
-      if (!analysis || analysis.userId !== userId) {
-        throw new Error('Analysis not found or access denied');
-      }
-      
-      // Update access count
-      await UserAnalysisHistory.updateAccess(analysisId);
-      
-      return {
-        result: analysis.result,
-        metadata: analysis.metadata,
-        createdAt: analysis.createdAt,
-        isDuplicate: analysis.isDuplicate,
-        originalAnalysis: analysis.originalAnalysisId
-      };
-      
-    } catch (error) {
-      console.error('Error getting cached result:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Force regenerate analysis (bypass duplicate detection)
-   */
-  static async forceRegenerate(
-    request: AnalysisRequest,
-    result: any,
-    metadata: any
-  ): Promise<string> {
-    try {
-      // Save as new analysis (not duplicate)
-      return await this.saveAnalysisResult(request, result, metadata, false);
-    } catch (error) {
-      console.error('Error forcing regeneration:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Get duplicate analysis groups for user
-   */
-  static async getDuplicateGroups(userId: string): Promise<any[]> {
-    try {
-      const duplicates = await UserAnalysisHistory.findDuplicates(userId, '');
-      
-      // Group by parameter hash
-      const groups: Record<string, any[]> = {};
-      
-      for (const analysis of duplicates) {
-        if (!groups[analysis.parameterHash]) {
-          groups[analysis.parameterHash] = [];
-        }
-        groups[analysis.parameterHash].push(analysis);
-      }
-      
-      return Object.values(groups).filter(group => group.length > 1);
-      
-    } catch (error) {
-      console.error('Error getting duplicate groups:', error);
+      console.error('Error checking exact duplicates:', error);
       return [];
     }
   }
-  
+
   /**
-   * Clean up old duplicate analyses
+   * Check for similar analyses
    */
-  static async cleanupDuplicates(userId: string, daysOld: number = 30): Promise<number> {
+  private async checkSimilarAnalyses(request: DuplicateDetectionRequest): Promise<DuplicateAnalysis[]> {
     try {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
-      
-      const result = await UserAnalysisHistory.deleteMany({
-        userId,
-        isDuplicate: true,
-        createdAt: { $lt: cutoffDate }
-      });
-      
-      return result.deletedCount || 0;
-      
+      const similarAnalyses = await UserAnalysisHistoryModel.find({
+        userId: request.userId,
+        toolSlug: request.toolSlug,
+        analysisType: request.analysisType,
+        success: true,
+        createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+      }).sort({ createdAt: -1 }).limit(20);
+
+      const threshold = 0.8; // 80% similarity threshold
+      const similar: DuplicateAnalysis[] = [];
+
+      for (const analysis of similarAnalyses) {
+        const similarity = this.calculateSimilarity(request.parameters, analysis.parameters);
+        if (similarity >= threshold) {
+          similar.push(analysis);
+        }
+      }
+
+      return similar;
     } catch (error) {
-      console.error('Error cleaning up duplicates:', error);
-      return 0;
+      console.error('Error checking similar analyses:', error);
+      return [];
     }
   }
-  
+
   /**
-   * Get analysis statistics for user
+   * Detect duplicates for a given analysis request
    */
-  static async getUserAnalysisStats(userId: string): Promise<any> {
+  public async detectDuplicates(request: DuplicateDetectionRequest): Promise<DuplicateDetectionResult> {
+    const cacheKey = `${request.userId}_${request.toolSlug}_${this.generateParameterHash(request.parameters)}`;
+    
+    // Check cache first
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.result;
+    }
+
     try {
-      const stats = await UserAnalysisHistory.getUserStats(userId);
-      const toolStats = await UserAnalysisHistory.getToolUsageStats(userId);
-      const duplicateGroups = await this.getDuplicateGroups(userId);
+      // Check for exact duplicates first
+      const exactDuplicates = await this.checkExactDuplicates(request);
       
-      return {
-        ...stats,
-        toolStats,
-        duplicateGroups: duplicateGroups.length,
-        savings: {
-          tokens: stats.totalTokens - (stats.uniqueAnalyses * 500), // Estimate
-          cost: stats.totalCost - (stats.uniqueAnalyses * 0.002), // Estimate
-          percentage: stats.totalAnalyses > 0 ? 
-            ((stats.duplicateAnalyses / stats.totalAnalyses) * 100).toFixed(1) : 0
-        }
+      if (exactDuplicates.length > 0) {
+        const mostRecent = exactDuplicates[0];
+        const timeDifference = Date.now() - mostRecent.createdAt.getTime();
+        
+        const result: DuplicateDetectionResult = {
+          isDuplicate: true,
+          confidence: 1.0,
+          existingAnalysis: mostRecent,
+          similarityScore: 1.0,
+          timeDifference
+        };
+
+        // Cache the result
+        this.cache.set(cacheKey, { result, timestamp: Date.now() });
+        
+        return result;
+      }
+
+      // Check for similar analyses
+      const similarAnalyses = await this.checkSimilarAnalyses(request);
+      
+      if (similarAnalyses.length > 0) {
+        const mostSimilar = similarAnalyses[0];
+        const similarity = this.calculateSimilarity(request.parameters, mostSimilar.parameters);
+        const timeDifference = Date.now() - mostSimilar.createdAt.getTime();
+        
+        const result: DuplicateDetectionResult = {
+          isDuplicate: similarity >= 0.9, // 90% similarity threshold for duplicates
+          confidence: similarity,
+          existingAnalysis: mostSimilar,
+          similarityScore: similarity,
+          timeDifference
+        };
+
+        // Cache the result
+        this.cache.set(cacheKey, { result, timestamp: Date.now() });
+        
+        return result;
+      }
+
+      // No duplicates found
+      const result: DuplicateDetectionResult = {
+        isDuplicate: false,
+        confidence: 0.0
       };
+
+      // Cache the result
+      this.cache.set(cacheKey, { result, timestamp: Date.now() });
       
+      return result;
     } catch (error) {
-      console.error('Error getting user stats:', error);
+      console.error('Error detecting duplicates:', error);
+      
+      const result: DuplicateDetectionResult = {
+        isDuplicate: false,
+        confidence: 0.0
+      };
+
+      return result;
+    }
+  }
+
+  /**
+   * Get duplicate statistics for a user
+   */
+  public async getDuplicateStats(userId: string): Promise<{
+    totalAnalyses: number;
+    duplicates: number;
+    duplicateRate: number;
+    mostDuplicatedTool: string;
+    averageSimilarity: number;
+  }> {
+    try {
+      const userAnalyses = await UserAnalysisHistoryModel.find({
+        userId,
+        success: true
+      }).sort({ createdAt: -1 });
+
+      if (userAnalyses.length === 0) {
+        return {
+          totalAnalyses: 0,
+          duplicates: 0,
+          duplicateRate: 0,
+          mostDuplicatedTool: '',
+          averageSimilarity: 0
+        };
+      }
+
+      let duplicates = 0;
+      let totalSimilarity = 0;
+      const toolDuplicates: { [key: string]: number } = {};
+
+      for (let i = 0; i < userAnalyses.length; i++) {
+        const currentAnalysis = userAnalyses[i];
+        
+        // Check for duplicates in previous analyses
+        for (let j = i + 1; j < userAnalyses.length; j++) {
+          const previousAnalysis = userAnalyses[j];
+          
+          if (currentAnalysis.toolSlug === previousAnalysis.toolSlug &&
+              currentAnalysis.analysisType === previousAnalysis.analysisType) {
+            
+            const similarity = this.calculateSimilarity(
+              currentAnalysis.parameters,
+              previousAnalysis.parameters
+            );
+
+            if (similarity >= 0.9) {
+              duplicates++;
+              totalSimilarity += similarity;
+              
+              if (!toolDuplicates[currentAnalysis.toolSlug]) {
+                toolDuplicates[currentAnalysis.toolSlug] = 0;
+              }
+              toolDuplicates[currentAnalysis.toolSlug]++;
+              
+              break; // Found a duplicate, move to next analysis
+            }
+          }
+        }
+      }
+
+      const mostDuplicatedTool = Object.keys(toolDuplicates).reduce((a, b) => 
+        toolDuplicates[a] > toolDuplicates[b] ? a : b, ''
+      );
+
+      return {
+        totalAnalyses: userAnalyses.length,
+        duplicates,
+        duplicateRate: userAnalyses.length > 0 ? (duplicates / userAnalyses.length) * 100 : 0,
+        mostDuplicatedTool,
+        averageSimilarity: duplicates > 0 ? totalSimilarity / duplicates : 0
+      };
+    } catch (error) {
+      console.error('Error getting duplicate stats:', error);
       return {
         totalAnalyses: 0,
-        totalTokens: 0,
-        totalCost: 0,
-        uniqueAnalyses: 0,
-        duplicateAnalyses: 0,
-        toolStats: [],
-        duplicateGroups: 0,
-        savings: { tokens: 0, cost: 0, percentage: 0 }
+        duplicates: 0,
+        duplicateRate: 0,
+        mostDuplicatedTool: '',
+        averageSimilarity: 0
       };
     }
   }
-}
 
-/**
- * Helper function to find key differences between parameters
- */
-function findKeyDifferences(params1: Record<string, any>, params2: Record<string, any>): string[] {
-  const differences: string[] = [];
-  const allKeys = new Set([...Object.keys(params1), ...Object.keys(params2)]);
-  
-  for (const key of allKeys) {
-    const value1 = params1[key];
-    const value2 = params2[key];
-    
-    if (value1 !== value2) {
-      if (value1 === undefined) {
-        differences.push(`Missing: ${key}`);
-      } else if (value2 === undefined) {
-        differences.push(`Extra: ${key}`);
-      } else {
-        differences.push(`Different: ${key}`);
-      }
-    }
+  /**
+   * Clear cache
+   */
+  public clearCache(): void {
+    this.cache.clear();
   }
-  
-  return differences.slice(0, 5); // Limit to 5 differences
+
+  /**
+   * Get cache statistics
+   */
+  public getCacheStats(): {
+    size: number;
+    entries: number;
+  } {
+    return {
+      size: this.cache.size,
+      entries: this.cache.size
+    };
+  }
 }
 
-/**
- * Check if user has enabled duplicate detection
- */
-export function isDuplicateDetectionEnabled(userId: string): boolean {
-  // In the future, this could check user preferences
-  // For now, always enabled
-  return true;
-}
-
-/**
- * Get duplicate detection settings for user
- */
-export function getDuplicateDetectionSettings(userId: string): {
-  enabled: boolean;
-  similarityThreshold: number;
-  showWarnings: boolean;
-  autoUseCache: boolean;
-} {
-  return {
-    enabled: true,
-    similarityThreshold: 0.9,
-    showWarnings: true,
-    autoUseCache: false
-  };
-} 
+// Export singleton instance
+export const duplicateDetectionService = DuplicateDetectionService.getInstance(); 
