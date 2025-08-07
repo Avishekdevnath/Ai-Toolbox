@@ -6,7 +6,10 @@ export const aiTools = [
     icon: '📊',
     category: 'Business',
     href: '/tools/swot-analysis',
-    features: ['AI-powered analysis', 'Comprehensive reports', 'Export options']
+    features: ['AI-powered analysis', 'Comprehensive reports', 'Export options'],
+    popularity: 95,
+    rating: 4.8,
+    recentUsage: 156
   },
   {
     id: 'finance-advisor',
@@ -15,7 +18,10 @@ export const aiTools = [
     icon: '💰',
     category: 'Finance Tools',
     href: '/tools/finance-advisor',
-    features: ['8 modules', 'AI insights', 'Retirement planning']
+    features: ['8 modules', 'AI insights', 'Retirement planning'],
+    popularity: 92,
+    rating: 4.7,
+    recentUsage: 134
   },
   {
     id: 'diet-planner',
@@ -24,7 +30,10 @@ export const aiTools = [
     icon: '🥗',
     category: 'Healthcare',
     href: '/tools/diet-planner',
-    features: ['AI meal plans', 'Nutrition analysis', 'Dietary restrictions']
+    features: ['AI meal plans', 'Nutrition analysis', 'Dietary restrictions'],
+    popularity: 88,
+    rating: 4.6,
+    recentUsage: 98
   },
   {
     id: 'price-tracker',
@@ -33,7 +42,10 @@ export const aiTools = [
     icon: '🛍️',
     category: 'Shopping',
     href: '/tools/price-tracker',
-    features: ['AI pricing', 'Price history', 'Alerts']
+    features: ['AI pricing', 'Price history', 'Alerts'],
+    popularity: 85,
+    rating: 4.5,
+    recentUsage: 87
   },
   {
     id: 'age-calculator',
@@ -42,7 +54,10 @@ export const aiTools = [
     icon: '📅',
     category: 'Health',
     href: '/tools/age-calculator',
-    features: ['Life milestones', 'Health recommendations', 'AI insights']
+    features: ['Life milestones', 'Health recommendations', 'AI insights'],
+    popularity: 82,
+    rating: 4.4,
+    recentUsage: 76
   },
   {
     id: 'quote-generator',
@@ -51,7 +66,10 @@ export const aiTools = [
     icon: '💭',
     category: 'Entertainment',
     href: '/tools/quote-generator',
-    features: ['Topic-based', 'Mood selection', 'AI generation']
+    features: ['Topic-based', 'Mood selection', 'AI generation'],
+    popularity: 78,
+    rating: 4.3,
+    recentUsage: 65
   },
   {
     id: 'resume-reviewer',
@@ -60,7 +78,10 @@ export const aiTools = [
     icon: '📄',
     category: 'Career',
     href: '/tools/resume-reviewer',
-    features: ['ATS optimization', 'Industry analysis', 'Actionable feedback']
+    features: ['ATS optimization', 'Industry analysis', 'Actionable feedback'],
+    popularity: 85,
+    rating: 4.5,
+    recentUsage: 92
   },
   {
     id: 'mock-interviewer',
@@ -69,7 +90,10 @@ export const aiTools = [
     icon: '🎤',
     category: 'Career',
     href: '/tools/mock-interviewer',
-    features: ['Role-based questions', 'Real market data', 'Experience level matching']
+    features: ['Role-based questions', 'Real market data', 'Experience level matching'],
+    popularity: 80,
+    rating: 4.4,
+    recentUsage: 78
   },
   {
     id: 'job-interviewer',
@@ -78,7 +102,10 @@ export const aiTools = [
     icon: '💼',
     category: 'Career',
     href: '/tools/job-interviewer',
-    features: ['Job posting analysis', 'Role-based questions', 'Job fit scoring']
+    features: ['Job posting analysis', 'Role-based questions', 'Job fit scoring'],
+    popularity: 83,
+    rating: 4.6,
+    recentUsage: 85
   }
 ];
 
@@ -90,7 +117,10 @@ export const utilityTools = [
     icon: '🔗',
     category: 'Utility',
     href: '/tools/url-shortener',
-    features: ['Custom aliases', 'Click tracking', 'QR codes']
+    features: ['Custom aliases', 'Click tracking', 'QR codes'],
+    popularity: 90,
+    rating: 4.7,
+    recentUsage: 123
   },
   {
     id: 'qr-generator',
@@ -99,7 +129,10 @@ export const utilityTools = [
     icon: '📱',
     category: 'Utility',
     href: '/tools/qr-generator',
-    features: ['Custom styling', 'Multiple formats', 'Download options']
+    features: ['Custom styling', 'Multiple formats', 'Download options'],
+    popularity: 87,
+    rating: 4.6,
+    recentUsage: 98
   },
   {
     id: 'password-generator',
@@ -108,7 +141,10 @@ export const utilityTools = [
     icon: '🔐',
     category: 'Security',
     href: '/tools/password-generator',
-    features: ['Multiple options', 'Strength meter', 'Copy to clipboard']
+    features: ['Multiple options', 'Strength meter', 'Copy to clipboard'],
+    popularity: 93,
+    rating: 4.8,
+    recentUsage: 145
   },
   {
     id: 'tip-calculator',
@@ -117,7 +153,10 @@ export const utilityTools = [
     icon: '🧮',
     category: 'Finance',
     href: '/tools/tip-calculator',
-    features: ['AI suggestions', 'Bill splitting', 'Tax calculations']
+    features: ['AI suggestions', 'Bill splitting', 'Tax calculations'],
+    popularity: 85,
+    rating: 4.5,
+    recentUsage: 87
   },
   {
     id: 'word-counter',
@@ -126,7 +165,10 @@ export const utilityTools = [
     icon: '📊',
     category: 'Writing',
     href: '/tools/word-counter',
-    features: ['Detailed analysis', 'Readability score', 'Character count']
+    features: ['Detailed analysis', 'Readability score', 'Character count'],
+    popularity: 82,
+    rating: 4.4,
+    recentUsage: 76
   },
   {
     id: 'unit-converter',
@@ -135,6 +177,9 @@ export const utilityTools = [
     icon: '⚖️',
     category: 'Utility',
     href: '/tools/unit-converter',
-    features: ['Live currency', 'Multiple units', 'Real-time rates']
+    features: ['Live currency', 'Multiple units', 'Real-time rates'],
+    popularity: 88,
+    rating: 4.6,
+    recentUsage: 92
   }
 ]; 

@@ -1,80 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkSystemHealth, getConfigurationReport } from '@/lib/configValidator';
+import { getDatabase } from '@/lib/mongodb';
 
-/**
- * GET /api/system/health
- * 
- * Returns comprehensive system health information including:
- * - Overall system status
- * - Individual service health (database, AI, auth, config)
- * - Configuration validation results
- * - Recommendations for improvement
- */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const detailed = searchParams.get('detailed') === 'true';
+    const db = await getDatabase();
     
-    // Get system health
-    const health = await checkSystemHealth();
-    
-    // Get detailed configuration report if requested
-    const configReport = detailed ? getConfigurationReport() : null;
-    
-    const response = {
-      status: 'success',
-      timestamp: new Date().toISOString(),
-      health,
-      ...(configReport && { config: configReport }),
-    };
-    
-    // Return appropriate HTTP status based on health
-    const statusCode = health.overall === 'critical' ? 503 : 
-                      health.overall === 'warning' ? 200 : 200;
-    
-    return NextResponse.json(response, { status: statusCode });
-  } catch (error: any) {
-    console.error('System health check failed:', error);
+    // Test basic operations
+    const collections = await db.db.listCollections().toArray();
+    const collectionNames = collections.map(col => col.name);
     
     return NextResponse.json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      error: 'Failed to check system health',
-      details: error.message,
-    }, { status: 500 });
+      success: true,
+      status: 'healthy',
+      collections: collectionNames,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        status: 'unhealthy',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      },
+      { status: 500 }
+    );
   }
 }
 
 /**
  * POST /api/system/health
- * 
- * Triggers a fresh health check and returns results
- * Useful for monitoring systems to verify application health
+ * Trigger system maintenance tasks
  */
 export async function POST(request: NextRequest) {
   try {
-    // Force a fresh health check
-    const health = await checkSystemHealth();
-    
-    const response = {
-      status: 'success',
-      timestamp: new Date().toISOString(),
-      health,
-      message: 'Health check completed successfully',
-    };
-    
-    // Return appropriate HTTP status based on health
-    const statusCode = health.overall === 'critical' ? 503 : 
-                      health.overall === 'warning' ? 200 : 200;
-    
-    return NextResponse.json(response, { status: statusCode });
+    const body = await request.json();
+    const { action } = body;
+
+    switch (action) {
+      case 'cleanup':
+        // Import cleanup function
+        const { cleanupOldData } = await import('@/lib/databaseInit');
+        const cleanupResult = await cleanupOldData();
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Data cleanup completed',
+          data: cleanupResult,
+        });
+
+      case 'sync':
+        // Trigger user sync (this would typically be done by middleware)
+        return NextResponse.json({
+          success: true,
+          message: 'User sync is handled automatically by middleware',
+        });
+
+      case 'stats':
+        // Refresh statistics
+        const stats = await getFullStats();
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Statistics refreshed',
+          data: stats,
+        });
+
+      default:
+        return NextResponse.json({
+          success: false,
+          error: 'Invalid action',
+          validActions: ['cleanup', 'sync', 'stats'],
+        }, { status: 400 });
+    }
+
   } catch (error: any) {
-    console.error('System health check failed:', error);
+    console.error('❌ System maintenance failed:', error);
     
     return NextResponse.json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      error: 'Failed to perform health check',
+      success: false,
+      error: 'System maintenance failed',
       details: error.message,
     }, { status: 500 });
   }

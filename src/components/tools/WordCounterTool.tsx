@@ -60,6 +60,13 @@ export default function WordCounterTool() {
       readabilityScore: Math.round(readabilityScore),
       readabilityLevel
     });
+    
+    // Track usage when text is analyzed
+    fetch('/api/tools/word-counter/track-usage', { 
+      method: 'POST' 
+    }).catch(err => {
+      console.error('Usage tracking failed:', err);
+    });
   };
 
   const estimateSyllables = (text: string, wordCount: number): number => {

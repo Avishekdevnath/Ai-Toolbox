@@ -34,6 +34,20 @@ export default function FinanceAdvisorTool({ onBack }: Props) {
     const module = financeModules.find(m => m.id === moduleId);
     if (module?.status === 'Available' || module?.status === 'Beta') {
       setSelectedModule(moduleId);
+      
+      // Track usage when module is selected
+      fetch('/api/tools/finance-advisor/track-usage', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          module: moduleId,
+          action: 'module_selected'
+        })
+      }).catch(err => {
+        console.error('Usage tracking failed:', err);
+      });
     }
   };
 

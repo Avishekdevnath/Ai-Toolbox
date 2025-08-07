@@ -115,7 +115,7 @@ export function filterAuthenticQuotes(quotes: { quote: string, author: string }[
 }
 
 // Function to parse quotes from AI response
-export function parseQuotesFromResponse(text: string, language: string, author?: string): { quote: string, author: string }[] {
+export function parseQuotesFromResponse(text: string, language: string, author?: string, requestedCount: number = 10): { quote: string, author: string }[] {
   const quotes: { quote: string, author: string }[] = [];
   
   // Split by lines and look for quote patterns
@@ -185,7 +185,7 @@ export function parseQuotesFromResponse(text: string, language: string, author?:
   // If no quotes found with standard patterns, try to extract from plain text
   if (quotes.length === 0) {
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
-    for (const sentence of sentences.slice(0, 5)) { // Limit to first 5 sentences
+    for (const sentence of sentences.slice(0, Math.min(requestedCount, 5))) { // Limit to requested count or 5
       const cleanSentence = stripEnglishTranslation(sentence.trim(), language);
       if (cleanSentence.length > 20 && cleanSentence.length < 200) {
         quotes.push({ 
@@ -196,7 +196,7 @@ export function parseQuotesFromResponse(text: string, language: string, author?:
     }
   }
   
-  return quotes.slice(0, 10); // Limit to 10 quotes
+  return quotes.slice(0, requestedCount); // Return up to the requested count
 }
 
 // Function to get fallback quotes when AI is not available

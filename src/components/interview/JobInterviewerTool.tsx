@@ -191,6 +191,13 @@ export default function JobInterviewerTool() {
         isTimerRunning: true,
         loading: false
       }));
+      
+      // Track usage when job interview starts
+      fetch('/api/tools/job-interviewer/track-usage', { 
+        method: 'POST' 
+      }).catch(err => {
+        console.error('Usage tracking failed:', err);
+      });
     } catch (error) {
       setState(prev => ({
         ...prev,

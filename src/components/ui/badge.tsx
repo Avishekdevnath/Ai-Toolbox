@@ -4,9 +4,10 @@ interface BadgeProps {
   children: React.ReactNode;
   variant?: 'default' | 'outline' | 'secondary' | 'destructive';
   className?: string;
+  onClick?: () => void;
 }
 
-export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
+export function Badge({ children, variant = 'default', className = '', onClick }: BadgeProps) {
   const baseClasses = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium';
   
   const variantClasses = {
@@ -16,10 +17,10 @@ export function Badge({ children, variant = 'default', className = '' }: BadgePr
     destructive: 'bg-red-100 text-red-800'
   };
   
-  const classes = `${baseClasses} ${variantClasses[variant]} ${className}`;
+  const classes = `${baseClasses} ${variantClasses[variant]} ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''} ${className}`;
   
   return (
-    <span className={classes}>
+    <span className={classes} onClick={onClick}>
       {children}
     </span>
   );

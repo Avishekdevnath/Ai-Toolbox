@@ -1,23 +1,61 @@
-import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
+'use client';
 
-export default async function AdminLayout({
-  children,
-}: {
+import { Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminHeader from '@/components/admin/AdminHeader';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { useEffect } from 'react';
+
+interface AdminLayoutProps {
   children: React.ReactNode;
-}) {
-  const { userId } = await auth();
-  
-  // TODO: Add proper admin role checking
-  // For now, just check if user is authenticated
-  if (!userId) {
-    redirect('/signin');
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  const { isAuthenticated, isLoading } = useAdminAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/admin-login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner text="Checking authentication..." />
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Fixed Admin Header */}
+      <div className="flex-shrink-0">
+        <AdminHeader />
+      </div>
+      
+      {/* Main Content Area with Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Fixed Admin Sidebar */}
+        <div className="flex-shrink-0">
+          <AdminSidebar />
+        </div>
+        
+        {/* Scrollable Main Content */}
+        <main className="flex-1 overflow-y-auto p-6">
+          <Suspense fallback={<LoadingSpinner text="Loading admin panel..." />}>
+            {children}
+          </Suspense>
+        </main>
       </div>
     </div>
   );

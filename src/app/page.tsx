@@ -1,11 +1,7 @@
-'use client';
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
-import Header from "@/components/Header";
-import NewFooter from "@/components/NewFooter";
+import Navbar from "@/components/Navbar";
 
 const aiTools = [
   {
@@ -157,8 +153,8 @@ const categories = [
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
-      <Header />
-      <main className="flex-1">
+      <Navbar />
+      
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto text-center py-24 px-4 flex flex-col items-center justify-center">
         <Image src="/file.svg" alt="AI Toolbox Logo" width={80} height={80} className="mb-4 drop-shadow-lg" />
@@ -233,17 +229,17 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
             <span className="text-3xl mb-3">⭐️⭐️⭐️⭐️⭐️</span>
-            <p className="text-gray-700 dark:text-gray-200 mb-3">“AI Toolbox has become my go-to for quick, smart solutions. The tools are intuitive and save me hours every week!”</p>
+            <p className="text-gray-700 dark:text-gray-200 mb-3">"AI Toolbox has become my go-to for quick, smart solutions. The tools are intuitive and save me hours every week!"</p>
             <span className="text-sm text-gray-500 dark:text-gray-400">— Alex, Product Manager</span>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
             <span className="text-3xl mb-3">⭐️⭐️⭐️⭐️⭐️</span>
-            <p className="text-gray-700 dark:text-gray-200 mb-3">“I love the privacy-first approach. I can use powerful AI tools without worrying about my data.”</p>
+            <p className="text-gray-700 dark:text-gray-200 mb-3">"I love the privacy-first approach. I can use powerful AI tools without worrying about my data."</p>
             <span className="text-sm text-gray-500 dark:text-gray-400">— Priya, Developer</span>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center">
             <span className="text-3xl mb-3">⭐️⭐️⭐️⭐️⭐️</span>
-            <p className="text-gray-700 dark:text-gray-200 mb-3">“The all-in-one suite is a game changer. Everything I need, beautifully designed and easy to use.”</p>
+            <p className="text-gray-700 dark:text-gray-200 mb-3">"The all-in-one suite is a game changer. Everything I need, beautifully designed and easy to use."</p>
             <span className="text-sm text-gray-500 dark:text-gray-400">— Sam, Designer</span>
           </div>
         </div>
@@ -271,8 +267,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-        </main>
-      <NewFooter />
     </div>
   );
 }

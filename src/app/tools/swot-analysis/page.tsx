@@ -1,19 +1,19 @@
 'use client';
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import SwotAnalysisTool from '@/components/tools/SwotAnalysisTool';
+import Navbar from "@/components/Navbar";
+import NewFooter from "@/components/NewFooter";
 
 export default function SwotAnalysisPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <Header />
+      <Navbar />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-4xl bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 md:p-10">
           <SwotAnalysisTool />
         </div>
       </main>
-      <Footer />
+      <NewFooter />
     </div>
   );
 } 

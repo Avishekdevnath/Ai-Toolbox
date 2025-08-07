@@ -10,6 +10,7 @@ export interface UserProfile {
     twitter?: string;
     linkedin?: string;
     github?: string;
+    facebook?: string;
   };
 }
 
@@ -50,6 +51,7 @@ export interface UserActivity {
     ip: string;
     userAgent: string;
     location?: string;
+    provider: string; // 'email', 'google', 'facebook', 'github'
   }[];
   toolUsage: {
     [toolName: string]: {
@@ -68,30 +70,43 @@ export interface UserSubscription {
   billingCycle?: 'monthly' | 'yearly';
 }
 
+export interface OAuthAccount {
+  provider: 'google' | 'facebook' | 'github' | 'email';
+  providerAccountId: string;
+  providerUserId?: string; // For OAuth providers
+  email?: string;
+  name?: string;
+  image?: string;
+  refresh_token?: string;
+  access_token?: string;
+  expires_at?: number;
+  token_type?: string;
+  scope?: string;
+  id_token?: string;
+  session_state?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lastUsedAt?: Date;
+}
+
 export interface User {
   _id?: ObjectId;
+  clerkId: string; // Clerk user ID
   email: string;
   name: string;
-  password?: string; // Only for email/password auth
-  image?: string; // For OAuth providers
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  image?: string;
   
   // Authentication
   emailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
   
-  // OAuth Accounts
-  accounts?: {
-    provider: string;
-    providerAccountId: string;
-    refresh_token?: string;
-    access_token?: string;
-    expires_at?: number;
-    token_type?: string;
-    scope?: string;
-    id_token?: string;
-    session_state?: string;
-  }[];
+  // OAuth Accounts - Support multiple providers
+  oauthAccounts: OAuthAccount[];
+  primaryProvider: 'email' | 'google' | 'facebook' | 'github';
   
   // Profile Information
   profile: UserProfile;
@@ -108,6 +123,16 @@ export interface User {
   // Subscription
   subscription: UserSubscription;
   
+  // Statistics
+  stats: {
+    totalToolsUsed: number;
+    totalUrlsShortened: number;
+    totalAnalyses: number;
+    lastActivityAt?: Date;
+    loginCount: number;
+    sessionCount: number;
+  };
+  
   // Metadata
   createdAt: Date;
   updatedAt: Date;
@@ -123,22 +148,32 @@ export interface User {
   locale?: string;
   ipAddress?: string;
   userAgent?: string;
+  metadata: Record<string, any>;
 }
 
 export interface CreateUserRequest {
+  clerkId: string;
   email: string;
   name: string;
-  password?: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
   image?: string;
-  provider?: string;
+  provider: 'email' | 'google' | 'facebook' | 'github';
   providerAccountId?: string;
+  emailVerified?: boolean;
 }
 
 export interface UpdateUserRequest {
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  image?: string;
   profile?: Partial<UserProfile>;
   preferences?: Partial<UserPreferences>;
-  image?: string;
+  oauthAccounts?: OAuthAccount[];
+  primaryProvider?: 'email' | 'google' | 'facebook' | 'github';
 }
 
 export interface UserStats {
@@ -155,6 +190,12 @@ export interface UserStats {
     basic: number;
     premium: number;
     enterprise: number;
+  };
+  usersByProvider: {
+    email: number;
+    google: number;
+    facebook: number;
+    github: number;
   };
   recentSignups: number;
   averageSessionDuration: number;
@@ -231,6 +272,15 @@ export const defaultUserSubscription: UserSubscription = {
   features: ['basic_tools', 'ai_analysis', 'url_shortener']
 };
 
+// Default user stats
+export const defaultUserStats = {
+  totalToolsUsed: 0,
+  totalUrlsShortened: 0,
+  totalAnalyses: 0,
+  loginCount: 0,
+  sessionCount: 0
+};
+
 // Basic Database Operations (Simple CRUD)
 export class UserSchema {
   private static collectionName = 'users';
@@ -239,6 +289,25 @@ export class UserSchema {
     const db = await getDatabase();
     return db.collection(this.collectionName).findOne({ 
       email: email.toLowerCase() 
+    }) as Promise<User | null>;
+  }
+
+  static async findByClerkId(clerkId: string): Promise<User | null> {
+    const db = await getDatabase();
+    return db.collection(this.collectionName).findOne({ 
+      clerkId 
+    }) as Promise<User | null>;
+  }
+
+  static async findByOAuthProvider(provider: string, providerAccountId: string): Promise<User | null> {
+    const db = await getDatabase();
+    return db.collection(this.collectionName).findOne({
+      'oauthAccounts': {
+        $elemMatch: {
+          provider,
+          providerAccountId
+        }
+      }
     }) as Promise<User | null>;
   }
 
@@ -265,6 +334,102 @@ export class UserSchema {
         $unset: {
           'security.emailVerificationToken': '',
           'security.emailVerificationExpires': ''
+        }
+      }
+    );
+
+    return result.modifiedCount > 0;
+  }
+
+  static async addOAuthAccount(clerkId: string, oauthAccount: OAuthAccount): Promise<boolean> {
+    const db = await getDatabase();
+    
+    const result = await db.collection(this.collectionName).updateOne(
+      { clerkId },
+      {
+        $push: { oauthAccounts: oauthAccount as any },
+        $set: { 
+          updatedAt: new Date(),
+          primaryProvider: oauthAccount.provider
+        }
+      }
+    );
+
+    return result.modifiedCount > 0;
+  }
+
+  static async updateOAuthAccount(clerkId: string, provider: string, providerAccountId: string, updates: Partial<OAuthAccount>): Promise<boolean> {
+    const db = await getDatabase();
+    
+    const result = await db.collection(this.collectionName).updateOne(
+      { 
+        clerkId,
+        'oauthAccounts.provider': provider,
+        'oauthAccounts.providerAccountId': providerAccountId
+      },
+      {
+        $set: {
+          'oauthAccounts.$.updatedAt': new Date(),
+          ...Object.fromEntries(
+            Object.entries(updates).map(([key, value]) => [`oauthAccounts.$.${key}`, value])
+          ),
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    return result.modifiedCount > 0;
+  }
+
+  static async trackLogin(clerkId: string, loginData: {
+    ip: string;
+    userAgent: string;
+    provider: string;
+    location?: string;
+  }): Promise<boolean> {
+    const db = await getDatabase();
+    
+    const result = await db.collection(this.collectionName).updateOne(
+      { clerkId },
+      {
+        $set: {
+          'activity.lastLogin': new Date(),
+          'activity.lastActive': new Date(),
+          updatedAt: new Date()
+        },
+        $push: {
+          'activity.loginHistory': {
+            timestamp: new Date(),
+            ip: loginData.ip,
+            userAgent: loginData.userAgent,
+            provider: loginData.provider,
+            location: loginData.location
+          } as any
+        },
+        $inc: {
+          'stats.loginCount': 1
+        }
+      }
+    );
+
+    return result.modifiedCount > 0;
+  }
+
+  static async incrementToolUsage(clerkId: string, toolName: string): Promise<boolean> {
+    const db = await getDatabase();
+    
+    const result = await db.collection(this.collectionName).updateOne(
+      { clerkId },
+      {
+        $inc: {
+          'stats.totalToolsUsed': 1,
+          [`activity.toolUsage.${toolName}.count`]: 1
+        },
+        $set: {
+          [`activity.toolUsage.${toolName}.lastUsed`]: new Date(),
+          'stats.lastActivityAt': new Date(),
+          'activity.lastActive': new Date(),
+          updatedAt: new Date()
         }
       }
     );

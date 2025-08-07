@@ -1,60 +1,46 @@
+'use client';
+
 import { useState } from 'react';
-import html2canvas from 'html2canvas';
 import { Quote } from '@/lib/quoteUtils';
+import { 
+  Sparkles, 
+  Copy, 
+  Download, 
+  Share2, 
+  Heart, 
+  Calendar, 
+  Globe, 
+  User, 
+  BookOpen, 
+  Zap,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Quote as QuoteIcon
+} from 'lucide-react';
 
 const AUTHOR_SUGGESTIONS = [
-  'Rabindranath Tagore',
-  'Rumi',
-  'Albert Einstein',
-  'Marie Curie',
-  'Isaac Newton',
-  'Stephen Hawking',
-  'Scientists',
-  'Maya Angelou',
-  'William Shakespeare',
-  'Khalil Gibran',
-  'Oscar Wilde',
-  'Lao Tzu',
-  'Mahatma Gandhi',
-  'Steve Jobs',
-  'Jim Morrison',
-  'Plautus',
-  'Unknown',
+  'Rabindranath Tagore', 'Rumi', 'Albert Einstein', 'Marie Curie', 'Isaac Newton',
+  'Stephen Hawking', 'Maya Angelou', 'William Shakespeare', 'Khalil Gibran',
+  'Oscar Wilde', 'Lao Tzu', 'Mahatma Gandhi', 'Steve Jobs', 'Jim Morrison',
+  'Plautus', 'Unknown'
 ];
+
 const TOPICS = [
-  'Love',
-  'Success',
-  'Life',
-  'Friendship',
-  'Happiness',
-  'Science',
-  'Art',
-  'Nature',
-  'Wisdom',
-  'Courage',
-  'Birthday',
+  'Love', 'Success', 'Life', 'Friendship', 'Happiness', 'Science', 'Art',
+  'Nature', 'Wisdom', 'Courage', 'Birthday', 'Motivation', 'Leadership'
 ];
+
 const MOODS = [
-  'Motivational',
-  'Humorous',
-  'Thoughtful',
-  'Romantic',
-  'Philosophical',
-  'Reflective',
-  'Uplifting',
-  'Celebratory',
+  'Motivational', 'Humorous', 'Thoughtful', 'Romantic', 'Philosophical',
+  'Reflective', 'Uplifting', 'Celebratory', 'Inspirational'
 ];
+
 const LANGUAGES = [
-  'English',
-  'Hindi',
-  'Spanish',
-  'French',
-  'German',
-  'Bengali',
-  'Chinese',
-  'Japanese',
-  'Russian',
-  'Arabic',
+  'English', 'Hindi', 'Spanish', 'French', 'German', 'Bengali', 'Chinese',
+  'Japanese', 'Russian', 'Arabic'
 ];
 
 export default function QuoteGeneratorTool() {
@@ -72,6 +58,7 @@ export default function QuoteGeneratorTool() {
   const [message, setMessage] = useState('');
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [page, setPage] = useState(1);
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const pageSize = 5;
 
   // Author suggestions logic
@@ -86,6 +73,7 @@ export default function QuoteGeneratorTool() {
       setAuthorSuggestions([]);
     }
   };
+
   const handleAuthorSuggestionClick = (suggestion: string) => {
     setAuthor(suggestion);
     setAuthorSuggestions([]);
@@ -98,245 +86,442 @@ export default function QuoteGeneratorTool() {
     setLoading(true);
     setError('');
     setMessage('');
-    setQuotes([]);
-    setFamousPeople([]);
-    setCopiedIdx(null);
-    setPage(1); // Reset to first page on new generation
+    setPage(1);
+
     try {
-      const res = await fetch('/api/quote', {
+      const response = await fetch('/api/quote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, mood, author, birthDate, count, language })
+        body: JSON.stringify({
+          topic,
+          mood,
+          author,
+          birthDate,
+          count,
+          language
+        })
       });
-      const data = await res.json();
-      if (data.error) setError(data.error);
-      if (data.message) setMessage(data.message);
-      setQuotes(data.quotes || []);
-      setFamousPeople(data.famousPeople || []);
-      fetch('/api/tools/quote-generator/track-usage', { method: 'POST' });
-    } catch (e) {
-      setError('Failed to generate quotes. Please try again.');
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setQuotes(data.quotes || []);
+        setFamousPeople(data.famousPeople || []);
+        setMessage(data.message || '');
+        
+        // Track usage
+        fetch('/api/tools/quote-generator/track-usage', { method: 'POST' }).catch(err => {
+          console.error('Usage tracking failed:', err);
+        });
+      } else {
+        setError(data.error || 'Failed to generate quotes');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopy = (quote: string, author: string, idx: number) => {
-    navigator.clipboard.writeText(`"${quote}" — ${author}`);
-    setCopiedIdx(idx);
-    setTimeout(() => setCopiedIdx(null), 1500);
+  const handleCopy = async (quote: string, author: string, idx: number) => {
+    try {
+      await navigator.clipboard.writeText(`"${quote}" — ${author}`);
+      setCopiedIdx(idx);
+      setTimeout(() => setCopiedIdx(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   const handleDownload = async (idx: number) => {
-    const content = document.getElementById(`quote-content-${idx}`);
-    if (!content) return;
-    const canvas = await html2canvas(content, { backgroundColor: null });
+    const quote = quotes[idx];
+    if (!quote) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = 800;
+    canvas.height = 400;
+
+    // Background
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Quote text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    
+    const words = quote.quote.split(' ');
+    let line = '';
+    let y = 150;
+    
+    for (let word of words) {
+      const testLine = line + word + ' ';
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > canvas.width - 100) {
+        ctx.fillText(line, canvas.width / 2, y);
+        line = word + ' ';
+        y += 40;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, canvas.width / 2, y);
+
+    // Author
+    ctx.font = 'italic 24px Arial';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText(`— ${quote.author}`, canvas.width / 2, y + 60);
+
+    // Download
     const link = document.createElement('a');
-    link.download = 'quote.png';
+    link.download = `quote-${idx + 1}.png`;
     link.href = canvas.toDataURL();
     link.click();
   };
 
+  const handleShare = async (quote: string, author: string) => {
+    const text = `"${quote}" — ${author}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Quote from AI Toolbox',
+          text: text,
+          url: window.location.href
+        });
+      } catch (err) {
+        console.error('Share failed:', err);
+      }
+    } else {
+      // Fallback to copy
+      await handleCopy(quote, author, -1);
+    }
+  };
+
+  const toggleFavorite = (idx: number) => {
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(idx)) {
+      newFavorites.delete(idx);
+    } else {
+      newFavorites.add(idx);
+    }
+    setFavorites(newFavorites);
+  };
+
+  const isFormValid = topic || mood || author || birthDate;
+
   return (
-    <section className="min-h-screen py-12 bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-gray-950">
-      <div className="max-w-3xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-10">
-          <h2 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2 font-sans">
-            AI Quote Generator
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto font-sans">
-            Instantly generate beautiful, authentic, and shareable quotes for any topic, mood, or language. Download or copy your favorites!
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <Sparkles className="w-8 h-8 text-blue-600 mr-3" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Quote Generator
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Discover inspiring quotes from famous authors, or create original quotes tailored to your mood and interests
           </p>
         </div>
-        {/* Controls Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 max-w-2xl mx-auto mb-10">
-          <form
-            onSubmit={e => { e.preventDefault(); handleGenerate(); }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 items-end"
-          >
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 font-sans">Topic</label>
-              <select
-                value={topic}
-                onChange={e => setTopic(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans text-base"
-              >
-                <option value="">Select topic</option>
-                {TOPICS.map(t => <option key={t} value={t.toLowerCase()}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 font-sans">Mood</label>
-              <select
-                value={mood}
-                onChange={e => setMood(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans text-base"
-              >
-                <option value="">Select mood</option>
-                {MOODS.map(m => <option key={m} value={m.toLowerCase()}>{m}</option>)}
-              </select>
-            </div>
-            <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 font-sans">Author Style</label>
-              <input
-                type="text"
-                value={author}
-                onChange={handleAuthorChange}
-                placeholder="e.g. Rabindranath Tagore, Scientists, My Dad"
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans text-base"
-                autoComplete="off"
-              />
-              {authorSuggestions.length > 0 && (
-                <ul className="absolute z-10 left-0 right-0 bg-white border border-gray-300 rounded shadow mt-1 max-h-40 overflow-y-auto">
-                  {authorSuggestions.map((s, idx) => (
-                    <li
-                      key={idx}
-                      className="px-3 py-2 cursor-pointer hover:bg-blue-100"
-                      onClick={() => handleAuthorSuggestionClick(s)}
-                    >
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 font-sans">Birthday (optional)</label>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={e => setBirthDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans text-base"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 font-sans">Language</label>
-              <select
-                value={language}
-                onChange={e => setLanguage(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans text-base"
-              >
-                {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </div>
-            <div className="md:col-span-2 flex flex-col items-center mt-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 font-sans">Number of Quotes: {count}</label>
-              <input
-                type="range"
-                min={5}
-                max={20}
-                value={count}
-                onChange={e => setCount(Number(e.target.value))}
-                className="w-2/3"
-              />
-            </div>
-            <div className="md:col-span-2 text-center mt-6">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold shadow hover:bg-blue-700 transition-colors disabled:opacity-60"
-              >
-                {loading ? 'Generating...' : 'Generate Quotes'}
-              </button>
-              {error && <div className="text-red-500 mt-2 text-sm font-medium font-sans">{error}</div>}
-              {message && <div className="text-green-600 mt-2 text-sm font-medium font-sans">{message}</div>}
-            </div>
-          </form>
-        </div>
-        {/* Results */}
-        {quotes.length > 0 && (
-          <div className="mt-10 flex flex-col gap-6 items-center">
-            {paginatedQuotes.map((q, idx) => (
-              <div
-                key={idx + (page - 1) * pageSize}
-                id={`quote-card-${idx + (page - 1) * pageSize}`}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 w-full max-w-md p-8 relative"
-              >
-                {/* Downloadable content only */}
-                <div id={`quote-content-${idx + (page - 1) * pageSize}`} className="w-full bg-white dark:bg-gray-800 rounded-2xl p-0 relative min-h-[120px] flex flex-col items-center justify-center">
-                  {/* Watermark quote mark */}
-                  <span className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 text-9xl text-gray-200 dark:text-gray-700 font-serif z-0 pointer-events-none opacity-70">
-                    &ldquo;
-                  </span>
-                  <blockquote
-                    className="text-2xl md:text-3xl italic font-normal leading-snug text-gray-800 dark:text-gray-200"
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Input Panel */}
+          <div className="lg:col-span-1">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 sticky top-8">
+              <h2 className="text-xl font-semibold mb-6 flex items-center">
+                <Zap className="w-5 h-5 mr-2 text-yellow-500" />
+                Generate Quotes
+              </h2>
+
+              <div className="space-y-6">
+                {/* Topic */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Topic
+                  </label>
+                  <select
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    {q.quote}
-                  </blockquote>
-                  <div
-                    className="font-bold text-lg tracking-wide text-gray-700 dark:text-gray-300"
+                    <option value="">Select a topic</option>
+                    {TOPICS.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Mood */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center">
+                    <Heart className="w-4 h-4 mr-2" />
+                    Mood
+                  </label>
+                  <select
+                    value={mood}
+                    onChange={(e) => setMood(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    — {q.author || author || 'Unknown'}
+                    <option value="">Select a mood</option>
+                    {MOODS.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Author */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center">
+                    <User className="w-4 h-4 mr-2" />
+                    Author (Optional)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={author}
+                      onChange={handleAuthorChange}
+                      placeholder="Enter author name"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {authorSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                        {authorSuggestions.map((suggestion, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleAuthorSuggestionClick(suggestion)}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-slate-600 first:rounded-t-lg last:rounded-b-lg"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-                {/* Buttons (not included in download) */}
-                <div className="flex gap-3 mt-6 z-10">
-                  <button
-                    onClick={() => handleCopy(q.quote, q.author || author || 'Unknown', idx + (page - 1) * pageSize)}
-                    className="px-4 py-2 rounded-lg shadow-sm text-sm font-semibold bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+
+                {/* Birth Date */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Birth Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Count */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Number of Quotes
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={count}
+                    onChange={(e) => setCount(Number(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>1</span>
+                    <span className="font-medium">{count}</span>
+                    <span>20</span>
+                  </div>
+                </div>
+
+                {/* Language */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center">
+                    <Globe className="w-4 h-4 mr-2" />
+                    Language
+                  </label>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    {copiedIdx === idx + (page - 1) * pageSize ? 'Copied!' : 'Copy'}
-                  </button>
-                  <button
-                    onClick={() => handleDownload(idx + (page - 1) * pageSize)}
-                    className="px-4 py-2 rounded-lg shadow-sm text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors font-semibold"
-                  >
-                    Download
-                  </button>
+                    {LANGUAGES.map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Generate Button */}
+                <button
+                  onClick={handleGenerate}
+                  disabled={!isFormValid || loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Generate Quotes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Results Panel */}
+          <div className="lg:col-span-2">
+            {/* Messages */}
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 flex items-center">
+                <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
+                <span className="text-red-700 dark:text-red-300">{error}</span>
+              </div>
+            )}
+
+            {message && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 flex items-center">
+                <CheckCircle className="w-5 h-5 text-blue-500 mr-3" />
+                <span className="text-blue-700 dark:text-blue-300">{message}</span>
+              </div>
+            )}
+
+            {/* Famous People */}
+            {famousPeople.length > 0 && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-green-500" />
+                  Famous People Born on This Day
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {famousPeople.map((person, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm"
+                    >
+                      {person}
+                    </span>
+                  ))}
                 </div>
               </div>
-            ))}
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
-                >
-                  Prev
-                </button>
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPage(i + 1)}
-                    className={`px-3 py-2 rounded-lg border ${i + 1 === page ? 'border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'} font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === totalPages}
-                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
-                >
-                  Next
-                </button>
+            )}
+
+            {/* Quotes */}
+            {quotes.length > 0 && (
+              <div className="space-y-6">
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-lg p-4 shadow-lg">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="flex items-center px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg disabled:opacity-50"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      Page {page} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="flex items-center px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg disabled:opacity-50"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Quote Cards */}
+                <div className="grid gap-6">
+                  {paginatedQuotes.map((quote, idx) => {
+                    const globalIdx = (page - 1) * pageSize + idx;
+                    return (
+                      <div
+                        key={globalIdx}
+                        className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <QuoteIcon className="w-8 h-8 text-blue-500 flex-shrink-0 mr-4 mt-1" />
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => toggleFavorite(globalIdx)}
+                              className={`p-2 rounded-lg transition-colors ${
+                                favorites.has(globalIdx)
+                                  ? 'text-red-500 bg-red-50 dark:bg-red-900/20'
+                                  : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                              }`}
+                            >
+                              <Heart className={`w-5 h-5 ${favorites.has(globalIdx) ? 'fill-current' : ''}`} />
+                            </button>
+                            <button
+                              onClick={() => handleCopy(quote.quote, quote.author, globalIdx)}
+                              className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            >
+                              {copiedIdx === globalIdx ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              ) : (
+                                <Copy className="w-5 h-5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleDownload(globalIdx)}
+                              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                            >
+                              <Download className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleShare(quote.quote, quote.author)}
+                              className="p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                            >
+                              <Share2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <blockquote className="text-lg text-gray-800 dark:text-gray-200 mb-4 leading-relaxed">
+                          "{quote.quote}"
+                        </blockquote>
+
+                        <footer className="text-right">
+                          <cite className="text-sm font-medium text-gray-600 dark:text-gray-400 not-italic">
+                            — {quote.author}
+                          </cite>
+                        </footer>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && quotes.length === 0 && (
+              <div className="text-center py-12">
+                <QuoteIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                  No quotes generated yet
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Fill in the form and click "Generate Quotes" to get started
+                </p>
               </div>
             )}
           </div>
-        )}
-        {famousPeople.length > 0 && (
-          <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-6 text-center max-w-md mx-auto mt-10">
-            <div className="font-semibold text-gray-800 dark:text-gray-200 mb-2 font-sans">Famous people born on this day:</div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {famousPeople.map((person, idx) => (
-                <span key={idx} className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-sans">
-                  {person}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="mt-10 text-gray-600 dark:text-gray-400 text-sm text-center font-sans">
-          {topic && <span>Topic: <span className="font-semibold">{topic}</span> </span>}
-          {mood && <span>Mood: <span className="font-semibold">{mood}</span> </span>}
-          {author && <span>Author: <span className="font-semibold">{author}</span> </span>}
-          {language && <span>Language: <span className="font-semibold">{language}</span> </span>}
-          {birthDate && <span>Birthday: <span className="font-semibold">{birthDate}</span></span>}
         </div>
       </div>
-    </section>
+    </div>
   );
 } 

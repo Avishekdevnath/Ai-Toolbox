@@ -1,345 +1,385 @@
-# AI Toolbox
+# AI Toolbox - Comprehensive AI Tools Platform
 
-A comprehensive collection of AI-powered tools and utilities built with Next.js 15, React 19, TypeScript, and Google Gemini AI.
+## 🎉 **Project Status: Production Ready**
 
-## 🚀 Features
+A comprehensive AI tools platform with advanced usage history tracking, professional user dashboard, and robust admin management capabilities.
 
-- **AI-Powered Tools**: Diet planning, SWOT analysis, financial advice, resume review, and more
-- **URL Shortener**: Professional URL shortening with analytics and anonymous user support
-- **Modern Tech Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS 4.1
-- **Cloud Database**: MongoDB Atlas integration with automatic TTL indexes
-- **Authentication**: NextAuth.js with Google/GitHub OAuth support
-- **Professional UI**: Responsive design with dark mode support
-- **Configuration Management**: Centralized environment variable management with validation
+---
 
-## 🛠️ Tech Stack
+## 📊 **Features**
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS 4.1
-- **Backend**: Next.js API Routes, Google Gemini 1.5 Flash AI
-- **Database**: MongoDB Atlas with Mongoose
-- **Authentication**: NextAuth.js
-- **Deployment**: Vercel-ready
-- **Configuration**: Centralized config management with validation
+### **🤖 AI Tools**
+- **SWOT Analysis**: AI-powered business analysis
+- **Finance Advisor**: Comprehensive financial planning
+- **Diet Planner**: Personalized nutrition recommendations
+- **URL Shortener**: Link management and analytics
+- **QR Generator**: QR code creation and management
+- **Quote Generator**: AI-powered quote generation
+- **Unit Converter**: Multi-unit conversion tool
+- **Password Generator**: Secure password creation
+- **Price Tracker**: Product price monitoring
+- **Resume Reviewer**: AI-powered resume analysis
+- **Interview AI**: Mock interview practice
+- **Word Counter**: Text analysis tool
 
-## 📋 Prerequisites
+### **📈 Usage History System**
+- **Complete Tracking**: All analysis results automatically saved
+- **Advanced Filtering**: Search, type, status, and date range filters
+- **Export Functionality**: JSON and CSV export capabilities
+- **Detailed Analytics**: Performance metrics and usage statistics
+- **Data Management**: View, delete, and manage analysis history
 
+### **👤 User Dashboard**
+- **Real-time Analytics**: Live usage statistics and insights
+- **Tools Management**: Personal tool usage tracking
+- **History Management**: Complete analysis history interface
+- **Professional UI**: Modern, responsive design
+- **Export Capabilities**: Download personal data
+
+### **🔧 Admin Dashboard**
+- **Dual Authentication**: Custom admin auth + Clerk integration
+- **User Management**: Complete user control and analytics
+- **System Monitoring**: Real-time health and performance
+- **Role-based Access**: Secure permission system
+- **Advanced Analytics**: Comprehensive system statistics
+
+---
+
+## 🚀 **Quick Start**
+
+### **Prerequisites**
 - Node.js 18+ 
-- MongoDB Atlas account (free tier available)
-- Google AI API key (free tier available)
+- MongoDB Atlas account
+- Clerk account for authentication
+- Gemini API key for AI features
 
-## 🚀 Quick Start
+### **Installation**
 
-### 1. Clone the Repository
-
+1. **Clone the repository**
    ```bash
-git clone <repository-url>
+   git clone <repository-url>
    cd ai-toolbox
-```
+   ```
 
-### 2. Install Dependencies
-
-```bash
+2. **Install dependencies**
+   ```bash
    npm install
    ```
 
-### 3. Environment Configuration
-
-Copy the environment template and configure your variables:
-
-```bash
-cp env.local.template .env.local
-```
-
-Edit `.env.local` with your actual values:
-
+3. **Environment Setup**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Configure the following environment variables:
    ```env
-# Required Variables
-   GOOGLE_AI_API_KEY=your_google_ai_api_key_here
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/ai-toolbox
-NEXTAUTH_SECRET=your_super_secure_nextauth_secret_here_minimum_32_characters
-NEXTAUTH_URL=http://localhost:3000
+   # Database
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/ai-toolbox
+   DB_NAME=ai-toolbox
+   
+   # Authentication (Clerk)
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
+   
+   # AI Services (Gemini)
+   GEMINI_API_KEY=your_gemini_api_key
+   
+   # NextAuth
+   NEXTAUTH_SECRET=your_nextauth_secret
+   NEXTAUTH_URL=http://localhost:3000
+   ```
 
-# Optional Variables
-APP_NAME=AI Toolbox
-APP_VERSION=1.0.0
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-```
+4. **Database Setup**
+   ```bash
+   # Seed admin users
+   node scripts/seed-admin-user.js
+   
+   # Seed initial data
+   node scripts/seed-admin-models.js
+   ```
 
-### 4. Get API Keys
-
-#### Google AI API Key
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new API key
-3. Add it to your `.env.local` as `GOOGLE_AI_API_KEY`
-
-#### MongoDB Atlas Setup
-1. Visit [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Create a free cluster
-3. Get your connection string
-4. Add it to your `.env.local` as `MONGODB_URI`
-
-#### NextAuth Secret (Optional)
-Generate a secure secret:
-```bash
-openssl rand -base64 32
-```
-
-### 5. Run the Development Server
-
+5. **Start Development Server**
    ```bash
    npm run dev
    ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+6. **Access the Application**
+   - **Main Site**: http://localhost:3000
+   - **Admin Dashboard**: http://localhost:3000/admin
+   - **User Dashboard**: http://localhost:3000/dashboard
 
-## 🔧 Configuration Management
+---
 
-The application uses a centralized configuration system with comprehensive validation:
+## 🏗️ **Architecture**
 
-### Environment Variables
+### **Frontend**
+- **Next.js 15**: App Router with Server and Client Components
+- **React 18**: Modern React with hooks and context
+- **TypeScript**: Full type safety throughout
+- **Tailwind CSS**: Utility-first styling
+- **Lucide React**: Icon library
+- **Framer Motion**: Smooth animations
 
-All environment variables are standardized and validated on startup:
+### **Backend**
+- **Next.js API Routes**: RESTful API endpoints
+- **MongoDB**: Native MongoDB driver for database operations
+- **Mongoose**: ODM for model definitions and validation
+- **JWT**: Custom admin authentication
+- **Clerk**: User authentication and management
 
-#### Required Variables
-- `GOOGLE_AI_API_KEY`: Google AI API key for Gemini 1.5 Flash
-- `MONGODB_URI`: MongoDB Atlas connection string
-- `NEXTAUTH_SECRET`: Secure secret for NextAuth.js (min 32 characters)
+### **Database Schema**
+```
+users/
+├── profile (Clerk-managed)
+├── preferences
+└── settings
 
-#### Optional Variables
-- `GOOGLE_AI_MODEL`: AI model to use (default: gemini-1.5-flash)
-- `GOOGLE_AI_MAX_TOKENS`: Maximum tokens for AI responses (default: 2048)
-- `GOOGLE_AI_TEMPERATURE`: AI response creativity (default: 0.7)
-- `MONGODB_DB_NAME`: Database name (default: ai-toolbox)
-- `APP_NAME`: Application name (default: AI Toolbox)
-- `APP_VERSION`: Application version (default: 1.0.0)
-- `NEXT_PUBLIC_BASE_URL`: Public base URL (default: http://localhost:3000)
+adminusers/
+├── email, password (hashed)
+├── role (super_admin, admin, moderator)
+├── permissions
+└── session management
 
-#### Feature Flags
-- `ENABLE_ANALYTICS`: Enable analytics features (default: true)
-- `ENABLE_RATE_LIMITING`: Enable rate limiting (default: true)
-- `ENABLE_CACHING`: Enable caching (default: true)
-- `ENABLE_HEALTH_CHECKS`: Enable health checks (default: true)
+useranalysishistories/
+├── userId, clerkId
+├── analysisType, toolSlug
+├── inputData, result
+├── metadata, status
+└── timestamps
 
-### Configuration Validation
+toolusages/
+├── userId, toolSlug
+├── usageType, metadata
+└── timestamps
 
-The system automatically validates configuration on startup:
-
-```typescript
-import { config, getEnvironmentConfig } from '@/lib/config';
-
-// Access configuration
-const aiConfig = config.googleAI;
-const dbConfig = config.mongodb;
-
-// Check environment
-const env = getEnvironmentConfig();
-console.log(env.isDevelopment); // true/false
+adminactivities/
+├── adminId, action
+├── details, metadata
+└── timestamps
 ```
 
-### System Health Monitoring
+---
 
-Check system health via API:
+## 📁 **Project Structure**
 
-```bash
-# Basic health check
-curl http://localhost:3000/api/system/health
-
-# Detailed health check with configuration report
-curl http://localhost:3000/api/system/health?detailed=true
+```
+ai-toolbox/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── admin/             # Admin dashboard pages
+│   │   ├── dashboard/         # User dashboard pages
+│   │   ├── tools/            # AI tools pages
+│   │   └── api/              # API routes
+│   ├── components/            # React components
+│   │   ├── admin/            # Admin components
+│   │   ├── dashboard/        # Dashboard components
+│   │   ├── tools/            # Tool components
+│   │   └── ui/               # UI components
+│   ├── lib/                  # Utility libraries
+│   ├── models/               # Database models
+│   └── schemas/              # Validation schemas
+├── scripts/                  # Database scripts
+├── public/                   # Static assets
+└── docs/                     # Documentation
 ```
 
-## 🗄️ Database Collections
+---
 
-The application uses MongoDB Atlas with the following collections:
+## 🔧 **API Endpoints**
 
-### `shortened_urls`
-- URL shortening with TTL indexes for automatic expiration
-- Anonymous user support with device fingerprinting
-- Click tracking and analytics
-- Custom aliases and flexible expiration
+### **User APIs**
+- `GET /api/user/stats` - User statistics
+- `GET /api/user/history` - Analysis history
+- `POST /api/user/history/save` - Save analysis
+- `DELETE /api/user/history` - Delete analysis
+- `GET /api/user/history/export` - Export data
 
-### `tools`
-- Tool usage tracking
-- Analytics and statistics
+### **Admin APIs**
+- `GET /api/admin/dashboard/stats` - Admin statistics
+- `GET /api/admin/users` - User management
+- `GET /api/admin/tools` - Tool management
+- `POST /api/admin/auth/login` - Admin login
+- `POST /api/admin/auth/logout` - Admin logout
 
-### `users`
-- User authentication data
-- Profile information
-
-## 🏗️ Architecture
-
-### Configuration Layer
-- **Centralized Config**: `src/lib/config.ts` - Single source of truth for all configuration
-- **Validation**: Automatic validation of environment variables and configuration
-- **Type Safety**: Full TypeScript support for configuration access
-
-### Service Layer
-- **MongoDB Service**: `src/lib/mongodb.ts` - Database connection and management
-- **AI Service**: `src/lib/gemini.ts` - Google Gemini AI integration
-- **Auth Service**: `src/lib/authOptions.ts` - NextAuth.js configuration
-
-### API Layer
-- **RESTful APIs**: Next.js API routes for all functionality
-- **Error Handling**: Consistent error responses and validation
-- **Health Monitoring**: System health and configuration validation endpoints
-
-### Frontend Layer
-- **React Components**: Modern React 19 with hooks and context
-- **TypeScript**: Full type safety throughout the application
-- **Responsive Design**: Mobile-first design with Tailwind CSS
-
-## 🔍 API Endpoints
-
-### Core APIs
-- `POST /api/analyze/diet` - AI-powered diet planning
-- `POST /api/analyze/swot` - SWOT analysis generation
-- `POST /api/analyze/finance` - Financial advice
-- `POST /api/analyze/investment` - Investment analysis
-- `POST /api/analyze/retirement` - Retirement planning
-- `POST /api/analyze/debt` - Debt management
-
-### URL Shortener APIs
-- `POST /api/url-shortener` - Create shortened URLs
-- `GET /api/url-shortener` - List user's URLs
-- `GET /api/url-shortener/stats` - URL analytics
-- `DELETE /api/url-shortener/[id]` - Delete URLs
-
-### System APIs
+### **System APIs**
 - `GET /api/system/health` - System health check
-- `POST /api/system/health` - Trigger health check
+- `POST /api/system/health` - System maintenance
 
-### Tool Tracking
-- `POST /api/tools/[slug]/track-usage` - Track tool usage
+### **Analysis APIs**
+- `POST /api/analyze/swot` - SWOT analysis
+- `POST /api/analyze/finance` - Financial analysis
+- `POST /api/analyze/diet` - Diet planning
 
-## 🎨 UI Components
+---
 
-### Core Components
-- **Header**: Navigation and user authentication
-- **Footer**: Links and information
-- **Tool Sidebar**: Tool navigation and categories
+## 🔒 **Security Features**
 
-### Tool Components
-- **DietPlannerTool**: AI-powered diet planning interface
-- **URLShortenerTool**: Professional URL shortening with analytics
-- **SwotAnalysisTool**: SWOT analysis generation
-- **FinanceAdvisorTool**: Financial planning and advice
+### **Authentication**
+- **Clerk Integration**: Secure user authentication
+- **Custom Admin Auth**: JWT-based admin authentication
+- **Role-based Access**: Super admin, admin, moderator roles
+- **Session Management**: Secure session handling
 
-### Utility Components
-- **LoadingOverlay**: Loading states and progress indicators
-- **ErrorBoundary**: Error handling and fallback UI
-- **ResponsiveLayout**: Mobile-responsive layouts
+### **Data Protection**
+- **Input Validation**: Comprehensive validation throughout
+- **SQL Injection Protection**: Parameterized queries
+- **XSS Protection**: Content Security Policy
+- **CSRF Protection**: Cross-site request forgery protection
 
-## 🔒 Security Features
+### **Privacy**
+- **Data Encryption**: Sensitive data encryption
+- **User Consent**: Clear data usage policies
+- **Data Export**: User data export capabilities
+- **Data Deletion**: User data deletion options
 
-- **Input Validation**: All inputs validated and sanitized
-- **Rate Limiting**: Configurable rate limiting for API endpoints
-- **Authentication**: Secure NextAuth.js integration
-- **Environment Variables**: Secure handling of sensitive configuration
-- **CORS Protection**: Cross-origin request protection
-- **Security Headers**: Automatic security headers
+---
 
-## 🚀 Deployment
+## 📊 **Monitoring & Analytics**
 
-### Vercel Deployment
-1. Connect your repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+### **System Health**
+- **Real-time Monitoring**: System health checks
+- **Database Monitoring**: Connection and performance
+- **API Monitoring**: Response times and errors
+- **Error Tracking**: Comprehensive error logging
 
-### Environment Variables for Production
-```env
-NODE_ENV=production
-GOOGLE_AI_API_KEY=your_production_api_key
-MONGODB_URI=your_production_mongodb_uri
-NEXTAUTH_SECRET=your_production_secret
-NEXTAUTH_URL=https://yourdomain.com
-NEXT_PUBLIC_BASE_URL=https://yourdomain.com
+### **User Analytics**
+- **Usage Tracking**: Tool usage statistics
+- **Performance Metrics**: Processing times and success rates
+- **User Behavior**: Usage patterns and preferences
+- **Engagement Metrics**: User activity and retention
+
+---
+
+## 🚀 **Deployment**
+
+### **Production Deployment**
+
+1. **Environment Setup**
+   ```bash
+   # Set production environment variables
+   NODE_ENV=production
+   MONGODB_URI=your_production_mongodb_uri
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_production_clerk_key
+   CLERK_SECRET_KEY=your_production_clerk_secret
+   ```
+
+2. **Build Application**
+   ```bash
+   npm run build
+   ```
+
+3. **Start Production Server**
+   ```bash
+   npm start
+   ```
+
+### **Deployment Validation**
+```bash
+# Run production validation
+node scripts/deploy-production.js
 ```
 
-## 🧪 Testing
+### **Platforms**
+- **Vercel**: Recommended for Next.js applications
+- **Netlify**: Alternative deployment platform
+- **AWS**: Enterprise deployment option
+- **Docker**: Containerized deployment
 
-### Health Checks
+---
+
+## 🧪 **Testing**
+
+### **API Testing**
 ```bash
-# Check system health
+# Test API endpoints
 curl http://localhost:3000/api/system/health
-
-# Check configuration
-curl http://localhost:3000/api/system/health?detailed=true
+curl http://localhost:3000/api/user/stats
 ```
 
-### Manual Testing
-1. Test all AI tools with various inputs
-2. Verify URL shortener functionality
-3. Check authentication flow
-4. Test responsive design on different devices
-
-## 🔧 Development
-
-### Available Scripts
+### **Component Testing**
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
+# Run component tests
+npm run test
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
-### Code Structure
-```
-src/
-├── app/             # Next.js 13+ app directory
-├── components/      # React components
-├── lib/            # Utility libraries and services
-├── data/           # Static data and configurations
-└── utils/          # Helper utilities
+### **E2E Testing**
+```bash
+# Run end-to-end tests
+npm run test:e2e
 ```
 
-## 🤝 Contributing
+---
 
+## 📈 **Performance Optimization**
+
+### **Database Optimization**
+- **Indexing**: Optimized database indexes
+- **Query Optimization**: Efficient database queries
+- **Connection Pooling**: Database connection management
+- **Caching**: Smart caching strategies
+
+### **Frontend Optimization**
+- **Code Splitting**: Dynamic imports and lazy loading
+- **Image Optimization**: Next.js image optimization
+- **Bundle Optimization**: Efficient bundle sizes
+- **Caching**: Browser and API caching
+
+---
+
+## 🤝 **Contributing**
+
+### **Development Setup**
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Add tests for new features
 5. Submit a pull request
 
-## 📄 License
+### **Code Standards**
+- **TypeScript**: Full type safety
+- **ESLint**: Code linting and formatting
+- **Prettier**: Code formatting
+- **Conventional Commits**: Commit message standards
 
-This project is licensed under the MIT License.
+---
 
-## 🆘 Troubleshooting
+## 📄 **License**
 
-### Common Issues
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-#### Configuration Errors
-- Check that all required environment variables are set
-- Verify API key formats and permissions
-- Ensure MongoDB connection string is correct
+---
 
-#### AI Service Issues
-- Verify Google AI API key is valid and has quota
-- Check API key permissions and billing status
-- Review error messages in console logs
+## 🆘 **Support**
 
-#### Database Connection Issues
-- Verify MongoDB Atlas network access settings
-- Check connection string format and credentials
-- Ensure database user has proper permissions
+### **Documentation**
+- [API Documentation](docs/api.md)
+- [Component Documentation](docs/components.md)
+- [Deployment Guide](docs/deployment.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
-#### Authentication Issues
-- Verify NextAuth secret is at least 32 characters
-- Check OAuth provider configuration
-- Review callback URLs and redirect URIs
+### **Issues**
+- [GitHub Issues](https://github.com/your-repo/ai-toolbox/issues)
+- [Feature Requests](https://github.com/your-repo/ai-toolbox/issues/new)
 
-### Getting Help
-- Check the system health endpoint: `/api/system/health`
-- Review console logs for detailed error messages
-- Verify configuration with detailed health check: `/api/system/health?detailed=true`
+### **Contact**
+- **Email**: support@ai-toolbox.com
+- **Discord**: [AI Toolbox Community](https://discord.gg/ai-toolbox)
 
-## 🔮 Future Features
+---
 
-- [ ] Advanced analytics dashboard
-- [ ] Team collaboration features
-- [ ] Custom domain support for URL shortener
-- [ ] Email notifications and alerts
-- [ ] Advanced AI model selection
-- [ ] API rate limiting and quotas
-- [ ] Multi-language support
-- [ ] Mobile app development
+## 🎉 **Acknowledgments**
+
+- **Next.js Team**: For the amazing framework
+- **Clerk**: For authentication services
+- **MongoDB**: For database services
+- **Google**: For Gemini AI services
+- **Open Source Community**: For all the amazing libraries
+
+---
+
+**Version:** 2.0  
+**Last Updated:** January 31, 2025  
+**Status:** ✅ **Production Ready**

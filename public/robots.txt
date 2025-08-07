@@ -1,21 +1,38 @@
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://aitoolbox.com/sitemap.xml
-
-# Disallow admin and API routes
+# Block sensitive routes
+Disallow: /admin
+Disallow: /admin-login
 Disallow: /api/
-Disallow: /admin/
+Disallow: /_next/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /profile
+Disallow: /overview
+Disallow: /favorites
+Disallow: /dashboard
 
-# Allow important pages
-Allow: /
+# Block admin and internal pages
+Disallow: /admin/
+Disallow: /api-docs
+Disallow: /test-
+Disallow: /debug
+Disallow: /simple-auth
+Disallow: /clerk-
+Disallow: /oauth-
+
+# Allow public pages
+Allow: /ai-tools
+Allow: /tools/
+Allow: /utilities
 Allow: /about
 Allow: /contact
 Allow: /privacy
 Allow: /terms
-Allow: /api-docs
-Allow: /tools/
+
+# Sitemap
+Sitemap: https://ai-toolbox.com/sitemap.xml
 
 # Crawl delay (optional)
 Crawl-delay: 1 

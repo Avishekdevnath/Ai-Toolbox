@@ -96,6 +96,13 @@ export default function MockInterviewerTool() {
         isTimerRunning: true,
         loading: false
       }));
+      
+      // Track usage when interview starts
+      fetch('/api/tools/mock-interviewer/track-usage', { 
+        method: 'POST' 
+      }).catch(err => {
+        console.error('Usage tracking failed:', err);
+      });
     } catch (error) {
       setState(prev => ({
         ...prev,

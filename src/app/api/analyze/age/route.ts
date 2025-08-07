@@ -17,6 +17,9 @@ import {
   type AgeBasedActivity
 } from '@/lib/ageCalculatorUtils';
 
+import { createHash } from 'crypto';
+import { AgeAnalysisModel } from '@/models/AgeAnalysisModel';
+
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
 import { AgeAnalysisRequest, AgeAnalysisResponse } from '@/schemas/ageAnalysisSchema';
@@ -24,17 +27,19 @@ import { AgeAnalysisRequest, AgeAnalysisResponse } from '@/schemas/ageAnalysisSc
 export async function POST(request: NextRequest) {
   try {
     const body: AgeAnalysisRequest = await request.json();
-    const {
-      birthDate,
-      gender = 'male',
-      lifestyle = 'average',
-      healthConditions = [],
-      retirementAge = 65,
-      currentSavings = 0,
-      monthlyIncome = 5000,
-      desiredRetirementIncome = 4000,
-      includeAIInsights = true
-    } = body;
+    
+    // Validate and convert numeric inputs
+    const birthDate = body.birthDate;
+    const gender = body.gender || 'male';
+    const lifestyle = body.lifestyle || 'average';
+    const healthConditions = body.healthConditions || [];
+    
+    // Convert and validate numeric inputs
+    const retirementAge = Math.max(50, Math.min(80, Number(body.retirementAge) || 65));
+    const currentSavings = Math.max(0, Number(body.currentSavings) || 0);
+    const monthlyIncome = Math.max(0, Number(body.monthlyIncome) || 5000);
+    const desiredRetirementIncome = Math.max(0, Number(body.desiredRetirementIncome) || 4000);
+    const includeAIInsights = body.includeAIInsights !== false;
 
     if (!birthDate) {
       return NextResponse.json(
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
     const ageData = calculateAge(birthDateObj);
     const age = ageData.age.years;
 
-    // Generate all calculations
+    // Generate all calculations with validated inputs
     const lifeMilestones = generateLifeMilestones(age);
     const healthRecommendations = generateHealthRecommendations(age);
     const retirementPlan = calculateRetirementPlan(
@@ -81,6 +86,30 @@ export async function POST(request: NextRequest) {
       nextBirthday
     };
 
+    // Try to save to database, but don't fail if it doesn't work
+    try {
+      // Compute a hash of the input for deduplication
+      const inputForHash = JSON.stringify({ birthDate, gender, lifestyle, healthConditions, retirementAge, currentSavings, monthlyIncome, desiredRetirementIncome });
+      const hash = createHash('sha256').update(inputForHash).digest('hex');
+
+      // Check for existing analysis
+      const existing = await AgeAnalysisModel.findOne({ hash });
+      if (existing) {
+        return NextResponse.json(existing.result);
+      }
+
+      // Save to database
+      await AgeAnalysisModel.create({
+        userId: null,
+        input: { birthDate, gender, lifestyle, healthConditions, retirementAge, currentSavings, monthlyIncome, desiredRetirementIncome },
+        result: response,
+        hash
+      });
+    } catch (dbError) {
+      console.log('Database operation failed, continuing without persistence:', dbError.message);
+      // Continue without database persistence
+    }
+
     // Generate AI insights if requested and API key is available
     if (includeAIInsights && process.env.GOOGLE_AI_API_KEY) {
       try {
@@ -98,13 +127,12 @@ export async function POST(request: NextRequest) {
         });
         response.aiInsights = aiInsights;
       } catch (aiError) {
-        console.error('AI insights generation failed:', aiError);
         // Continue without AI insights
+        console.log('AI insights generation failed:', aiError);
       }
     }
 
     return NextResponse.json(response);
-
   } catch (error) {
     console.error('Age analysis error:', error);
     return NextResponse.json(

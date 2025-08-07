@@ -225,10 +225,7 @@ export default function URLShortenerTool() {
                 <p>Your URLs are saved using your device fingerprint. They'll persist as long as you use the same browser.</p>
                 <p className="mt-2">
                   <strong>💡 Pro Tip:</strong> 
-                  <a href="/auth/signin" className="text-blue-600 dark:text-blue-400 hover:underline ml-1">
-                    Sign up for free
-                  </a> 
-                  to access advanced features like unlimited URLs, detailed analytics, and cross-device sync!
+                  Your URLs are saved using your device fingerprint and will persist as long as you use the same browser.
                 </p>
               </div>
             </div>

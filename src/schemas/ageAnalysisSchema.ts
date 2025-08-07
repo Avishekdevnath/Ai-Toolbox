@@ -1,4 +1,38 @@
 import { ObjectId } from 'mongodb';
+import { z } from 'zod';
+
+export const AgeAnalysisInputSchema = z.object({
+  birthDate: z.string(),
+  gender: z.enum(['male', 'female']),
+  lifestyle: z.enum(['poor', 'average', 'excellent']),
+  healthConditions: z.array(z.string()),
+  retirementAge: z.number().min(50).max(80),
+  currentSavings: z.number().min(0),
+  monthlyIncome: z.number().min(0),
+  desiredRetirementIncome: z.number().min(0),
+  includeAIInsights: z.boolean().optional()
+});
+
+export const AgeAnalysisResultSchema = z.object({
+  ageData: z.any(),
+  lifeMilestones: z.array(z.any()),
+  healthRecommendations: z.array(z.any()),
+  retirementPlan: z.any(),
+  lifeExpectancy: z.any(),
+  ageBasedActivities: z.array(z.any()),
+  lifePercentage: z.number(),
+  nextBirthday: z.object({
+    nextBirthday: z.any(),
+    daysUntil: z.number(),
+    ageAtNextBirthday: z.number()
+  }),
+  aiInsights: z.object({
+    personalizedAdvice: z.string(),
+    lifeOptimizationTips: z.array(z.string()),
+    motivationalMessage: z.string(),
+    futurePlanningSuggestions: z.array(z.string())
+  }).optional()
+});
 
 export interface AgeAnalysisRequest {
   birthDate: string;

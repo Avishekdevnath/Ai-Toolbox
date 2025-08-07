@@ -5,15 +5,21 @@ export async function POST(request: NextRequest) {
   try {
     const db = await getDatabase();
     
-    // Track quote generator usage
-    await db.collection('tool_usage').updateOne(
-      { toolName: 'quote-generator' },
-      {
-        $inc: { usageCount: 1 },
-        $set: { lastUsed: new Date() }
+    // Create a new usage record that matches the ToolUsage model schema
+    await db.collection('toolusages').insertOne({
+      userId: 'anonymous',
+      toolSlug: 'quote-generator',
+      toolName: 'Quote Generator',
+      usageType: 'generate',
+      metadata: {
+        action: 'generate_quote',
+        timestamp: new Date()
       },
-      { upsert: true }
-    );
+      userAgent: request.headers.get('user-agent') || '',
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

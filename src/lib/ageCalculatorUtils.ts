@@ -37,6 +37,8 @@ export interface RetirementPlan {
   monthlySavingsNeeded: number;
   totalSavingsNeeded: number;
   currentSavings: number;
+  monthlyIncome: number;
+  desiredRetirementIncome: number;
   investmentReturn: number;
 }
 
@@ -284,30 +286,62 @@ export function calculateRetirementPlan(
   desiredRetirementIncome: number = 4000,
   investmentReturn: number = 0.07
 ): RetirementPlan {
-  const yearsUntilRetirement = retirementAge - currentAge;
-  const estimatedLifeExpectancy = 85; // Can be customized
-  const retirementYears = estimatedLifeExpectancy - retirementAge;
+  // Validate inputs to prevent NaN
+  const validCurrentAge = Math.max(0, currentAge);
+  const validRetirementAge = Math.max(validCurrentAge + 1, retirementAge);
+  const validCurrentSavings = Math.max(0, currentSavings);
+  const validMonthlyIncome = Math.max(0, monthlyIncome);
+  const validDesiredRetirementIncome = Math.max(0, desiredRetirementIncome);
+  const validInvestmentReturn = Math.max(0.01, Math.min(0.20, investmentReturn)); // Between 1% and 20%
+
+  const yearsUntilRetirement = validRetirementAge - validCurrentAge;
+  const estimatedLifeExpectancy = 85;
+  const retirementYears = Math.max(1, estimatedLifeExpectancy - validRetirementAge);
   
   // Calculate total savings needed
-  const annualRetirementIncome = desiredRetirementIncome * 12;
+  const annualRetirementIncome = validDesiredRetirementIncome * 12;
   const totalSavingsNeeded = annualRetirementIncome * retirementYears;
   
-  // Calculate monthly savings needed
-  const futureValue = currentSavings * Math.pow(1 + investmentReturn, yearsUntilRetirement);
-  const additionalSavingsNeeded = totalSavingsNeeded - futureValue;
-  const monthlySavingsNeeded = additionalSavingsNeeded / 
-    (Math.pow(1 + investmentReturn, yearsUntilRetirement) - 1) * (investmentReturn / 12);
+  // Calculate monthly savings needed with proper error handling
+  let monthlySavingsNeeded = 0;
+  
+  if (yearsUntilRetirement > 0 && validInvestmentReturn > 0) {
+    try {
+      const futureValue = validCurrentSavings * Math.pow(1 + validInvestmentReturn, yearsUntilRetirement);
+      const additionalSavingsNeeded = Math.max(0, totalSavingsNeeded - futureValue);
+      
+      // Use a simpler calculation to avoid division by zero
+      if (additionalSavingsNeeded > 0) {
+        const monthlyRate = validInvestmentReturn / 12;
+        const monthsUntilRetirement = yearsUntilRetirement * 12;
+        
+        if (monthlyRate > 0 && monthsUntilRetirement > 0) {
+          const futureValueFactor = Math.pow(1 + monthlyRate, monthsUntilRetirement);
+          monthlySavingsNeeded = additionalSavingsNeeded / ((futureValueFactor - 1) / monthlyRate);
+        } else {
+          // Fallback: simple division
+          monthlySavingsNeeded = additionalSavingsNeeded / monthsUntilRetirement;
+        }
+      }
+    } catch (error) {
+      // Fallback calculation if complex math fails
+      const additionalSavingsNeeded = Math.max(0, totalSavingsNeeded - validCurrentSavings);
+      monthlySavingsNeeded = additionalSavingsNeeded / (yearsUntilRetirement * 12);
+    }
+  }
   
   return {
-    currentAge,
-    retirementAge,
+    currentAge: validCurrentAge,
+    retirementAge: validRetirementAge,
     yearsUntilRetirement,
     estimatedLifeExpectancy,
     retirementYears,
-    monthlySavingsNeeded: Math.max(0, monthlySavingsNeeded),
-    totalSavingsNeeded,
-    currentSavings,
-    investmentReturn
+    monthlySavingsNeeded: Math.max(0, Math.round(monthlySavingsNeeded)),
+    totalSavingsNeeded: Math.round(totalSavingsNeeded),
+    currentSavings: validCurrentSavings,
+    monthlyIncome: validMonthlyIncome,
+    desiredRetirementIncome: validDesiredRetirementIncome,
+    investmentReturn: validInvestmentReturn
   };
 }
 

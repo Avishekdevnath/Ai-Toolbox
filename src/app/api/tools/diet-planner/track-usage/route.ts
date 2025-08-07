@@ -5,15 +5,21 @@ export async function POST(request: NextRequest) {
   try {
     const db = await getDatabase();
     
-    // Track diet planner usage
-    await db.collection('tool_usage').updateOne(
-      { toolName: 'diet-planner' },
-      {
-        $inc: { usageCount: 1 },
-        $set: { lastUsed: new Date() }
+    // Create a new usage record that matches the ToolUsage model schema
+    await db.collection('toolusages').insertOne({
+      userId: 'anonymous', // For now, use anonymous since we don't have user auth
+      toolSlug: 'diet-planner',
+      toolName: 'Diet Planner',
+      usageType: 'generate',
+      metadata: {
+        action: 'generate_diet_plan',
+        timestamp: new Date()
       },
-      { upsert: true }
-    );
+      userAgent: request.headers.get('user-agent') || '',
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

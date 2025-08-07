@@ -41,6 +41,13 @@ export default function PasswordGeneratorTool() {
 
     setPassword(generatedPassword);
     setCopied(false);
+    
+    // Track usage when password is generated
+    fetch('/api/tools/password-generator/track-usage', { 
+      method: 'POST' 
+    }).catch(err => {
+      console.error('Usage tracking failed:', err);
+    });
   };
 
   const copyToClipboard = async () => {

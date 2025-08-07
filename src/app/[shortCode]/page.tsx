@@ -1,24 +1,41 @@
-import { redirect } from 'next/navigation';
 import { getDatabase } from '@/lib/mongodb';
-import { isUrlExpired } from '@/lib/urlShortenerUtils';
+import { UrlShortenerModel } from '@/models/UrlShortenerModel';
+import { notFound } from 'next/navigation';
 
-export default async function ShortCodeRedirectPage({ params }: { params: { shortCode: string } }) {
+interface PageProps {
+  params: Promise<{ shortCode: string }>;
+}
+
+export default async function ShortCodePage({ params }: PageProps) {
   const { shortCode } = await params;
-  const db = await getDatabase();
-  const url = await db.collection('shortened_urls').findOne({ shortCode, isActive: true });
 
-  if (!url || isUrlExpired(url)) {
-    // Not found or expired
-    return <div style={{ padding: 40, textAlign: 'center' }}><h1>Link not found or expired</h1></div>;
+  try {
+    await getDatabase();
+    const urlData = await UrlShortenerModel.findByShortCode(shortCode);
+
+    if (!urlData) {
+      notFound();
+    }
+
+    // Redirect to the original URL
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Redirecting...</h1>
+          <p className="text-gray-600 mb-4">
+            You are being redirected to: {urlData.originalUrl}
+          </p>
+          <a 
+            href={urlData.originalUrl} 
+            className="text-blue-600 hover:underline"
+          >
+            Click here if you are not redirected automatically
+          </a>
+        </div>
+      </div>
+    );
+  } catch (error) {
+    console.error('Error fetching URL:', error);
+    notFound();
   }
-
-  // Track click
-  await db.collection('shortened_urls').updateOne(
-    { shortCode },
-    { $inc: { clicks: 1 } }
-  );
-
-  // Redirect
-  redirect(url.originalUrl);
-  return null;
 } 

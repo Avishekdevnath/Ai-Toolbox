@@ -1,4 +1,4 @@
-import { QuoteRequest, famousBengaliAuthors } from './quoteUtils';
+import { QuoteRequest, famousBengaliAuthors, getMonthDay } from './quoteUtils';
 
 export function buildQuotePrompt(request: QuoteRequest): string {
   const { topic, mood, author, count, language, birthDate } = request;
@@ -70,10 +70,4 @@ export function buildFallbackPrompt(request: QuoteRequest): string {
 export function buildFamousPeoplePrompt(birthDate: string): string {
   const monthDay = getMonthDay(birthDate);
   return `List 3-5 famous people born on ${monthDay}. Return only their names as a comma-separated list.`;
-}
-
-function getMonthDay(date: string): string {
-  if (!date) return '';
-  const d = new Date(date);
-  return d.toLocaleString('en-US', { month: 'long', day: 'numeric' });
 } 

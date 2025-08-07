@@ -9,99 +9,13 @@ import {
   filterAuthenticQuotes, 
   parseQuotesFromResponse, 
   getFallbackQuotes, 
-  getMonthDay
+  getMonthDay,
+  stripEnglishTranslation
 } from '@/lib/quoteUtils';
 import { buildQuotePrompt, buildFallbackPrompt, buildFamousPeoplePrompt } from '@/lib/quotePromptBuilder';
+import { validateRequest, checkRateLimit } from '@/lib/security';
 
-function getMonthDay(date: string): string {
-  if (!date) return '';
-  const d = new Date(date);
-  // Format: Month Day (e.g., March 14)
-  return d.toLocaleString('en-US', { month: 'long', day: 'numeric' });
-}
 
-function stripEnglishTranslation(text: string, language: string) {
-  // Remove anything in parentheses or after a * (common for translations)
-  // Only if language is not English
-  if (language === 'English') return text;
-  // Remove parenthetical translations and asterisks
-  return text.replace(/\([^\)]*\*[^\)]*\)/g, '') // ( ... * ... )
-             .replace(/\([^\)]*English[^\)]*\)/gi, '')
-             .replace(/\*[^\n]+/g, '') // * ...
-             .replace(/\([^\)]*\)/g, '') // ( ... )
-             .replace(/\s+/g, ' ').trim();
-}
-
-// Function to filter out non-authentic quotes
-function filterAuthenticQuotes(quotes: { quote: string, author: string }[], language: string): { quote: string, author: string }[] {
-  const forbiddenPhrases = [
-    // Bengali disclaimers
-    'উপযুক্ত উক্তি যদিও নির্দিষ্ট নয়',
-    'একটি উপযুক্ত উক্তি যদিও নির্দিষ্ট নয়',
-    'নির্দিষ্ট কোন প্রসিদ্ধ উক্তি সন্নিবেশ করা সম্ভব হয়নি',
-    'প্রকৃত প্রসিদ্ধ',
-    'অজ্ঞাত',
-    'Unknown',
-    // English disclaimers
-    'inspired by',
-    'paraphrased',
-    'paraphrase',
-    'often misattributed',
-    'true authorship uncertain',
-    'widely attributed, though origin uncertain',
-    'commonly cited as',
-    'lacks definitive evidence',
-    'capturing',
-    'expressing a similar sentiment',
-    'Note:',
-    '**Note:**',
-    'Some quotes',
-    'uncertain or multiple attributions',
-    'widely accepted origins',
-    'definitive evidence',
-    'similar sentiment',
-    // Generic disclaimers
-    'disclaimer',
-    'note',
-    'দ্রষ্টব্য',
-    'উপরোক্ত',
-    'অনুপ্রাণিত'
-  ];
-
-  return quotes.filter(quote => {
-    const quoteText = quote.quote.toLowerCase();
-    const authorText = quote.author.toLowerCase();
-    
-    // Check if quote or author contains any forbidden phrases
-    const hasForbiddenPhrase = forbiddenPhrases.some(phrase => 
-      quoteText.includes(phrase.toLowerCase()) || 
-      authorText.includes(phrase.toLowerCase())
-    );
-    
-    // Check for suspicious patterns
-    const hasSuspiciousPatterns = 
-      quoteText.includes('(though') ||
-      quoteText.includes('(often') ||
-      quoteText.includes('(widely') ||
-      quoteText.includes('(commonly') ||
-      quoteText.includes('(true') ||
-      quoteText.includes('(definitive') ||
-      quoteText.includes('(similar') ||
-      quoteText.includes('(expressing') ||
-      quoteText.includes('(capturing') ||
-      authorText.includes('(though') ||
-      authorText.includes('(often') ||
-      authorText.includes('(widely') ||
-      authorText.includes('(commonly') ||
-      authorText.includes('(true') ||
-      authorText.includes('(definitive') ||
-      authorText.includes('(similar') ||
-      authorText.includes('(expressing') ||
-      authorText.includes('(capturing');
-
-    return !hasForbiddenPhrase && !hasSuspiciousPatterns;
-  });
-}
 
 // Expanded fallback quotes with metadata for filtering
 const fallbackQuotes = [
@@ -126,6 +40,24 @@ const famousBengaliAuthors = [
 
 export async function POST(request: NextRequest) {
   try {
+    // Security validation
+    const securityCheck = validateRequest(request);
+    if (!securityCheck.isValid) {
+      return NextResponse.json(
+        { error: securityCheck.error || 'Security validation failed' },
+        { status: securityCheck.statusCode || 400 }
+      );
+    }
+
+    // Rate limiting
+    const clientIP = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientIP, 50, 60000)) { // 50 requests per minute
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const requestData: QuoteRequest = await request.json();
     const { birthDate, topic, mood, author, count, language } = requestData;
     const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
@@ -162,7 +94,7 @@ export async function POST(request: NextRequest) {
     console.log('[QUOTE API] Raw AI response:', text);
     
     // Parse quotes from AI response
-    let quotes = parseQuotesFromResponse(text, language, author);
+    let quotes = parseQuotesFromResponse(text, language, author, quoteCount);
     
     // Fallback: if no quotes found, try alternative parsing
     if (quotes.length === 0 && text) {
@@ -239,7 +171,7 @@ export async function POST(request: NextRequest) {
       resultQuote = await model.generateContent(fallbackPrompt);
       responseQuote = await resultQuote.response;
       text = responseQuote.text().trim();
-      quotes = parseQuotesFromResponse(text, 'English', author);
+      quotes = parseQuotesFromResponse(text, 'English', author, quoteCount);
       
       // Fallback: if no quotes found, try alternative parsing
       if (quotes.length === 0 && text) {

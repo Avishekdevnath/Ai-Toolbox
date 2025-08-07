@@ -162,6 +162,13 @@ export default function ResumeReviewerTool() {
       }
 
       setAnalysis({ loading: false, result: data.analysis!, error: null });
+      
+      // Track usage when resume analysis is completed
+      fetch('/api/tools/resume-reviewer/track-usage', { 
+        method: 'POST' 
+      }).catch(err => {
+        console.error('Usage tracking failed:', err);
+      });
     } catch (error) {
       setAnalysis({
         loading: false,

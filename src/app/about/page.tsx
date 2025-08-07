@@ -3,16 +3,16 @@
 import React from 'react';
 import { Briefcase, GraduationCap, Mail, Linkedin, Globe, Phone, MapPin, Code2, Layers, BookOpen, User } from 'lucide-react';
 import Link from 'next/link';
-import Header from '@/components/Header';
+import Navbar from '@/components/Navbar';
 import NewFooter from '@/components/NewFooter';
 
 const projects: any[] = []; // Add projects here if available
 
 export default function AboutMePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <Header />
-      <main className="flex-1 py-12 px-4">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+      <Navbar />
+      <main className="flex-1 py-12">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-10">

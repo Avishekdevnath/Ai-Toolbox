@@ -38,7 +38,7 @@ export default function RedirectPage() {
         if (response.ok) {
           // Parse the response to get the redirect URL
           const data = await response.json();
-          console.log('Redirect response:', data); // Debug log
+      
           if (data.success && data.redirectUrl) {
             // Validate the redirect URL
             try {

@@ -192,7 +192,7 @@ export default function AgeCalculatorTool() {
               <Label htmlFor="gender">Gender</Label>
               <Select value={gender} onValueChange={(value: 'male' | 'female') => setGender(value)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>{gender ? (gender === 'male' ? 'Male' : 'Female') : 'Select Gender'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
@@ -205,7 +205,7 @@ export default function AgeCalculatorTool() {
               <Label htmlFor="lifestyle">Lifestyle</Label>
               <Select value={lifestyle} onValueChange={(value: 'poor' | 'average' | 'excellent') => setLifestyle(value)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>{lifestyle ? (lifestyle.charAt(0).toUpperCase() + lifestyle.slice(1)) : 'Select Lifestyle'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="poor">Poor (Sedentary, unhealthy habits)</SelectItem>
