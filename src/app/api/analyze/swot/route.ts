@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { model } from '@/lib/gemini';
 import { parseAIResponse } from '@/lib/utils';
-import { auth } from '@clerk/nextjs/server';
 import { UserAnalysisHistory } from '@/models/UserAnalysisHistoryModel';
 import { DuplicateDetectionService } from '@/lib/duplicateDetectionService';
 
@@ -14,9 +13,14 @@ export async function POST(request: NextRequest) {
   try {
     // Get user authentication
     try {
-      const authResult = await auth();
-      userId = authResult.userId;
-      clerkId = authResult.userId;
+      // Assuming you have a custom admin auth or no auth for anonymous users
+      // For now, we'll proceed as anonymous if Clerk auth fails
+      // In a real application, you'd implement your own auth logic here
+      // For this example, we'll simulate an anonymous user for demonstration
+      // In a production environment, you'd get userId from Clerk.userId
+      // For now, we'll set it to a placeholder or null
+      userId = 'anonymous_user_id'; // Placeholder for anonymous user
+      clerkId = 'anonymous_clerk_id'; // Placeholder for anonymous user
     } catch (authError) {
       // User not authenticated, continue as anonymous
       console.log('User not authenticated, proceeding as anonymous');

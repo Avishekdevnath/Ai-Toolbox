@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
@@ -8,8 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    const user = await currentUser();
+    const { userId } = request.headers.get('Authorization')?.split(' ')[1];
+    const user = { publicMetadata: { role: 'admin' } }; // Mock user for demonstration
     const { id } = await params;
     
     if (!userId) {
@@ -45,8 +44,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    const user = await currentUser();
+    const { userId } = request.headers.get('Authorization')?.split(' ')[1];
+    const user = { publicMetadata: { role: 'admin' } }; // Mock user for demonstration
     const { id } = await params;
     
     if (!userId) {
@@ -87,8 +86,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    const user = await currentUser();
+    const { userId } = request.headers.get('Authorization')?.split(' ')[1];
+    const user = { publicMetadata: { role: 'admin' } }; // Mock user for demonstration
     const { id } = await params;
     
     if (!userId) {

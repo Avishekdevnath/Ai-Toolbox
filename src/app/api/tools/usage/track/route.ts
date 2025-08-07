@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
 import { toolUsageService } from '@/lib/toolUsageService';
 import { userService } from '@/lib/userService';
 import { trackToolUsage } from '@/lib/authMiddleware';
@@ -7,8 +6,8 @@ import { determineProvider } from '@/lib/utils/providerUtils';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    const user = await currentUser();
+    const { userId } = await trackToolUsage();
+    const user = await userService.getUserById(userId);
     
     const body = await request.json();
     const {
@@ -103,7 +102,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await trackToolUsage();
     const { searchParams } = new URL(request.url);
     
     const toolSlug = searchParams.get('toolSlug');

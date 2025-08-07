@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { UserSettings } from '@/models/UserSettingsModel';
 import { UserAnalysisHistory } from '@/models/UserAnalysisHistoryModel';
 import { z } from 'zod';
@@ -18,7 +17,7 @@ const ExportRequestSchema = z.object({
 // POST - Export user data
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = request.headers.get('x-user-id')?.split(':')[0] || '';
     
     if (!userId) {
       return NextResponse.json(

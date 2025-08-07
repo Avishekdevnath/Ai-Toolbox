@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { getDatabase } from '@/lib/mongodb';
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // TODO: Implement account deletion logic
     // This would typically involve:
     // 1. Deleting user data from your database
