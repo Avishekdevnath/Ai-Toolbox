@@ -19,9 +19,9 @@ export default function AdminLoginPage() {
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       console.log('✅ Already authenticated, redirecting to dashboard...');
-      router.push('/admin');
+      window.location.href = '/admin';
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
