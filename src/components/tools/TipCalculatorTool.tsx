@@ -169,10 +169,10 @@ export default function TipCalculatorTool() {
                 id="billAmount"
                 type="number"
                 value={billAmount}
-                onChange={(e) => setBillAmount(e.target.value)}
+                onChange={(e) => setBillAmount(e.currentTarget.value)}
                 placeholder="0.00"
-                min="0"
-                step="0.01"
+                min={0}
+                step={0.01}
               />
             </div>
 
@@ -221,9 +221,9 @@ export default function TipCalculatorTool() {
                 id="people"
                 type="number"
                 value={numberOfPeople}
-                onChange={(e) => setNumberOfPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                min="1"
-                max="20"
+                onChange={(e) => setNumberOfPeople(Math.max(1, e.currentTarget.valueAsNumber || 1))}
+                min={1}
+                max={20}
               />
             </div>
 
@@ -246,10 +246,10 @@ export default function TipCalculatorTool() {
                     id="taxRate"
                     type="number"
                     value={taxRate}
-                    onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                    min="0"
-                    max="20"
-                    step="0.1"
+                    onChange={(e) => setTaxRate(e.currentTarget.valueAsNumber || 0)}
+                    min={0}
+                    max={20}
+                    step={0.1}
                   />
                 </div>
               )}

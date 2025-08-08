@@ -310,12 +310,12 @@ const userSchema = new Schema<User>({
     theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'auto' },
     language: { type: String, default: 'en' },
     timezone: { type: String, default: 'UTC' },
-    notifications: {
+  notifications: {
       email: { type: Boolean, default: true },
       push: { type: Boolean, default: true },
       marketing: { type: Boolean, default: false }
-    },
-    privacy: {
+  },
+  privacy: {
       profileVisibility: { type: String, enum: ['public', 'private'], default: 'public' },
       dataSharing: { type: Boolean, default: false }
     }

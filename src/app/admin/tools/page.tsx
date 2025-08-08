@@ -172,7 +172,7 @@ export default function ToolUsageDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+    <div>
           <h1 className="text-3xl font-bold text-gray-900">Tool Usage Dashboard</h1>
           <p className="text-gray-600 mt-1">Monitor and analyze tool performance and usage patterns</p>
         </div>
@@ -220,7 +220,7 @@ export default function ToolUsageDashboard() {
           </select>
         </div>
       </div>
-
+      
       {/* Overall Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -231,7 +231,7 @@ export default function ToolUsageDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">
               {data?.overallStats.totalUsage.toLocaleString() || 0}
-            </div>
+              </div>
             <p className="text-xs text-gray-500 mt-1">
               Total tool interactions
             </p>
@@ -338,10 +338,10 @@ export default function ToolUsageDashboard() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium capitalize">
                   {usage._id}
-                </CardTitle>
+          </CardTitle>
                 {getUsageTypeIcon(usage._id)}
-              </CardHeader>
-              <CardContent>
+        </CardHeader>
+        <CardContent>
                 <div className="text-2xl font-bold">
                   {usage.count.toLocaleString()}
                 </div>
@@ -362,8 +362,8 @@ export default function ToolUsageDashboard() {
         </h2>
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -378,8 +378,8 @@ export default function ToolUsageDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Time
                     </th>
-                  </tr>
-                </thead>
+                </tr>
+              </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {data?.recentActivity.map((activity) => (
                     <tr key={activity._id} className="hover:bg-gray-50">
@@ -409,14 +409,14 @@ export default function ToolUsageDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(activity.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
       </div>
 
       {/* Complete Tool Usage Table */}
@@ -425,7 +425,7 @@ export default function ToolUsageDashboard() {
           <BarChart3 className="w-5 h-5" />
           Complete Tool Usage Report
         </h2>
-        <Card>
+      <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -457,10 +457,10 @@ export default function ToolUsageDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {tool.toolName}
-                        </div>
+                </div>
                         <div className="text-sm text-gray-500">
                           {tool.toolSlug}
-                        </div>
+              </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {tool.totalUsage.toLocaleString()}
@@ -481,9 +481,9 @@ export default function ToolUsageDashboard() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
       </div>
     </div>
   );

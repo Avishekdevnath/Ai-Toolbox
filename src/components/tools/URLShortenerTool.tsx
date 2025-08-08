@@ -9,7 +9,7 @@ import {
   shareUrl,
   generateQRCodeUrl
 } from '@/lib/urlShortenerClient';
-import { ShortenedUrl } from '@/lib/urlShortenerUtils';
+import type { ShortenedUrl } from '@/schemas/urlShortenerSchema';
 
 interface DisplayUrl extends ShortenedUrl {
   shortenedUrl: string;
@@ -144,7 +144,7 @@ export default function URLShortenerTool() {
 
     try {
       await deleteShortenedUrl(urlId);
-      setShortenedUrls(prev => prev.filter(url => url._id !== urlId));
+      setShortenedUrls(prev => prev.filter(url => String(url._id) !== urlId));
       setSuccess('URL deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -464,7 +464,7 @@ export default function URLShortenerTool() {
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {shortenedUrls.map((url) => (
                 <div 
-                  key={url._id}
+                  key={String(url._id)}
                   className={`bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border ${
                     url.isExpired ? 'border-red-200 dark:border-red-800' : 'border-gray-200 dark:border-gray-600'
                   }`}
@@ -554,7 +554,7 @@ export default function URLShortenerTool() {
                         <span>Expires: {new Date(url.expiresAt).toLocaleDateString()}</span>
                       )}
                       <button
-                        onClick={() => handleDeleteUrl(url._id!)}
+                        onClick={() => handleDeleteUrl(String(url._id!))}
                         className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         title="Delete"
                       >

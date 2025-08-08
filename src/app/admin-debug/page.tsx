@@ -50,13 +50,13 @@ export default function AdminDebugPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">localStorage</h2>
           <div className="space-y-2">
-            <p><strong>Token:</strong> {localStorage.getItem('adminToken') ? 'Present' : 'Missing'}</p>
-            <p><strong>Admin Info:</strong> {localStorage.getItem('adminInfo') ? 'Present' : 'Missing'}</p>
+            <p><strong>Token:</strong> {typeof window !== 'undefined' && localStorage.getItem('adminToken') ? 'Present' : 'Missing'}</p>
+            <p><strong>Admin Info:</strong> {typeof window !== 'undefined' && localStorage.getItem('adminInfo') ? 'Present' : 'Missing'}</p>
             <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {JSON.stringify({
+              {typeof window !== 'undefined' ? JSON.stringify({
                 token: localStorage.getItem('adminToken')?.substring(0, 50) + '...',
                 adminInfo: localStorage.getItem('adminInfo') ? JSON.parse(localStorage.getItem('adminInfo')!) : null
-              }, null, 2)}
+              }, null, 2) : 'Unavailable on server render'}
             </pre>
           </div>
         </div>
