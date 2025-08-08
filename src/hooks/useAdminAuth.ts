@@ -29,97 +29,69 @@ export function useAdminAuth() {
     error: null
   });
   
-  const [isChecking, setIsChecking] = useState(false);
   const router = useRouter();
 
-  // Check authentication status on mount
+  // Single auth check on mount
   useEffect(() => {
-    if (!isChecking) {
-      checkAuthStatus();
-    }
-  }, []);
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const adminInfo = localStorage.getItem('adminInfo');
 
-  const checkAuthStatus = useCallback(async () => {
-    if (isChecking) return; // Prevent multiple simultaneous checks
-    
-    try {
-      setIsChecking(true);
-      console.log('🔍 Checking auth status...');
-      const token = localStorage.getItem('adminToken');
-      const adminInfo = localStorage.getItem('adminInfo');
-
-      console.log('🔍 Auth check - localStorage:', {
-        hasToken: !!token,
-        hasAdminInfo: !!adminInfo,
-        tokenLength: token?.length || 0
-      });
-
-      if (!token || !adminInfo) {
-        console.log('❌ No token or admin info found');
-        setAuthState({
-          isAuthenticated: false,
-          isSuperAdmin: false,
-          admin: null,
-          isLoading: false,
-          error: null
-        });
-        return;
-      }
-
-      // Verify token with server
-      console.log('🔍 Verifying token with server...');
-      const response = await fetch('/api/admin/verify', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+        if (!token || !adminInfo) {
+          setAuthState({
+            isAuthenticated: false,
+            isSuperAdmin: false,
+            admin: null,
+            isLoading: false,
+            error: null
+          });
+          return;
         }
-      });
 
-      console.log('🔍 Verify response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Token verification successful:', data);
-        const admin = JSON.parse(adminInfo);
-        
-        setAuthState({
-          isAuthenticated: true,
-          isSuperAdmin: admin.role === 'super_admin',
-          admin: admin,
-          isLoading: false,
-          error: null
+        // Verify token
+        const response = await fetch('/api/admin/verify', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
-      } else {
-        console.log('❌ Token verification failed:', response.status);
-        // Token is invalid, clear storage
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminInfo');
-        
+
+        if (response.ok) {
+          const admin = JSON.parse(adminInfo);
+          setAuthState({
+            isAuthenticated: true,
+            isSuperAdmin: admin.role === 'super_admin',
+            admin: admin,
+            isLoading: false,
+            error: null
+          });
+        } else {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminInfo');
+          setAuthState({
+            isAuthenticated: false,
+            isSuperAdmin: false,
+            admin: null,
+            isLoading: false,
+            error: 'Session expired'
+          });
+        }
+      } catch (error) {
         setAuthState({
           isAuthenticated: false,
           isSuperAdmin: false,
           admin: null,
           isLoading: false,
-          error: 'Session expired'
+          error: 'Authentication check failed'
         });
       }
-    } catch (error) {
-      console.error('❌ Auth check error:', error);
-      setAuthState({
-        isAuthenticated: false,
-        isSuperAdmin: false,
-        admin: null,
-        isLoading: false,
-        error: 'Authentication check failed'
-      });
-    } finally {
-      setIsChecking(false);
-    }
-  }, [isChecking]);
+    };
+
+    checkAuth();
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: {
@@ -144,20 +116,9 @@ export function useAdminAuth() {
 
         return { success: true };
       } else {
-        setAuthState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: data.error || 'Login failed'
-        }));
         return { success: false, error: data.error };
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: 'Network error'
-      }));
       return { success: false, error: 'Network error' };
     }
   }, []);
@@ -165,9 +126,7 @@ export function useAdminAuth() {
   const logout = useCallback(async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      
       if (token) {
-        // Call logout API
         await fetch('/api/admin/auth/logout', {
           method: 'POST',
           headers: {
@@ -178,7 +137,6 @@ export function useAdminAuth() {
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
-      // Clear local storage
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminInfo');
       
@@ -203,7 +161,6 @@ export function useAdminAuth() {
     login,
     logout,
     hasPermission,
-    checkAuthStatus,
     token: typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null
   };
 } 
