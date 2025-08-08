@@ -13,24 +13,48 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { isAuthenticated, isLoading } = useAdminAuth();
-  const [hasRedirected, setHasRedirected] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Simple auth check
   useEffect(() => {
-    console.log('🔍 Admin Layout Debug:', {
-      isAuthenticated,
-      isLoading,
-      hasToken: typeof window !== 'undefined' ? !!localStorage.getItem('adminToken') : false,
-      hasAdminInfo: typeof window !== 'undefined' ? !!localStorage.getItem('adminInfo') : false
-    });
+    const checkAuth = async () => {
+      const token = localStorage.getItem('adminToken');
+      const adminInfo = localStorage.getItem('adminInfo');
 
-    if (!isLoading && !isAuthenticated && !hasRedirected) {
-      console.log('❌ Redirecting to login - not authenticated');
-      setHasRedirected(true);
-      router.push('/admin-login');
-    }
-  }, [isAuthenticated, isLoading, router, hasRedirected]);
+      if (!token || !adminInfo) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        router.push('/admin-login');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/admin/verify', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminInfo');
+          setIsAuthenticated(false);
+          router.push('/admin-login');
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+        router.push('/admin-login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   // Show loading while checking authentication
   if (isLoading) {
