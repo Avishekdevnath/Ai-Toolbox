@@ -7,30 +7,35 @@ let model: any = null;
 // Export the model for other files that need it
 export { model };
 
+// Local defaults
+const DEFAULT_MODEL = 'gemini-1.5-flash';
+const DEFAULT_MAX_TOKENS = 2048;
+const DEFAULT_TEMPERATURE = 0.7;
+
 /**
  * Initialize Google Gemini AI with centralized configuration
  */
 function initializeGemini() {
   const isServer = typeof window === 'undefined';
-  const hasApiKey = config.googleAI.apiKey && config.googleAI.apiKey.length > 0;
+  const apiKey = config.ai.googleApiKey || config.ai.geminiApiKey || '';
+  const hasApiKey = apiKey.length > 0;
 
   if (isServer && hasApiKey) {
     try {
-      genAI = new GoogleGenerativeAI(config.googleAI.apiKey);
-      // Always use Gemini 1.5 Flash for optimal performance and cost-effectiveness
+      genAI = new GoogleGenerativeAI(apiKey);
       model = genAI.getGenerativeModel({ 
-        model: config.googleAI.model,
+        model: DEFAULT_MODEL,
         generationConfig: {
-          maxOutputTokens: config.googleAI.maxTokens,
-          temperature: config.googleAI.temperature,
+          maxOutputTokens: DEFAULT_MAX_TOKENS,
+          temperature: DEFAULT_TEMPERATURE,
         }
       });
-      console.log('✅ Gemini 1.5 Flash model initialized successfully');
+      console.log('✅ Gemini model initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Google AI:', error);
     }
   } else if (isServer && !hasApiKey) {
-    console.warn('⚠️  GOOGLE_AI_API_KEY not found. AI features will be disabled.');
+    console.warn('⚠️  GOOGLE_AI_API_KEY / GEMINI_API_KEY not found. AI features will be disabled.');
   }
 }
 
@@ -45,7 +50,7 @@ export async function generateGeminiResponse(prompt: string): Promise<{
   if (!model) {
     return {
       success: false,
-      error: 'Gemini AI model not initialized. Please check your GOOGLE_AI_API_KEY configuration.'
+      error: 'Gemini AI model not initialized. Please set GOOGLE_AI_API_KEY or GEMINI_API_KEY.'
     };
   }
 
@@ -109,10 +114,10 @@ export async function generateContentWithSafety(
 
   try {
     const modelWithSafety = genAI.getGenerativeModel({ 
-      model: config.googleAI.model,
+      model: DEFAULT_MODEL,
       generationConfig: {
-        maxOutputTokens: config.googleAI.maxTokens,
-        temperature: config.googleAI.temperature,
+        maxOutputTokens: DEFAULT_MAX_TOKENS,
+        temperature: DEFAULT_TEMPERATURE,
       },
       safetySettings: safetySettings || [
         {
@@ -168,12 +173,13 @@ export function getGeminiStatus(): {
   maxTokens: number;
   temperature: number;
 } {
+  const apiKey = config.ai.googleApiKey || config.ai.geminiApiKey || '';
   return {
     initialized: model !== null,
-    apiKeyConfigured: config.googleAI.apiKey.length > 0,
-    model: config.googleAI.model,
-    maxTokens: config.googleAI.maxTokens,
-    temperature: config.googleAI.temperature,
+    apiKeyConfigured: apiKey.length > 0,
+    model: DEFAULT_MODEL,
+    maxTokens: DEFAULT_MAX_TOKENS,
+    temperature: DEFAULT_TEMPERATURE,
   };
 }
 
