@@ -29,15 +29,21 @@ export function useAdminAuth() {
     error: null
   });
   
+  const [isChecking, setIsChecking] = useState(false);
   const router = useRouter();
 
   // Check authentication status on mount
   useEffect(() => {
-    checkAuthStatus();
+    if (!isChecking) {
+      checkAuthStatus();
+    }
   }, []);
 
   const checkAuthStatus = useCallback(async () => {
+    if (isChecking) return; // Prevent multiple simultaneous checks
+    
     try {
+      setIsChecking(true);
       console.log('🔍 Checking auth status...');
       const token = localStorage.getItem('adminToken');
       const adminInfo = localStorage.getItem('adminInfo');
@@ -105,8 +111,10 @@ export function useAdminAuth() {
         isLoading: false,
         error: 'Authentication check failed'
       });
+    } finally {
+      setIsChecking(false);
     }
-  }, []);
+  }, [isChecking]);
 
   const login = useCallback(async (email: string, password: string) => {
     try {

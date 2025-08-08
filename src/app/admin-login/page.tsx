@@ -13,15 +13,18 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { login, isAuthenticated, isLoading: authLoading } = useAdminAuth();
+  const { login } = useAdminAuth();
 
-  // Redirect if already authenticated
+  // Simple check for existing auth
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      console.log('✅ Already authenticated, redirecting to dashboard...');
+    const token = localStorage.getItem('adminToken');
+    const adminInfo = localStorage.getItem('adminInfo');
+    
+    if (token && adminInfo) {
+      console.log('✅ Found existing auth, redirecting to dashboard...');
       window.location.href = '/admin';
     }
-  }, [isAuthenticated, authLoading]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -6,7 +6,7 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,6 +14,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { isAuthenticated, isLoading } = useAdminAuth();
+  const [hasRedirected, setHasRedirected] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,11 +25,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       hasAdminInfo: typeof window !== 'undefined' ? !!localStorage.getItem('adminInfo') : false
     });
 
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !hasRedirected) {
       console.log('❌ Redirecting to login - not authenticated');
+      setHasRedirected(true);
       router.push('/admin-login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, hasRedirected]);
 
   // Show loading while checking authentication
   if (isLoading) {
