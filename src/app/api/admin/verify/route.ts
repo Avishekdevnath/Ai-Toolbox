@@ -1,43 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-import { connectToDatabase, getDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { AuthService } from '@/lib/authService';
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
+    // Get user session using unified service
+    const user = await AuthService.getSession(request);
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: 'No token provided' },
+        { success: false, error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7);
-    
-    // Verify JWT token
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    
-    if (!decoded || !decoded.isAdmin) {
+    // Check if user is admin
+    if (!user.isAdmin) {
       return NextResponse.json(
-        { success: false, error: 'Invalid admin token' },
-        { status: 401 }
+        { success: false, error: 'Admin privileges required' },
+        { status: 403 }
       );
     }
-
-    // For now, just verify the JWT token is valid
-    // We can add database verification later if needed
-    console.log('JWT token verified successfully for admin ID:', decoded.id);
 
     return NextResponse.json({
       success: true,
-      role: decoded.role || 'super_admin',
-      email: decoded.email || 'admin@ai-toolbox.com',
-      permissions: decoded.permissions || ['manage_users', 'manage_tools', 'view_analytics'],
-      isAdmin: true
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        permissions: user.permissions,
+        isAdmin: user.isAdmin
+      }
     });
 
   } catch (error) {

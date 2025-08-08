@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/mongodb';
+import mongoose from 'mongoose';
 import { getEnhancedUserId } from '@/lib/userTracking';
 
 export async function POST(request: NextRequest) {
   try {
-    const db = await getDatabase();
+    // Connect to database
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI!);
+    }
+    
     const userId = getEnhancedUserId(request);
     
     // Create a new usage record that matches the ToolUsage model schema
-    await db.collection('toolusages').insertOne({
+    await mongoose.connection.db.collection('toolusages').insertOne({
       userId: userId,
       toolSlug: 'qr-generator',
       toolName: 'QR Code Generator',

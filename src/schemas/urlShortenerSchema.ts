@@ -236,3 +236,49 @@ export class UrlShortenerSchema {
       .toArray() as Promise<ShortenedUrl[]>;
   }
 } 
+
+// Mongoose Schema
+import mongoose from 'mongoose';
+
+const clickEventSchema = new mongoose.Schema({
+  timestamp: { type: Date, default: Date.now },
+  ip: { type: String, required: true },
+  userAgent: { type: String, required: true },
+  referer: { type: String },
+  country: { type: String },
+  city: { type: String },
+  device: { type: String },
+  browser: { type: String }
+}, { _id: false });
+
+const shortenedUrlSchema = new mongoose.Schema({
+  originalUrl: { type: String, required: true },
+  shortCode: { type: String, required: true, unique: true, index: true },
+  customAlias: { type: String },
+  userId: { type: String },
+  anonymousUserId: { type: String },
+  deviceFingerprint: { type: String },
+  ipAddress: { type: String },
+  clicks: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date },
+  isActive: { type: Boolean, default: true },
+  tags: [{ type: String }],
+  description: { type: String },
+  healthStatus: { 
+    type: String, 
+    enum: ['unknown', 'ok', 'broken'], 
+    default: 'unknown' 
+  },
+  lastCheckedAt: { type: Date },
+  clickHistory: [clickEventSchema]
+});
+
+// Indexes (removing duplicate shortCode index since it's already defined in schema)
+shortenedUrlSchema.index({ userId: 1 });
+shortenedUrlSchema.index({ anonymousUserId: 1 });
+shortenedUrlSchema.index({ isActive: 1, expiresAt: 1 });
+
+// Export mongoose model
+export const ShortenedUrlModel = mongoose.models.ShortenedUrl || mongoose.model<ShortenedUrl>('ShortenedUrl', shortenedUrlSchema, 'shortened_urls'); 

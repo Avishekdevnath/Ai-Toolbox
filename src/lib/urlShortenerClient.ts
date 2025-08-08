@@ -10,21 +10,35 @@ export interface CreateShortenedUrlOptions {
 }
 
 export async function createShortenedUrl(opts: CreateShortenedUrlOptions) {
-  const session = await getAnonymousUserSession();
-  const res = await fetch('/api/url-shortener', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  try {
+    const session = await getAnonymousUserSession();
+    
+    const requestBody = {
       originalUrl: opts.originalUrl,
       customAlias: opts.customAlias,
       expiresInDays: opts.expiresInDays,
       expiresAt: opts.expiresAt,
       anonymousUserId: session.deviceFingerprint,
       deviceFingerprint: session.deviceFingerprint
-    })
-  });
-  if (!res.ok) throw new Error('Failed to create shortened URL');
-  return res.json();
+    };
+    
+    const res = await fetch('/api/url-shortener', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${res.status}: Failed to create shortened URL`);
+    }
+    
+    const responseData = await res.json();
+    return responseData;
+  } catch (error) {
+    console.error('Error in createShortenedUrl:', error);
+    throw error;
+  }
 }
 
 export async function getShortenedUrls(params: { limit?: number; activeOnly?: boolean }) {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -13,18 +13,14 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { login } = useAdminAuth();
+  const { user, isAuthenticated, isAdmin, login } = useAuth();
 
-  // Simple check for existing auth
+  // Redirect if already authenticated as admin
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    const adminInfo = localStorage.getItem('adminInfo');
-    
-    if (token && adminInfo) {
-      console.log('✅ Found existing auth, redirecting to dashboard...');
-      window.location.href = '/admin';
+    if (isAuthenticated && isAdmin) {
+      router.push('/admin');
     }
-  }, []);
+  }, [isAuthenticated, isAdmin, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,29 +28,27 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      console.log('🔐 Starting login process...');
+      console.log('🔐 Starting admin login process...');
       const result = await login(email, password);
 
       console.log('🔐 Login result:', result);
 
       if (result.success) {
         console.log('✅ Admin login successful:', email);
-        
-        // Debug localStorage
-        const token = localStorage.getItem('adminToken');
-        const adminInfo = localStorage.getItem('adminInfo');
-        console.log('🔍 localStorage after login:', {
-          hasToken: !!token,
-          hasAdminInfo: !!adminInfo,
-          adminInfo: adminInfo ? JSON.parse(adminInfo) : null
-        });
-        
-        // Debug router
         console.log('🔄 Attempting redirect to /admin...');
         
-        // Force immediate redirect
-        console.log('🔄 Force redirecting immediately...');
-        window.location.href = '/admin';
+        // Store token in localStorage as fallback
+        if (result.token) {
+          localStorage.setItem('authToken', result.token);
+          console.log('💾 Token stored in localStorage as fallback');
+        }
+        
+        // Add a longer delay to ensure state is updated and session is verified
+        setTimeout(() => {
+          console.log('🔄 Executing redirect now...');
+          // Use window.location.href for a full page navigation
+          window.location.href = '/admin';
+        }, 500);
       } else {
         console.log('❌ Login failed:', result.error);
         setError(result.error || 'Login failed');
@@ -66,6 +60,18 @@ export default function AdminLoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -82,7 +88,7 @@ export default function AdminLoginPage() {
           Access the admin dashboard
         </p>
         <p className="mt-1 text-center text-xs text-gray-500 dark:text-gray-500">
-          Use: superadmin@ai-toolbox.com / Admin@123456
+          Use: admin@ai-toolbox.com / Admin123!
         </p>
       </div>
 
@@ -109,7 +115,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
-                  placeholder="admin@example.com"
+                  placeholder="admin@ai-toolbox.com"
                 />
               </div>
             </div>
@@ -127,7 +133,7 @@ export default function AdminLoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm pr-10"
                   placeholder="Enter your password"
                 />
                 <button
@@ -136,9 +142,9 @@ export default function AdminLoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    <EyeOff className="h-5 w-5 text-gray-400" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    <Eye className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
               </div>
@@ -148,39 +154,28 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    Signing in...
-                  </>
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  'Sign in'
+                  <>
+                    <Shield className="h-5 w-5 mr-2" />
+                    Sign in to Admin Panel
+                  </>
                 )}
               </button>
             </div>
-          </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Need help?</span>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center">
+            <div className="text-center">
               <Link
-                href="/"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+                href="/sign-in"
+                className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
               >
-                Back to main site
+                Back to regular login
               </Link>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

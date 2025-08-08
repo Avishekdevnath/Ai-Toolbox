@@ -20,45 +20,42 @@ import {
   Eye,
   Settings,
   RefreshCw,
-  Loader2
+  Loader2,
+  MessageSquare,
+  Phone,
+  MapPin,
+  MessageCircle,
+  Github,
+  Linkedin,
+  Twitter
 } from 'lucide-react';
 import Link from 'next/link';
+import { DashboardStats } from '@/schemas/dashboardSchema';
 
-interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
-  totalTools: number;
-  totalUsage: number;
-  systemHealth: {
-    apiStatus: string;
-    databaseStatus: string;
-    errorRate: number;
-    uptime: string;
-    responseTime: string;
-    lastDowntime: string;
-  };
-  toolUsage: Array<{
-    name: string;
-    count: number;
-    growth: number;
-  }>;
-  recentActivity: Array<{
-    user: string;
-    action: string;
-    time: string;
-    type: string;
-  }>;
-  alerts: Array<{
-    type: string;
-    message: string;
-    time: string;
-  }>;
-  unreadNotifications: number;
-  lastUpdated: string;
+interface ContactStats {
+  total: number;
+  pending: number;
+  inProgress: number;
+  resolved: number;
+  closed: number;
+  urgent: number;
+  high: number;
+}
+
+interface RecentContact {
+  _id: string;
+  name: string;
+  email: string;
+  subject: string;
+  status: string;
+  priority: string;
+  createdAt: string;
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [contactStats, setContactStats] = useState<ContactStats | null>(null);
+  const [recentContacts, setRecentContacts] = useState<RecentContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -80,13 +77,52 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchContactStats = async () => {
+    try {
+      const response = await fetch('/api/contact/stats');
+      const result = await response.json();
+      
+      if (response.ok) {
+        setContactStats(result.overall);
+      }
+    } catch (error) {
+      console.error('Error fetching contact stats:', error);
+    }
+  };
+
+  const fetchRecentContacts = async () => {
+    try {
+      const response = await fetch('/api/contact?limit=5');
+      const result = await response.json();
+      
+      if (response.ok) {
+        setRecentContacts(result.contacts || []);
+      }
+    } catch (error) {
+      console.error('Error fetching recent contacts:', error);
+    }
+  };
+
   useEffect(() => {
-    fetchDashboardStats().finally(() => setLoading(false));
+    const fetchAllData = async () => {
+      await Promise.all([
+        fetchDashboardStats(),
+        fetchContactStats(),
+        fetchRecentContacts()
+      ]);
+      setLoading(false);
+    };
+    
+    fetchAllData();
   }, []);
 
   const refreshData = async () => {
     setRefreshing(true);
-    await fetchDashboardStats();
+    await Promise.all([
+      fetchDashboardStats(),
+      fetchContactStats(),
+      fetchRecentContacts()
+    ]);
     setRefreshing(false);
   };
 
@@ -98,70 +134,104 @@ export default function AdminDashboard() {
       case 'offline':
       case 'disconnected':
         return 'text-red-600';
-      default:
+      case 'degraded':
+      case 'slow':
         return 'text-yellow-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
   const getAlertIcon = (type: string) => {
     switch (type) {
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'warning':
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case 'error':
         return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
       default:
-        return <Activity className="h-4 w-4 text-blue-500" />;
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
     }
   };
 
   const getAlertColor = (type: string) => {
     switch (type) {
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'error':
-        return 'bg-red-50 border-red-200';
       case 'success':
-        return 'bg-green-50 border-green-200';
+        return 'border-green-200 bg-green-50';
+      case 'warning':
+        return 'border-yellow-200 bg-yellow-50';
+      case 'error':
+        return 'border-red-200 bg-red-50';
       default:
-        return 'bg-blue-50 border-blue-200';
+        return 'border-blue-200 bg-blue-50';
+    }
+  };
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInHours = Math.floor((now.getTime() - time.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    return `${diffInWeeks}w ago`;
+  };
+
+  const getContactStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'in-progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'resolved': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'closed': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  };
+
+  const getContactPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading dashboard data...</p>
-        </div>
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading dashboard...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-600" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={refreshData} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
+      <div className="text-center py-8">
+        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Dashboard</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+        <Button onClick={refreshData} disabled={refreshing}>
+          {refreshing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+          Try Again
+        </Button>
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-yellow-600" />
-          <p className="text-gray-600">No data available</p>
-        </div>
+      <div className="text-center py-8">
+        <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Data Available</h3>
+        <p className="text-gray-600 dark:text-gray-400">Dashboard data is not available at the moment.</p>
       </div>
     );
   }
@@ -171,266 +241,417 @@ export default function AdminDashboard() {
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">System Overview</h2>
-          <p className="text-sm text-gray-500">
-            Last updated: {new Date(stats.lastUpdated).toLocaleTimeString()}
-          </p>
-          <div className="mt-2 flex items-center space-x-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-              ✅ Live Data: Real-time statistics from database
-            </span>
-            {stats.unreadNotifications > 0 && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                🔔 {stats.unreadNotifications} unread notifications
-              </span>
-            )}
-          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">System Overview</h2>
+          <p className="text-gray-600 dark:text-gray-400">Real-time system metrics and performance</p>
         </div>
-        <Button
-          onClick={refreshData}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-          className="flex items-center space-x-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
+        <Button onClick={refreshData} disabled={refreshing} variant="outline">
+          {refreshing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+          Refresh
         </Button>
       </div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Registered users
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Last 7 days
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tools</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTools}</div>
-            <p className="text-xs text-muted-foreground">
-              Available tools
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Usage</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsage.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              All-time tool interactions
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* System Health */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Server className="h-5 w-5" />
-              <span>System Health</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">API Status</span>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${stats.systemHealth.apiStatus === 'Online' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className={`text-sm font-medium ${getStatusColor(stats.systemHealth.apiStatus)}`}>
-                    {stats.systemHealth.apiStatus}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Database</span>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${stats.systemHealth.databaseStatus === 'Connected' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className={`text-sm font-medium ${getStatusColor(stats.systemHealth.databaseStatus)}`}>
-                    {stats.systemHealth.databaseStatus}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Uptime</span>
-                <span className="text-sm font-medium text-green-600">{stats.systemHealth.uptime}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Response Time</span>
-                <span className="text-sm font-medium text-blue-600">{stats.systemHealth.responseTime}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Error Rate</span>
-                <span className="text-sm font-medium text-red-600">{stats.systemHealth.errorRate}%</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Last Downtime</span>
-                <span className="text-sm text-gray-500">{stats.systemHealth.lastDowntime}</span>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t">
-              <Link href="/admin/system">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Settings className="h-4 w-4 mr-2" />
-                  System Settings
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5" />
-              <span>Recent Alerts</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.alerts.map((alert, index) => (
-                <div
-                  key={index}
-                  className={`p-3 rounded-lg border ${getAlertColor(alert.type)}`}
-                >
-                  <div className="flex items-start space-x-3">
-                    {getAlertIcon(alert.type)}
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{alert.message}</p>
-                      <p className="text-xs text-gray-500">{alert.time}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="pt-4 border-t">
-              <Link href="/admin/alerts">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Eye className="h-4 w-4 mr-2" />
-                  View All Alerts
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tool Usage Analytics */}
+      {/* System Overview */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <BarChart2 className="h-5 w-5" />
-            <span>Tool Usage Analytics (Last 24 Hours)</span>
+          <CardTitle className="flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2" />
+            System Overview
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {stats.toolUsage.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.toolUsage.map((tool) => (
-                  <div key={tool.name} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-sm">{tool.name}</h4>
-                      <Badge variant="secondary">{tool.count}</Badge>
-                    </div>
-                    <div className="flex items-center text-xs text-gray-500">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      <span>+{tool.growth}% from last week</span>
-                    </div>
-                  </div>
-                ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Total Users</p>
+                <p className="text-2xl font-bold">{stats.systemOverview.totalUsers}</p>
+                <p className="text-xs text-gray-400">Registered users</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Active Users</p>
+                <p className="text-2xl font-bold">{stats.systemOverview.activeUsers}</p>
+                <p className="text-xs text-gray-400">Last 30 days</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Settings className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Total Tools</p>
+                <p className="text-2xl font-bold">{stats.systemOverview.totalTools}</p>
+                <p className="text-xs text-gray-400">Available tools</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Activity className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Total Usage</p>
+                <p className="text-2xl font-bold">{stats.systemOverview.totalUsage.toLocaleString()}</p>
+                <p className="text-xs text-gray-400">All-time tool interactions</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Contact Overview */}
+      {contactStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Contact Management
+              </span>
+              <Link href="/admin/contacts">
+                <Button variant="outline" size="sm">
+                  View All Contacts
+                </Button>
+              </Link>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <MessageSquare className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Total Contacts</p>
+                  <p className="text-2xl font-bold">{contactStats.total}</p>
+                  <p className="text-xs text-gray-400">All submissions</p>
+                </div>
               </div>
               
-              <div className="pt-4 border-t mt-4">
-                <Link href="/admin/tools/analytics">
-                  <Button variant="outline" size="sm">
-                    <BarChart2 className="h-4 w-4 mr-2" />
-                    View Detailed Analytics
-                  </Button>
-                </Link>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Pending</p>
+                  <p className="text-2xl font-bold">{contactStats.pending}</p>
+                  <p className="text-xs text-gray-400">Awaiting response</p>
+                </div>
               </div>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <BarChart2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-500">No tool usage data available</p>
+              
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Urgent</p>
+                  <p className="text-2xl font-bold">{contactStats.urgent}</p>
+                  <p className="text-xs text-gray-400">High priority</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Resolved</p>
+                  <p className="text-2xl font-bold">{contactStats.resolved}</p>
+                  <p className="text-xs text-gray-400">Completed</p>
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Recent Contacts */}
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Recent Contacts</h4>
+              <div className="space-y-2">
+                {recentContacts.length > 0 ? (
+                  recentContacts.map((contact) => (
+                    <div key={contact._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-medium">{contact.name}</p>
+                          <Badge className={getContactStatusColor(contact.status)}>
+                            {contact.status}
+                          </Badge>
+                          <Badge className={getContactPriorityColor(contact.priority)}>
+                            {contact.priority}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">{contact.subject}</p>
+                        <p className="text-xs text-gray-500">{contact.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">
+                          {formatTimeAgo(contact.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No recent contacts</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Contact Settings Quick Access */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center">
+              <Settings className="h-5 w-5 mr-2" />
+              Contact Information
+            </span>
+            <Link href="/admin/contact-settings">
+              <Button variant="outline" size="sm">
+                Edit Settings
+              </Button>
+            </Link>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                  <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Email Support</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">contact@aitoolbox.com</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                  <Phone className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Phone Support</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">+1 (555) 123-4567</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                  <MessageCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">WhatsApp</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">+1 (555) 123-4567</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-orange-100 dark:bg-orange-800 rounded-lg">
+                  <MapPin className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Office Location</p>
+                  <p className="text-sm text-orange-600 dark:text-orange-400">San Francisco, CA</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                  <Github className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">GitHub</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">github.com/aitoolbox</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                  <Linkedin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">LinkedIn</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">linkedin.com/company/aitoolbox</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                  <Twitter className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">X (Twitter)</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">@aitoolbox</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                  <Globe className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Website</p>
+                  <p className="text-sm text-purple-600 dark:text-purple-400">aitoolbox.com</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Response Time</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">We typically respond within 2 hours during business hours</p>
+              </div>
+              <Link href="/admin/contact-settings">
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Customize
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* System Health */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Server className="h-5 w-5 mr-2" />
+            System Health
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">API Status</span>
+              </div>
+              <Badge 
+                variant={stats.systemHealth.apiStatus === 'Online' ? 'default' : 'destructive'}
+                className={getStatusColor(stats.systemHealth.apiStatus)}
+              >
+                {stats.systemHealth.apiStatus}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Database className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">Database</span>
+              </div>
+              <Badge 
+                variant={stats.systemHealth.database === 'Connected' ? 'default' : 'destructive'}
+                className={getStatusColor(stats.systemHealth.database)}
+              >
+                {stats.systemHealth.database}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Cpu className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">Uptime</span>
+              </div>
+              <span className="text-sm font-bold text-green-600">
+                {stats.systemHealth.uptime}%
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">Response Time</span>
+              </div>
+              <span className="text-sm font-bold text-blue-600">
+                {stats.systemHealth.responseTime}ms
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">Error Rate</span>
+              </div>
+              <span className="text-sm font-bold text-red-600">
+                {stats.systemHealth.errorRate}%
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">Last Downtime</span>
+              </div>
+              <span className="text-xs text-gray-500">
+                {stats.systemHealth.lastDowntime}
+              </span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Activity className="h-5 w-5" />
-            <span>Recent Activity</span>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center">
+              <Activity className="h-5 w-5 mr-2" />
+              Recent Activity
+            </span>
+            <Link href="/admin/activity">
+              <Button variant="outline" size="sm">
+                View All Activity
+              </Button>
+            </Link>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {stats.recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.type === 'admin_action' ? 'bg-purple-500' : 'bg-blue-500'
-                  }`}></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{activity.user}</p>
-                    <p className="text-xs text-gray-500">{activity.action}</p>
+            {stats.recentActivity.length > 0 ? (
+              stats.recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{activity.userEmail}</p>
+                    <p className="text-xs text-gray-600">{activity.action}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">
+                      {formatTimeAgo(activity.timestamp)}
+                    </p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400">{activity.time}</span>
-              </div>
-            ))}
-          </div>
-          
-          <div className="pt-4 border-t mt-4">
-            <Link href="/admin/activity">
-              <Button variant="outline" size="sm">
-                <Activity className="h-4 w-4 mr-2" />
-                View All Activity
-              </Button>
-            </Link>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-4">No recent activity</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -441,24 +662,31 @@ export default function AdminDashboard() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Link href="/admin/users">
-              <Button variant="outline" className="w-full h-16 flex flex-col space-y-2">
-                <Users className="h-6 w-6" />
+              <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
+                <Users className="h-6 w-6 mb-2" />
                 <span>Manage Users</span>
               </Button>
             </Link>
             
+            <Link href="/admin/contacts">
+              <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
+                <MessageSquare className="h-6 w-6 mb-2" />
+                <span>Manage Contacts</span>
+              </Button>
+            </Link>
+            
             <Link href="/admin/tools">
-              <Button variant="outline" className="w-full h-16 flex flex-col space-y-2">
-                <Settings className="h-6 w-6" />
+              <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
+                <Settings className="h-6 w-6 mb-2" />
                 <span>Manage Tools</span>
               </Button>
             </Link>
             
             <Link href="/admin/analytics">
-              <Button variant="outline" className="w-full h-16 flex flex-col space-y-2">
-                <BarChart2 className="h-6 w-6" />
+              <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
+                <BarChart2 className="h-6 w-6 mb-2" />
                 <span>View Analytics</span>
               </Button>
             </Link>

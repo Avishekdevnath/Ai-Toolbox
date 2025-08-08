@@ -1,14 +1,16 @@
 // Export all models
 export { UserModel } from './UserModel';
-export { AdminUser, IAdminUser } from './AdminUserModel';
-export { UserRole, IUserRole } from './UserRoleModel';
-export { AgeAnalysis, IAgeAnalysis } from './AgeAnalysisModel';
-export { Quote, IQuote } from './QuoteModel';
-export { Resume, IResume } from './ResumeModel';
-export { UrlShortener, IUrlShortener } from './UrlShortenerModel';
+export { AdminUser } from './AdminUserModel';
+export { UserRoleModel } from './UserRoleModel';
+export { AgeAnalysisModel } from './AgeAnalysisModel';
+export { QuoteModel } from './QuoteModel';
+export { ResumeModel } from './ResumeModel';
+export { ShortenedUrlModel } from '../schemas/urlShortenerSchema';
+export { ContactModel } from '../schemas/contactSchema';
+export { ContactSettingsModel } from './ContactSettingsModel';
 
 // New admin dashboard models
-export { ToolUsage, IToolUsage } from './ToolUsageModel';
-export { AdminActivity, IAdminActivity } from './AdminActivityModel';
-export { SystemSettings, ISystemSettings } from './SystemSettingsModel';
-export { AdminNotification, IAdminNotification } from './AdminNotificationModel'; 
+export { ToolUsage } from './ToolUsageModel';
+export { AdminActivity } from './AdminActivityModel';
+export { SystemSettings } from './SystemSettingsModel';
+export { AdminNotification } from './AdminNotificationModel'; 

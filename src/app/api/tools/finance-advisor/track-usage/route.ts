@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/mongodb';
+import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest) {
   try {
-    const db = await getDatabase();
+    // Connect to database
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI!);
+    }
     
     // Create a new usage record that matches the ToolUsage model schema
-    await db.collection('toolusages').insertOne({
+    await mongoose.connection.db.collection('toolusages').insertOne({
       userId: 'anonymous',
       toolSlug: 'finance-advisor',
       toolName: 'Finance Advisor',
       usageType: 'generate',
       metadata: {
-        action: 'generate_finance_advice',
+        action: 'advise_finance',
         timestamp: new Date()
       },
       userAgent: request.headers.get('user-agent') || '',

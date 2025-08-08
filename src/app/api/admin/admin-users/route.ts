@@ -1,49 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
-import { AdminUser } from '@/models/AdminUserModel';
-import { AdminVerificationService } from '@/lib/adminVerificationService';
-import bcrypt from 'bcryptjs';
+import { connectToDatabase, getDatabase } from '@/lib/mongodb';
+import { AuthService } from '@/lib/authService';
 
-// GET - Fetch admin users with search and pagination
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Admin users API called');
+    // Verify admin authentication using AuthService
+    const user = await AuthService.getSession(request);
     
-    // Verify admin session
-    const session = await AdminVerificationService.getAdminSession(request);
-    if (!session.success || !session.session) {
-      console.log('❌ Unauthorized access attempt');
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!user || !user.isAdmin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    console.log('✅ Admin session verified:', session.session.email);
-
-    // Check permissions
-    if (!AdminVerificationService.canManageAdmins(session.session)) {
-      console.log('❌ Insufficient permissions');
-      return NextResponse.json({ success: false, error: 'Insufficient permissions' }, { status: 403 });
-    }
-
+    // Connect to database
     await connectToDatabase();
-    console.log('✅ Database connected');
+    const dbConnection = await getDatabase();
+    const db = dbConnection.db;
 
-    // Get query parameters
-    const url = new URL(request.url);
-    const search = url.searchParams.get('search') || '';
-    const role = url.searchParams.get('role') || 'all';
-    const status = url.searchParams.get('status') || 'all';
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '10');
-    const sortBy = url.searchParams.get('sortBy') || 'createdAt';
-    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
-
-    console.log('🔍 Query params:', { search, role, status, page, limit, sortBy, sortOrder });
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+    const role = searchParams.get('role') || 'all';
+    const status = searchParams.get('status') || 'all';
 
     // Build query
-    const queryFilter: any = {};
-
+    const query: any = {};
+    
     if (search) {
-      queryFilter.$or = [
+      query.$or = [
         { email: { $regex: search, $options: 'i' } },
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } }
@@ -51,34 +38,44 @@ export async function GET(request: NextRequest) {
     }
 
     if (role !== 'all') {
-      queryFilter.role = role;
+      query.role = role;
     }
 
     if (status !== 'all') {
-      queryFilter.isActive = status === 'active';
+      query.isActive = status === 'active';
     }
 
-    console.log('🔍 Query filter:', queryFilter);
-
     // Get total count
-    const totalAdmins = await AdminUser.countDocuments(queryFilter);
+    const totalAdmins = await db.collection('adminusers').countDocuments(query);
     const totalPages = Math.ceil(totalAdmins / limit);
 
-    console.log('📊 Total admins:', totalAdmins, 'Total pages:', totalPages);
-
     // Get admins with pagination
-    const admins = await AdminUser.find(queryFilter)
-      .select('-password')
-      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+    const admins = await db.collection('adminusers')
+      .find(query)
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .toArray();
 
-    console.log('✅ Found admins:', admins.length);
+    // Format admin data
+    const formattedAdmins = admins.map(admin => ({
+      _id: admin._id.toString(),
+      email: admin.email,
+      firstName: admin.firstName || '',
+      lastName: admin.lastName || '',
+      role: admin.role || 'admin',
+      permissions: admin.permissions || [],
+      isActive: admin.isActive !== false,
+      loginAttempts: admin.loginAttempts || 0,
+      lastLoginAt: admin.lastLoginAt,
+      createdAt: admin.createdAt,
+      updatedAt: admin.updatedAt
+    }));
 
     return NextResponse.json({
       success: true,
       data: {
-        admins,
+        admins: formattedAdmins,
         pagination: {
           page,
           limit,
@@ -88,80 +85,73 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
-    console.error('❌ Error fetching admin users:', error);
+  } catch (error) {
+    console.error('Admin users API error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch admin users: ' + error.message },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// POST - Create new admin user
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin session
-    const session = await AdminVerificationService.getAdminSession(request);
-    if (!session.success || !session.session) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check permissions
-    if (!AdminVerificationService.canManageAdmins(session.session)) {
-      return NextResponse.json({ success: false, error: 'Insufficient permissions' }, { status: 403 });
-    }
-
-    await connectToDatabase();
-
-    const body = await request.json();
-
-    // Check if email already exists
-    const existingAdmin = await AdminUser.findOne({ email: body.email.toLowerCase() });
-    if (existingAdmin) {
+    // Verify admin authentication using AuthService
+    const user = await AuthService.getSession(request);
+    
+    if (!user || !user.isAdmin) {
       return NextResponse.json(
-        { success: false, error: 'Admin with this email already exists' },
-        { status: 400 }
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(body.password, salt);
+    // Connect to database
+    await connectToDatabase();
+    const dbConnection = await getDatabase();
+    const db = dbConnection.db;
 
-    // Create admin user
-    const admin = new AdminUser({
-      email: body.email.toLowerCase(),
-      password: hashedPassword,
-      firstName: body.firstName,
-      lastName: body.lastName,
-      role: body.role,
-      permissions: AdminVerificationService.getPermissionsByRole(body.role),
-      isActive: body.isActive
+    // Parse request body
+    const body = await request.json();
+    const { email, firstName, lastName, role, password, permissions } = body;
+
+    // Check if admin already exists
+    const existingAdmin = await db.collection('adminusers').findOne({
+      email: email.toLowerCase()
     });
 
-    await admin.save();
+    if (existingAdmin) {
+      return NextResponse.json(
+        { success: false, error: 'Admin with this email already exists' },
+        { status: 409 }
+      );
+    }
 
-    // Log activity
-    await AdminVerificationService.logActivity(session.session.id, 'create_admin', {
-      createdAdminId: admin._id,
-      email: admin.email,
-      role: admin.role
-    });
+    // Create new admin
+    const newAdmin = {
+      email: email.toLowerCase(),
+      firstName,
+      lastName,
+      role: role || 'admin',
+      permissions: permissions || ['basic_access'],
+      isActive: true,
+      loginAttempts: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
 
-    // Return admin without password
-    const adminResponse = admin.toObject();
-    delete adminResponse.password;
+    const result = await db.collection('adminusers').insertOne(newAdmin);
 
     return NextResponse.json({
       success: true,
-      data: { admin: adminResponse },
+      data: { ...newAdmin, _id: result.insertedId },
       message: 'Admin user created successfully'
     });
 
-  } catch (error: any) {
-    console.error('Error creating admin user:', error);
+  } catch (error) {
+    console.error('Create admin error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to create admin user' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -3,618 +3,545 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Users, 
-  Search, 
+  UserPlus, 
+  UserCheck, 
+  UserX,
+  Search,
   Filter,
+  RefreshCw,
   MoreHorizontal,
-  Eye,
   Edit,
   Trash2,
-  UserPlus,
-  Download,
-  Upload,
+  Power,
+  PowerOff,
+  Calendar,
+  Mail,
+  Shield,
+  TrendingUp,
+  AlertCircle,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw
+  XCircle
 } from 'lucide-react';
+import EditUserModal from '@/components/EditUserModal';
 
 interface User {
   _id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  name: string;
   role: string;
   isActive: boolean;
   createdAt: string;
   lastLoginAt?: string;
-  totalUsage: number;
 }
 
-interface CreateUserData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  password: string;
-  status: string;
-}
-
-export default function UserManagementPage() {
-  const { isAuthenticated, isSuperAdmin, isLoading } = useAdminAuth();
+export default function AdminUsersPage() {
+  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [actionLoading, setActionLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [createUserData, setCreateUserData] = useState<CreateUserData>({
-    email: '',
-    firstName: '',
-    lastName: '',
-    role: 'user',
-    password: '',
-    status: 'active'
-  });
-  const [actionLoading, setActionLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && isSuperAdmin) {
+    if (isAuthenticated && isAdmin) {
       fetchUsers();
     }
-  }, [isAuthenticated, isSuperAdmin, currentPage, searchTerm, filterRole]);
+  }, [isAuthenticated, isAdmin]);
 
   const fetchUsers = async () => {
-    setLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '10',
-        search: searchTerm,
-        role: filterRole
-      });
-
-      const response = await fetch(`/api/admin/users?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      console.log('🔍 Fetching users...');
+      setLoading(true);
+      const response = await fetch('/api/admin/users');
+      
+      console.log('🔍 Response status:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('🔍 Response data:', result);
+        
+        if (result.success && result.data) {
+          setUsers(result.data);
+          console.log('✅ Users loaded:', result.data.length);
+        } else {
+          console.error('❌ Failed to fetch users:', result.error);
         }
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        // Fix: Access nested data structure
-        setUsers(data.data.users || []);
-        setTotalPages(data.data.pagination?.totalPages || 1);
-        setTotalUsers(data.data.pagination?.totalUsers || 0);
       } else {
-        console.error('API Error:', data.error);
-        setUsers([]);
-        setTotalPages(1);
-        setTotalUsers(0);
+        console.error('❌ HTTP error:', response.status);
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
-      setUsers([]);
-      setTotalPages(1);
-      setTotalUsers(0);
+      console.error('❌ Error fetching users:', error);
     } finally {
       setLoading(false);
+      console.log('🔍 Loading finished');
     }
   };
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchUsers();
+    setRefreshing(false);
   };
 
-  const handleFilterChange = (role: string) => {
-    setFilterRole(role);
-    setCurrentPage(1);
-  };
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && user.isActive) ||
+                         (statusFilter === 'inactive' && !user.isActive);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
-  const handleBulkAction = async (action: string) => {
-    if (selectedUsers.length === 0) return;
-
-    setActionLoading(true);
+  const handleUserAction = async (userId: string, action: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/users/bulk', {
-        method: 'POST',
+      setActionLoading(true);
+      console.log(`🔍 Performing ${action} on user:`, userId);
+      
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           action,
-          userIds: selectedUsers
+          isActive: action === 'activate' 
         })
       });
 
-      const data = await response.json();
-      if (data.success) {
-        setSelectedUsers([]);
-        fetchUsers();
-        alert(`Bulk ${action} completed successfully. ${data.affectedCount} users affected.`);
+      console.log(`🔍 ${action} response status:`, response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log(`✅ User ${action} successful`);
+          fetchUsers(); // Refresh the list
+        } else {
+          console.error(`❌ Failed to ${action} user:`, data.error);
+        }
       } else {
-        alert(`Error: ${data.error}`);
+        console.error(`❌ HTTP error:`, response.status);
       }
     } catch (error) {
-      console.error('Error performing bulk action:', error);
-      alert('Error performing bulk action');
+      console.error(`❌ Error performing ${action}:`, error);
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleUserAction = async (userId: string, action: string) => {
-    setActionLoading(true);
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: action === 'delete' ? 'DELETE' : 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: action !== 'delete' ? JSON.stringify({ action }) : undefined
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        fetchUsers();
-        alert(`User ${action} completed successfully`);
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (error) {
-      console.error('Error performing user action:', error);
-      alert('Error performing user action');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleCreateUser = async () => {
-    setActionLoading(true);
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(createUserData)
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setShowCreateModal(false);
-        setCreateUserData({
-          email: '',
-          firstName: '',
-          lastName: '',
-          role: 'user',
-          password: '',
-          status: 'active'
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    const confirmed = window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`);
+    if (confirmed) {
+      try {
+        setActionLoading(true);
+        console.log(`🔍 Deleting user:`, userId);
+        
+        const response = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE',
         });
-        fetchUsers();
-        alert('User created successfully');
+
+        console.log(`🔍 Delete response status:`, response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            console.log(`✅ User deleted successfully`);
+            fetchUsers(); // Refresh the list
+          } else {
+            console.error(`❌ Failed to delete user:`, data.error);
+          }
+        } else {
+          console.error(`❌ HTTP error:`, response.status);
+        }
+      } catch (error) {
+        console.error(`❌ Error deleting user:`, error);
+      } finally {
+        setActionLoading(false);
+      }
+    }
+  };
+
+  const handleEditUser = async (formData: any) => {
+    if (!editingUser) return;
+
+    try {
+      setActionLoading(true);
+      console.log('🔍 Updating user:', editingUser._id);
+      
+      const response = await fetch(`/api/admin/users/${editingUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update_profile',
+          ...formData
+        })
+      });
+
+      console.log('🔍 Update response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('✅ User updated successfully');
+          setShowEditModal(false);
+          setEditingUser(null);
+          fetchUsers(); // Refresh the list
+        } else {
+          console.error('❌ Failed to update user:', data.error);
+        }
       } else {
-        alert(`Error: ${data.error}`);
+        console.error('❌ HTTP error:', response.status);
       }
     } catch (error) {
-      console.error('Error creating user:', error);
-      alert('Error creating user');
+      console.error('❌ Error updating user:', error);
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleSelectUser = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedUsers.length === (users?.length || 0)) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers(users.map(user => user._id));
-    }
-  };
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'moderator':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'user':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const openEditModal = (user: User) => {
+    setEditingUser(user);
+    setShowEditModal(true);
   };
 
   const getStatusIcon = (isActive: boolean) => {
     return isActive ? (
-      <CheckCircle className="w-4 h-4 text-green-500" />
+      <CheckCircle className="h-4 w-4 text-green-500" />
     ) : (
-      <XCircle className="w-4 h-4 text-red-500" />
+      <XCircle className="h-4 w-4 text-red-500" />
     );
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading User Management..." />
-      </div>
-    );
-  }
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Shield className="h-4 w-4 text-purple-500" />;
+      case 'moderator':
+        return <TrendingUp className="h-4 w-4 text-blue-500" />;
+      default:
+        return <Users className="h-4 w-4 text-gray-500" />;
+    }
+  };
 
-  if (!isAuthenticated || !isSuperAdmin) {
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Enhanced Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage user accounts, roles, and permissions
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            User Management
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            Manage all users in the system with advanced controls
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={fetchUsers}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add User
-          </Button>
-        </div>
+        <Button 
+          onClick={handleRefresh} 
+          disabled={loading || refreshing}
+          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
-      {/* Filters and Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+      {/* Enhanced Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-blue-700">Total Users</CardTitle>
+            <div className="p-2 bg-blue-500 rounded-lg group-hover:scale-110 transition-transform duration-300">
+              <Users className="h-4 w-4 text-white" />
             </div>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="role-filter" className="text-sm font-medium">Role:</Label>
-              <select
-                id="role-filter"
-                value={filterRole}
-                onChange={(e) => handleFilterChange(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="all">All Roles</option>
-                <option value="user">User</option>
-                <option value="moderator">Moderator</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Bulk Actions */}
-      {(selectedUsers?.length || 0) > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">
-                {selectedUsers.length} user(s) selected
-              </span>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBulkAction('activate')}
-                  disabled={actionLoading}
-                >
-                  Activate
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBulkAction('deactivate')}
-                  disabled={actionLoading}
-                >
-                  Deactivate
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBulkAction('delete')}
-                  disabled={actionLoading}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-700">{users.length}</div>
+            <p className="text-xs text-blue-600 mt-1">Registered accounts</p>
           </CardContent>
         </Card>
-      )}
+        
+        <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-green-50 to-green-100">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-green-700">Active Users</CardTitle>
+            <div className="p-2 bg-green-500 rounded-lg group-hover:scale-110 transition-transform duration-300">
+              <UserCheck className="h-4 w-4 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-700">
+              {users.filter(u => u.isActive).length}
+            </div>
+            <p className="text-xs text-green-600 mt-1">Currently active</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-red-50 to-red-100">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-red-700">Inactive Users</CardTitle>
+            <div className="p-2 bg-red-500 rounded-lg group-hover:scale-110 transition-transform duration-300">
+              <UserX className="h-4 w-4 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-red-700">
+              {users.filter(u => !u.isActive).length}
+            </div>
+            <p className="text-xs text-red-600 mt-1">Suspended accounts</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-purple-50 to-purple-100">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-purple-700">Admins</CardTitle>
+            <div className="p-2 bg-purple-500 rounded-lg group-hover:scale-110 transition-transform duration-300">
+              <UserPlus className="h-4 w-4 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-700">
+              {users.filter(u => u.role === 'admin').length}
+            </div>
+            <p className="text-xs text-purple-600 mt-1">Administrators</p>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Users ({users?.length || 0})</CardTitle>
+      {/* Enhanced Search and Filter */}
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold text-gray-800 flex items-center">
+            <Users className="h-5 w-5 mr-2 text-blue-600" />
+            User Directory
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Enhanced Search and Filter Bar */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors duration-200" />
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="pl-10 pr-8 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white appearance-none cursor-pointer"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                  <option value="moderator">Moderator</option>
+                </select>
+              </div>
+              
+              <div className="relative">
+                <AlertCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="pl-10 pr-8 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white appearance-none cursor-pointer"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Results Summary */}
+          <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-gray-500" />
+              <span className="text-sm text-gray-600">
+                Showing <span className="font-semibold text-gray-800">{filteredUsers.length}</span> of{' '}
+                <span className="font-semibold text-gray-800">{users.length}</span> users
+              </span>
+            </div>
+            {searchTerm && (
+              <Badge variant="outline" className="text-xs">
+                Filtered by "{searchTerm}"
+              </Badge>
+            )}
+          </div>
+
+          {/* Enhanced Table */}
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <LoadingSpinner text="Loading users..." />
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <LoadingSpinner />
+                <p className="mt-4 text-gray-600">Loading users...</p>
+              </div>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No users found matching your criteria.</p>
+              <p className="text-gray-400 text-sm mt-2">Try adjusting your search or filters.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.length === (users?.length || 0) && (users?.length || 0) > 0}
-                        onChange={handleSelectAll}
-                        className="rounded"
-                      />
-                    </th>
-                    <th className="text-left p-2">User</th>
-                    <th className="text-left p-2">Role</th>
-                    <th className="text-left p-2">Status</th>
-                    <th className="text-left p-2">Usage</th>
-                    <th className="text-left p-2">Created</th>
-                    <th className="text-left p-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(users || []).map((user) => (
-                    <tr key={user._id} className="border-b hover:bg-gray-50">
-                      <td className="p-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(user._id)}
-                          onChange={() => handleSelectUser(user._id)}
-                          className="rounded"
-                        />
-                      </td>
-                      <td className="p-2">
-                        <div>
-                          <div className="font-medium">
-                            {user.firstName} {user.lastName}
-                          </div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex items-center space-x-1">
-                          {getStatusIcon(user.isActive)}
-                          <span className={user.isActive ? 'text-green-600' : 'text-red-600'}>
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <span className="text-sm text-gray-600">
-                          {user.totalUsage} uses
-                        </span>
-                      </td>
-                      <td className="p-2">
-                        <span className="text-sm text-gray-600">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </span>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex items-center space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingUser(user);
-                              setShowEditModal(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUserAction(user._id, user.isActive ? 'deactivate' : 'activate')}
-                            disabled={actionLoading}
-                          >
-                            {user.isActive ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle className="w-4 h-4 text-green-500" />}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (confirm('Are you sure you want to delete this user?')) {
-                                handleUserAction(user._id, 'delete');
-                              }
-                            }}
-                            disabled={actionLoading}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
+            <div className="overflow-hidden rounded-xl border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">User</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Contact</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Role</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Joined</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredUsers.map((user, index) => (
+                      <tr 
+                        key={user._id} 
+                        className="hover:bg-gray-50 transition-colors duration-200 group"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <td className="py-4 px-6">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{user.name}</p>
+                              <p className="text-sm text-gray-500">ID: {user._id.slice(-6)}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center space-x-2">
+                            <Mail className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-700">{user.email}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center space-x-2">
+                            {getRoleIcon(user.role)}
+                            <Badge 
+                              variant={user.role === 'admin' ? 'default' : 'secondary'}
+                              className="capitalize"
+                            >
+                              {user.role}
+                            </Badge>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(user.isActive)}
+                            <Badge 
+                              variant={user.isActive ? 'default' : 'destructive'}
+                              className="capitalize"
+                            >
+                              {user.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-700">
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEditModal(user)}
+                              disabled={actionLoading}
+                              className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                            {user.isActive ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUserAction(user._id, 'deactivate')}
+                                disabled={actionLoading}
+                                className="hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700 transition-all duration-200"
+                              >
+                                <PowerOff className="h-3 w-3 mr-1" />
+                                Deactivate
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUserAction(user._id, 'activate')}
+                                disabled={actionLoading}
+                                className="hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200"
+                              >
+                                <Power className="h-3 w-3 mr-1" />
+                                Activate
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteUser(user._id, user.name)}
+                              disabled={actionLoading}
+                              className="hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Create User Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Create New User</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={createUserData.email}
-                  onChange={(e) => setCreateUserData(prev => ({ ...prev, email: e.target.value }))}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={createUserData.firstName}
-                    onChange={(e) => setCreateUserData(prev => ({ ...prev, firstName: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={createUserData.lastName}
-                    onChange={(e) => setCreateUserData(prev => ({ ...prev, lastName: e.target.value }))}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={createUserData.password}
-                  onChange={(e) => setCreateUserData(prev => ({ ...prev, password: e.target.value }))}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <select
-                    id="role"
-                    value={createUserData.role}
-                    onChange={(e) => setCreateUserData(prev => ({ ...prev, role: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="user">User</option>
-                    <option value="moderator">Moderator</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <select
-                    id="status"
-                    value={createUserData.status}
-                    onChange={(e) => setCreateUserData(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-end space-x-2 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setShowCreateModal(false)}
-                disabled={actionLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateUser}
-                disabled={actionLoading || !createUserData.email || !createUserData.firstName || !createUserData.lastName || !createUserData.password}
-              >
-                {actionLoading ? 'Creating...' : 'Create User'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Edit User Modal */}
+      <EditUserModal
+        user={editingUser}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingUser(null);
+        }}
+        onSubmit={handleEditUser}
+        loading={actionLoading}
+      />
     </div>
   );
 } 

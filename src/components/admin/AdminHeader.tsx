@@ -18,11 +18,11 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminHeader() {
   const router = useRouter();
-  const { admin, logout } = useAdminAuth();
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -62,7 +62,7 @@ export default function AdminHeader() {
     }
   };
 
-  if (!admin) {
+  if (!user) {
     return null; // Will redirect to login
   }
 
@@ -186,12 +186,12 @@ export default function AdminHeader() {
                   </div>
                   <div className="hidden md:block text-left">
                     <div className="text-sm font-medium text-gray-900">
-                      {admin.firstName && admin.lastName 
-                        ? `${admin.firstName} ${admin.lastName}`
-                        : admin.email
+                      {user.firstName && user.lastName 
+                        ? `${user.firstName} ${user.lastName}`
+                        : user.email
                       }
                     </div>
-                    <div className="text-xs text-gray-500">{admin.email}</div>
+                    <div className="text-xs text-gray-500">{user.email}</div>
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 </button>
@@ -207,18 +207,18 @@ export default function AdminHeader() {
                           </div>
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {admin.firstName && admin.lastName 
-                                ? `${admin.firstName} ${admin.lastName}`
+                              {user.firstName && user.lastName 
+                                ? `${user.firstName} ${user.lastName}`
                                 : 'Admin User'
                               }
                             </div>
-                            <div className="text-xs text-gray-500">{admin.email}</div>
+                            <div className="text-xs text-gray-500">{user.email}</div>
                             <div className="mt-1">
                               <span className={cn(
                                 "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
-                                getRoleBadgeColor(admin.role)
+                                getRoleBadgeColor(user.role)
                               )}>
-                                {getRoleDisplayName(admin.role)}
+                                {getRoleDisplayName(user.role)}
                               </span>
                             </div>
                           </div>

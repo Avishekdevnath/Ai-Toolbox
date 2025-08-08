@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { connectToDatabase, getDatabase } from '@/lib/mongodb';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { AuthService } from '@/lib/authService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,134 +12,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to database and get connection
-    await connectToDatabase();
-    const dbConnection = await getDatabase();
-    const db = dbConnection.db;
+    console.log('🔐 Signin attempt for:', email);
 
-    // Check admin users first
-    const adminUser = await db.collection('adminusers').findOne({ email });
+    // Authenticate user using unified service
+    const authResult = await AuthService.authenticate(email, password);
 
-    if (adminUser) {
-      // Verify password for admin user
-      const isValidPassword = await bcrypt.compare(password, adminUser.password);
-
-      if (!isValidPassword) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid credentials' },
-          { status: 401 }
-        );
-      }
-
-      if (!adminUser.isActive) {
-        return NextResponse.json(
-          { success: false, error: 'Account is deactivated' },
-          { status: 401 }
-        );
-      }
-
-      // Create JWT token for admin
-      const token = jwt.sign(
-        {
-          userId: adminUser._id,
-          email: adminUser.email,
-          role: adminUser.role,
-          permissions: adminUser.permissions,
-          isAdmin: true
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
+    if (!authResult.success || !authResult.session) {
+      console.log('❌ Authentication failed:', authResult.error);
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Authentication failed' },
+        { status: 401 }
       );
-
-      // Update last login
-      await db.collection('adminusers').updateOne(
-        { _id: adminUser._id },
-        { 
-          $set: { 
-            lastLoginAt: new Date(),
-            loginAttempts: 0
-          } 
-        }
-      );
-
-      return NextResponse.json({
-        success: true,
-        token,
-        user: {
-          id: adminUser._id,
-          email: adminUser.email,
-          firstName: adminUser.firstName,
-          lastName: adminUser.lastName,
-          role: adminUser.role,
-          permissions: adminUser.permissions,
-          isAdmin: true
-        }
-      });
     }
 
-    // Check regular users
-    const regularUser = await db.collection('users').findOne({ email });
+    console.log('✅ Authentication successful, setting cookie...');
 
-    if (regularUser) {
-      // Verify password for regular user
-      const isValidPassword = await bcrypt.compare(password, regularUser.password);
+    // Create response with token in cookie
+    const response = NextResponse.json({
+      success: true,
+      user: authResult.session.user,
+      token: authResult.session.token // Ensure token is returned
+    });
 
-      if (!isValidPassword) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid credentials' },
-          { status: 401 }
-        );
-      }
+    // Set secure cookie
+    response.cookies.set('authToken', authResult.session.token, {
+      httpOnly: false, // Changed to false for debugging
+      secure: false, // Changed to false for development
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/'
+    });
 
-      if (!regularUser.isActive) {
-        return NextResponse.json(
-          { success: false, error: 'Account is deactivated' },
-          { status: 401 }
-        );
-      }
+    console.log('🍪 Cookie set successfully');
 
-      // Create JWT token for regular user
-      const token = jwt.sign(
-        {
-          userId: regularUser._id,
-          email: regularUser.email,
-          role: 'user',
-          isAdmin: false
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-
-      // Update last login
-      await db.collection('users').updateOne(
-        { _id: regularUser._id },
-        { 
-          $set: { 
-            lastLoginAt: new Date(),
-            loginAttempts: 0
-          } 
-        }
-      );
-
-      return NextResponse.json({
-        success: true,
-        token,
-        user: {
-          id: regularUser._id,
-          email: regularUser.email,
-          firstName: regularUser.firstName,
-          lastName: regularUser.lastName,
-          role: 'user',
-          isAdmin: false
-        }
-      });
-    }
-
-    // User not found
-    return NextResponse.json(
-      { success: false, error: 'Invalid credentials' },
-      { status: 401 }
-    );
+    return response;
 
   } catch (error) {
     console.error('Signin error:', error);

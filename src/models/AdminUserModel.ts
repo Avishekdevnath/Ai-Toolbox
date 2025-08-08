@@ -271,6 +271,6 @@ AdminUserSchema.virtual('displayName').get(function() {
 });
 
 // Export the model
-export const AdminUser = mongoose.models.adminusers || mongoose.model<IAdminUser>('adminusers', AdminUserSchema);
+export const AdminUser = mongoose.models?.adminusers || mongoose.model<IAdminUser>('adminusers', AdminUserSchema);
 
 export default AdminUser; 

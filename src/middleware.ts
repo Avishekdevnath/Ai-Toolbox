@@ -1,113 +1,104 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Rate limiting store (in production, use Redis or similar)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-// Rate limiting configuration
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 100; // 100 requests per minute
-
-function getRateLimitKey(request: NextRequest): string {
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-  return `rate_limit:${ip}`;
-}
-
-function isRateLimited(request: NextRequest): boolean {
-  const key = getRateLimitKey(request);
-  const now = Date.now();
-  const record = rateLimitStore.get(key);
-
-  if (!record || now > record.resetTime) {
-    // Reset or create new record
-    rateLimitStore.set(key, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
-    return false;
-  }
-
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return true;
-  }
-
-  record.count++;
-  return false;
-}
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Security headers for all responses
+  // Create response object
   const response = NextResponse.next();
-  
-  // Add security headers
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-  // Block access to sensitive files
-  if (
-    pathname.includes('/.env') ||
-    pathname.includes('/.git') ||
-    pathname.includes('/package.json') ||
-    pathname.includes('/package-lock.json') ||
-    pathname.includes('/yarn.lock') ||
-    pathname.includes('/node_modules') ||
-    pathname.includes('/.next') ||
-    pathname.includes('/README.md') ||
-    pathname.includes('/.gitignore')
-  ) {
-    return new NextResponse('Not Found', { status: 404 });
+  // ALL routes are public - no authentication required
+  const publicRoutes = [
+    '/',
+    '/about',
+    '/privacy',
+    '/terms',
+    '/contact',
+    '/api/auth/signin',
+    '/api/auth/signup',
+    '/api/auth/logout',
+    '/api/auth/session',
+    '/sign-in',
+    '/sign-up',
+    '/admin-login',
+    '/api/admin/auth/login',
+    '/api/admin/verify',
+    '/favicon.ico',
+    '/_next',
+    '/api/analytics',
+    '/api/tools',
+    '/tools', // Make all tools publicly accessible
+    '/ai-tools', // Make AI tools publicly accessible
+    '/utilities', // Make utilities publicly accessible
+    '/api/url-shortener', // Make URL shortener API publicly accessible
+    '/api/redirect', // Make redirect API publicly accessible
+    '/api/analyze', // Make analysis APIs publicly accessible
+    '/api/quote', // Make quote API publicly accessible
+    '/api/currency', // Make currency API publicly accessible
+    '/api/health', // Make health API publicly accessible
+    '/api/recommendations', // Make recommendations API publicly accessible
+    '/api/resume', // Make resume API publicly accessible
+    '/api/interview', // Make interview API publicly accessible
+    '/api/price-tracker', // Make price tracker API publicly accessible
+    '/api/test', // Make test APIs publicly accessible
+    '/api/system', // Make system APIs publicly accessible
+    '/api/user', // Make user APIs publicly accessible
+    '/api/admin', // Make admin APIs publicly accessible (for admin login)
+    '/api-docs', // Make API docs publicly accessible
+    '/stories', // Make Storybook publicly accessible
+    '/admin-debug', // Make admin debug publicly accessible
+    '/clerk-auth-test', // Make clerk tests publicly accessible
+    '/clerk-diagnostic', // Make clerk diagnostic publicly accessible
+    '/clerk-simple-test', // Make clerk simple test publicly accessible
+    '/clerk-test', // Make clerk test publicly accessible
+    '/email-debug', // Make email debug publicly accessible
+    '/oauth-callback', // Make oauth callback publicly accessible
+    '/oauth-setup-guide', // Make oauth setup guide publicly accessible
+    '/oauth-test', // Make oauth test publicly accessible
+    '/simple-auth', // Make simple auth publicly accessible
+    '/simple-auth-test', // Make simple auth test publicly accessible
+    '/sso-callback', // Make sso callback publicly accessible
+    '/test-auth', // Make test auth publicly accessible
+    '/test-clerk', // Make test clerk publicly accessible
+    '/test-clerk-login', // Make test clerk login publicly accessible
+    '/test-email', // Make test email publicly accessible
+    '/test-signup-email', // Make test signup email publicly accessible
+    '/verify-email', // Make verify email publicly accessible
+    '/forgot-password', // Make forgot password publicly accessible
+    '/reset-password', // Make reset password publicly accessible
+    '/oauth-callback', // Make oauth callback publicly accessible
+    '/r', // Make redirect routes publicly accessible
+  ];
+
+  // Check if it's a public route
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+
+  // Also allow short code routes (like /abc123) without authentication
+  const isShortCodeRoute = /^\/[a-zA-Z0-9_-]{3,20}$/.test(pathname);
+
+  // Allow all routes that start with /tools/ or /ai-tools/ or /utilities/
+  const isToolRoute = pathname.startsWith('/tools/') || 
+                     pathname.startsWith('/ai-tools/') || 
+                     pathname.startsWith('/utilities/');
+
+  // Allow all API routes that don't require authentication
+  const isPublicApiRoute = pathname.startsWith('/api/') && 
+                          !pathname.startsWith('/api/admin/') && 
+                          pathname !== '/api/admin/auth/login';
+
+  // ALLOW ALL ROUTES - NO AUTHENTICATION REQUIRED
+  if (isPublicRoute || isShortCodeRoute || isToolRoute || isPublicApiRoute || true) {
+    return response;
   }
 
-  // Protect API routes
-  if (pathname.startsWith('/api/')) {
-    // Rate limiting for API routes
-    if (isRateLimited(request)) {
-      return new NextResponse('Too Many Requests', { status: 429 });
-    }
-
-    // Block access to admin API routes from non-admin sources
-    if (pathname.startsWith('/api/admin/')) {
-      // Allow admin login and verify endpoints without authentication
-      if (pathname === '/api/admin/auth/login' || pathname === '/api/admin/verify') {
-        return response;
-      }
-      
-      const authHeader = request.headers.get('authorization');
-      const adminToken = request.cookies.get('adminToken')?.value;
-      
-      if (!authHeader && !adminToken) {
-        return new NextResponse('Unauthorized', { status: 401 });
-      }
-    }
-
-    // Add CORS headers for API routes
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  }
-
-  // Block access to admin routes from non-admin sources
+  // Only require authentication for admin dashboard (not admin login)
   if (pathname.startsWith('/admin') && pathname !== '/admin-login') {
     const adminToken = request.cookies.get('adminToken')?.value;
-    const authHeader = request.headers.get('authorization');
     
-    if (!adminToken && !authHeader) {
+    if (!adminToken) {
       return NextResponse.redirect(new URL('/admin-login', request.url));
     }
-  }
-
-  // Block access to internal routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api-docs') ||
-    pathname.includes('/test-') ||
-    pathname.includes('/debug')
-  ) {
-    return new NextResponse('Not Found', { status: 404 });
   }
 
   return response;
@@ -117,11 +108,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }; 

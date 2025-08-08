@@ -1,55 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase, getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { AuthService } from '@/lib/authService';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'No token provided' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    console.log('🔍 Analytics Users API - Starting authentication check...');
     
-    if (!decoded || !decoded.isAdmin) {
+    // Verify admin authentication using AuthService
+    const user = await AuthService.getSession(request);
+    
+    console.log('🔍 Analytics Users API - Auth result:', { 
+      hasUser: !!user, 
+      isAdmin: user?.isAdmin,
+      email: user?.email 
+    });
+    
+    if (!user || !user.isAdmin) {
+      console.log('❌ Analytics Users API - Unauthorized:', { user: !!user, isAdmin: user?.isAdmin });
       return NextResponse.json(
-        { success: false, error: 'Invalid admin token' },
+        { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // Verify admin exists and has permissions
+    console.log('✅ Analytics Users API - Authentication successful');
+
+    // Connect to database
     await connectToDatabase();
     const dbConnection = await getDatabase();
     const db = dbConnection.db;
-
-    const adminUser = await db.collection('adminusers').findOne({ 
-      _id: new ObjectId(decoded.id),
-      isActive: true 
-    });
-
-    if (!adminUser) {
-      return NextResponse.json(
-        { success: false, error: 'Admin user not found or inactive' },
-        { status: 401 }
-      );
-    }
-
-    // Check if admin has analytics permission
-    if (!adminUser.permissions.includes('view_analytics')) {
-      return NextResponse.json(
-        { success: false, error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
 
     const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || '7d';
@@ -97,13 +77,17 @@ export async function GET(request: NextRequest) {
     const totalUsers = await db.collection('users').countDocuments();
 
     // Get active users (users with activity in the last 24 hours)
-    const activeUsers = await db.collection('useranalysishistories')
-      .distinct('userId', {
-        createdAt: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
-      });
+    const activeUsers = await db.collection('users').countDocuments({
+      lastLoginAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    });
+
+    // Get new users in the selected range
+    const newUsers = await db.collection('users').countDocuments({
+      createdAt: { $gte: startDate }
+    });
 
     // Get user activity by tool
-    const userActivityByTool = await db.collection('toolusage')
+    const userActivityByTool = await db.collection('toolusages')
       .aggregate([
         {
           $match: {
@@ -122,89 +106,34 @@ export async function GET(request: NextRequest) {
             toolSlug: '$_id',
             uniqueUsers: { $size: '$uniqueUsers' },
             totalUsage: 1,
-            avgUsagePerUser: {
-              $divide: ['$totalUsage', { $size: '$uniqueUsers' }]
-            }
+            _id: 0
           }
         },
         {
-          $sort: { uniqueUsers: -1 }
+          $sort: { totalUsage: -1 }
         }
       ]).toArray();
 
-    // Get user retention data
-    const userRetention = await db.collection('useranalysishistories')
-      .aggregate([
-        {
-          $match: {
-            createdAt: { $gte: startDate }
-          }
-        },
-        {
-          $group: {
-            _id: '$userId',
-            firstActivity: { $min: '$createdAt' },
-            lastActivity: { $max: '$createdAt' },
-            totalActivities: { $sum: 1 }
-          }
-        },
-        {
-          $project: {
-            userId: '$_id',
-            firstActivity: 1,
-            lastActivity: 1,
-            totalActivities: 1,
-            daysActive: {
-              $ceil: {
-                $divide: [
-                  { $subtract: ['$lastActivity', '$firstActivity'] },
-                  1000 * 60 * 60 * 24
-                ]
-              }
-            }
-          }
-        }
-      ]).toArray();
-
-    // Calculate retention metrics
-    const totalActiveUsers = userRetention.length;
-    const returningUsers = userRetention.filter(user => user.daysActive > 1).length;
-    const retentionRate = totalActiveUsers > 0 ? (returningUsers / totalActiveUsers) * 100 : 0;
-
-    // Format the data
-    const userAnalytics = {
+    const result = {
       totalUsers,
-      activeUsers: activeUsers.length,
-      newUsers: userGrowth.reduce((sum, day) => sum + day.newUsers, 0),
-      userGrowth: userGrowth.map(day => ({
-        date: day._id,
-        count: day.newUsers
+      activeUsers,
+      newUsers,
+      userGrowth: userGrowth.map(item => ({
+        date: item._id,
+        count: item.newUsers
       })),
-      userActivityByTool: userActivityByTool.map(tool => ({
-        toolSlug: tool.toolSlug,
-        uniqueUsers: tool.uniqueUsers,
-        totalUsage: tool.totalUsage
-      }))
+      userActivityByTool
     };
-
-    // Log analytics access
-    await db.collection('adminactivities').insertOne({
-      adminId: new ObjectId(decoded.id),
-      type: 'viewed',
-      action: 'user_analytics',
-      details: { range, totalUsers, activeUsers: activeUsers.length },
-      createdAt: new Date()
-    });
 
     return NextResponse.json({
       success: true,
-      ...userAnalytics
+      data: result
     });
 
   } catch (error) {
     console.error('User analytics API error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch user analytics data' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Wrench, 
   Settings, 
@@ -37,28 +37,23 @@ interface Tool {
 }
 
 export default function ServiceManagementPage() {
-  const { isAuthenticated, isSuperAdmin, isLoading } = useAdminAuth();
+  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   const [tools, setTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && isSuperAdmin) {
+    if (isAuthenticated && isAdmin) {
       fetchTools();
       fetchMaintenanceStatus();
     }
-  }, [isAuthenticated, isSuperAdmin]);
+  }, [isAuthenticated, isAdmin]);
 
   const fetchTools = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/services/tools', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/admin/services/tools');
       const data = await response.json();
 
       if (data.success) {
@@ -73,12 +68,7 @@ export default function ServiceManagementPage() {
 
   const fetchMaintenanceStatus = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/services/maintenance/status', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/admin/services/maintenance/status');
       const data = await response.json();
       if (data.success) {
         setMaintenanceMode(data.maintenanceMode);
@@ -90,12 +80,10 @@ export default function ServiceManagementPage() {
 
   const handleToolToggle = async (toolId: string, status: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch('/api/admin/services/toggle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           toolId,
@@ -171,7 +159,7 @@ export default function ServiceManagementPage() {
     );
   }
 
-  if (!isAuthenticated || !isSuperAdmin) {
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 

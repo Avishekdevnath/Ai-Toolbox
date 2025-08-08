@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import SessionProviderWrapper from '@/components/SessionProviderWrapper';
+import { AuthProvider } from '@/hooks/useAuth';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -44,10 +44,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <SessionProviderWrapper>
+      <body className={inter.className} suppressHydrationWarning={true}>
+        <AuthProvider>
           {children}
-        </SessionProviderWrapper>
+        </AuthProvider>
       </body>
     </html>
   );

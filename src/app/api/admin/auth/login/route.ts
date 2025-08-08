@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AdminAuth } from '@/lib/adminAuth';
+import { AuthService } from '@/lib/authService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,16 +21,17 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Input validation passed, attempting authentication...');
 
-    // Authenticate admin using new service
-    const authResult = await AdminAuth.authenticateAdmin(email, password);
+    // Authenticate using unified service
+    const authResult = await AuthService.authenticate(email, password);
 
     console.log('🔍 Authentication result:', {
       success: authResult.success,
       error: authResult.error,
-      hasAdmin: !!authResult.admin
+      hasUser: !!authResult.session?.user,
+      isAdmin: authResult.session?.user.isAdmin
     });
 
-    if (!authResult.success || !authResult.admin) {
+    if (!authResult.success || !authResult.session) {
       console.log('❌ Authentication failed:', authResult.error);
       return NextResponse.json(
         { success: false, error: authResult.error || 'Authentication failed' },
@@ -38,48 +39,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Authentication successful, creating JWT token...');
+    // Check if user is admin
+    if (!authResult.session.user.isAdmin) {
+      console.log('❌ User is not an admin');
+      return NextResponse.json(
+        { success: false, error: 'Access denied. Admin privileges required.' },
+        { status: 403 }
+      );
+    }
 
-    // Create JWT token
-    const token = AdminAuth.createToken(authResult.admin);
+    console.log('✅ Admin authentication successful');
 
-    console.log('✅ JWT token created, logging activity...');
-
-    // Log admin activity
-    await AdminAuth.logActivity(
-      authResult.admin.id,
-      'login',
-      'admin_dashboard',
-      { ipAddress: request.headers.get('x-forwarded-for') || 'unknown' }
-    );
-
-    console.log('✅ Activity logged, returning success response');
-
-    return NextResponse.json({
+    // Create response with token in cookie
+    const response = NextResponse.json({
       success: true,
-      message: 'Login successful',
-      token: token, // Return token for client-side storage
-      admin: {
-        id: authResult.admin.id,
-        email: authResult.admin.email,
-        role: authResult.admin.role,
-        firstName: authResult.admin.firstName,
-        lastName: authResult.admin.lastName,
-        permissions: authResult.admin.permissions
-      },
-      timestamp: new Date().toISOString()
+      user: authResult.session.user,
+      token: authResult.session.token
     });
 
-  } catch (error: any) {
+    // Set secure cookie for admin
+    response.cookies.set('adminToken', authResult.session.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/'
+    });
+
+    // Also set the unified auth token
+    response.cookies.set('authToken', authResult.session.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/'
+    });
+
+    console.log('✅ Admin login completed successfully');
+
+    return response;
+
+  } catch (error) {
     console.error('❌ Admin login error:', error);
-    
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Login failed',
-        message: error.message || 'Unknown error occurred',
-        timestamp: new Date().toISOString()
-      },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

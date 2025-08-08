@@ -34,43 +34,11 @@ export async function connectToDatabase() {
   }
 }
 
-async function initializeCollections() {
-  try {
-    // Ensure connection is ready
-    if (!mongoose.connection.db) {
-      console.log('⚠️  Database not ready, skipping collection initialization');
-      return;
-    }
-    
-    const db = mongoose.connection.db;
-    
-    // List of collections to ensure exist
-    const collections = [
-      'userfavorites',
-      'toolratings', 
-      'toolusages',
-      'useranalysishistories',
-      'usersettings',
-      'adminusers',
-      'users',
-      'urlshorteners',
-      'age_analyses'
-    ];
-
-    for (const collectionName of collections) {
-      try {
-        const collections = await db.listCollections({ name: collectionName }).toArray();
-        if (collections.length === 0) {
-          await db.createCollection(collectionName);
-          console.log(`✅ Created collection: ${collectionName}`);
-        }
-      } catch (error) {
-        // Collection might already exist or other error
-        console.log(`ℹ️  Collection ${collectionName}: ${error.message}`);
-      }
-    }
-  } catch (error) {
-    console.log('⚠️  Collection initialization warning:', error.message);
+export async function disconnectFromDatabase() {
+  if (isConnected) {
+    await mongoose.disconnect();
+    isConnected = false;
+    console.log('🔌 MongoDB disconnected');
   }
 }
 
@@ -78,24 +46,35 @@ export async function getDatabase() {
   if (!isConnected) {
     await connectToDatabase();
   }
-  return mongoose.connection;
+  return { db: mongoose.connection.db };
 }
 
-export async function disconnectFromDatabase() {
-  if (isConnected) {
-    await mongoose.disconnect();
-    isConnected = false;
-    console.log('🔌 Disconnected from MongoDB');
+async function initializeCollections() {
+  try {
+    const db = mongoose.connection.db;
+    
+    // Create collections if they don't exist
+    const collections = await db.listCollections().toArray();
+    const collectionNames = collections.map(col => col.name);
+    
+    const requiredCollections = [
+      'users',
+      'adminusers',
+      'toolusages',
+      'useranalysishistories',
+      'userfavorites',
+      'usersettings',
+      'adminactivities',
+      'adminnotifications'
+    ];
+    
+    for (const collectionName of requiredCollections) {
+      if (!collectionNames.includes(collectionName)) {
+        await db.createCollection(collectionName);
+        console.log(`✅ Created collection: ${collectionName}`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error initializing collections:', error);
   }
 }
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  await disconnectFromDatabase();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  await disconnectFromDatabase();
-  process.exit(0);
-});

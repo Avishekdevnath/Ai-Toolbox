@@ -15,7 +15,7 @@ import {
   Shield,
   Users
 } from 'lucide-react';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import AdminUserModal from '@/components/admin/AdminUserModal';
 
@@ -48,7 +48,7 @@ interface AdminUsersResponse {
 }
 
 export default function AdminUsersPage() {
-  const { admin, token } = useAdminAuth();
+  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,23 +66,14 @@ export default function AdminUsersPage() {
   const fetchAdmins = async () => {
     try {
       console.log('🔍 Fetching admins...');
-      console.log('🔍 Token available:', !!token);
-      
-      if (!token) {
-        console.error('❌ No token available');
-        return;
-      }
+      console.log('🔍 Auth state:', { isAuthenticated, isAdmin, user });
       
       setLoading(true);
       
       const url = `/api/admin/admin-users?page=${currentPage}&limit=10&search=${searchTerm}&role=${roleFilter}&status=${statusFilter}`;
       console.log('🔍 Fetching from URL:', url);
       
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(url);
 
       console.log('🔍 Response status:', response.status);
       
@@ -106,11 +97,11 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    console.log('🔍 useEffect triggered - token:', !!token);
-    if (token) {
+    console.log('🔍 useEffect triggered - isAuthenticated:', isAuthenticated, 'isAdmin:', isAdmin);
+    if (isAuthenticated && isAdmin) {
       fetchAdmins();
     }
-  }, [token]); // Only depend on token
+  }, [isAuthenticated, isAdmin]); // Depend on authentication state instead of token
 
   const handleSearch = () => {
     setCurrentPage(1);
@@ -126,7 +117,6 @@ export default function AdminUsersPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           action,
@@ -157,7 +147,6 @@ export default function AdminUsersPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
@@ -201,7 +190,6 @@ export default function AdminUsersPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
@@ -244,7 +232,6 @@ export default function AdminUsersPage() {
         method: action === 'delete' ? 'DELETE' : 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: action !== 'delete' ? JSON.stringify({ isActive: action === 'activate' }) : undefined
       });
@@ -307,6 +294,11 @@ export default function AdminUsersPage() {
   const getStatusBadgeColor = (isActive: boolean) => {
     return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
   };
+
+  // Check authentication
+  if (!isAuthenticated || !isAdmin) {
+    return null;
+  }
 
   if (loading) {
     return (

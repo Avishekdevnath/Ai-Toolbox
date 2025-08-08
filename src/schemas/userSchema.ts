@@ -10,9 +10,10 @@ export interface User extends Document {
   username?: string;
   image?: string;
   avatar?: string;
-  provider: string;
-  providerAccountId: string;
-  oauthAccounts: OAuthAccount[];
+  password?: string; // Added password field for local auth
+  provider?: string; // Made optional for local auth
+  providerAccountId?: string; // Made optional for local auth
+  oauthAccounts?: OAuthAccount[]; // Made optional
   stats: UserStats;
   preferences: UserPreferences;
   createdAt: Date;
@@ -26,6 +27,11 @@ export interface User extends Document {
   toolUsage: ToolUsageRecord[];
   favorites: string[];
   settings: UserSettings;
+  // Added fields for better user management
+  loginAttempts?: number;
+  lockUntil?: Date;
+  lastLoginAt?: Date;
+  permissions?: string[];
 }
 
 // OAuth Account interface
@@ -135,8 +141,9 @@ export const UserSchema = z.object({
   username: z.string().optional(),
   image: z.string().url().optional(),
   avatar: z.string().url().optional(),
-  provider: z.string().min(1, 'Provider is required'),
-  providerAccountId: z.string().min(1, 'Provider account ID is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters').optional(), // Added password validation
+  provider: z.string().optional(), // Made optional
+  providerAccountId: z.string().optional(), // Made optional
   oauthAccounts: z.array(z.object({
     provider: z.string(),
     providerAccountId: z.string(),
@@ -221,7 +228,12 @@ export const UserSchema = z.object({
       profileVisibility: z.enum(['public', 'private']).default('public'),
       dataSharing: z.boolean().default(false)
     }).optional()
-  }).optional()
+  }).optional(),
+  // Added new fields
+  loginAttempts: z.number().default(0).optional(),
+  lockUntil: z.date().optional(),
+  lastLoginAt: z.date().optional(),
+  permissions: z.array(z.string()).default(['basic_access']).optional()
 });
 
 // Mongoose schema
@@ -233,8 +245,9 @@ const userSchema = new Schema<User>({
   username: { type: String, unique: true, sparse: true },
   image: { type: String },
   avatar: { type: String },
-  provider: { type: String, required: true },
-  providerAccountId: { type: String, required: true },
+  password: { type: String }, // Added password field
+  provider: { type: String }, // Made optional
+  providerAccountId: { type: String }, // Made optional
   oauthAccounts: [{
     provider: { type: String, required: true },
     providerAccountId: { type: String, required: true },
@@ -319,7 +332,12 @@ const userSchema = new Schema<User>({
       profileVisibility: { type: String, enum: ['public', 'private'], default: 'public' },
       dataSharing: { type: Boolean, default: false }
     }
-  }
+  },
+  // Added new fields for security
+  loginAttempts: { type: Number, default: 0 },
+  lockUntil: { type: Date },
+  lastLoginAt: { type: Date },
+  permissions: { type: [String], default: ['basic_access'] }
 }, {
   timestamps: true,
   collection: 'users'

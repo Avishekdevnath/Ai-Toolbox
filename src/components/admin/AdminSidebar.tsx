@@ -17,10 +17,12 @@ import {
   ChevronRight,
   Home,
   Bell,
-  Search
+  Search,
+  MessageSquare,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarItem {
   name: string;
@@ -35,6 +37,8 @@ const sidebarItems: SidebarItem[] = [
   { name: 'Tool Usage', href: '/admin/tools', icon: BarChart3 },
   { name: 'User Management', href: '/admin/users', icon: Users },
   { name: 'Admin Users', href: '/admin/admin-users', icon: Shield },
+  { name: 'Contacts', href: '/admin/contacts', icon: MessageSquare },
+  { name: 'Contact Settings', href: '/admin/contact-settings', icon: FileText },
   { name: 'Service Management', href: '/admin/services', icon: Wrench },
   { name: 'System Settings', href: '/admin/settings', icon: Settings },
   { name: 'Activity Logs', href: '/admin/activity', icon: Activity },
@@ -43,7 +47,7 @@ const sidebarItems: SidebarItem[] = [
 export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
-  const { admin, logout } = useAdminAuth();
+  const { user, logout } = useAuth();
 
   // Debug: Log current pathname
   console.log('🔍 Sidebar - Current pathname:', pathname);
@@ -133,15 +137,15 @@ export default function AdminSidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {admin?.firstName} {admin?.lastName}
+                  {user?.firstName} {user?.lastName}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {admin?.email}
+                  {user?.email}
                 </p>
                 <div className="flex items-center space-x-1 mt-1">
                   <Shield className="w-3 h-3 text-blue-500" />
                   <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                    {admin?.role}
+                    {user?.role}
                   </span>
                 </div>
               </div>

@@ -1,60 +1,51 @@
-import { getDatabase } from '@/lib/mongodb';
 import { NextRequest, NextResponse } from 'next/server';
-import { isUrlExpired } from '@/lib/urlShortenerUtils';
-import { UrlShortenerSchema } from '@/schemas/urlShortenerSchema';
-
-const COLLECTION_NAME = 'shortened_urls';
+import mongoose from 'mongoose';
+import { ShortenedUrlModel } from '@/schemas/urlShortenerSchema';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ shortCode: string }> }
+  { params }: { params: { shortCode: string } }
 ) {
+  const { shortCode } = params;
+
   try {
-    const { shortCode } = await params;
-    
-    if (!shortCode) {
-      return NextResponse.json(
-        { error: 'Short code is required' },
-        { status: 400 }
-      );
+    // Connect to database
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI!);
     }
 
-    const db = await getDatabase();
-    
-    // Find the URL by short code
-    const url = await db.collection(COLLECTION_NAME).findOne({ 
+    // Find the URL
+    const urlData = await ShortenedUrlModel.findOne({
       shortCode,
-      isActive: true 
-    });
+      isActive: true,
+      $or: [
+        { expiresAt: { $exists: false } },
+        { expiresAt: { $gt: new Date() } }
+      ]
+    }).lean();
 
-    if (!url) {
+    if (!urlData) {
       return NextResponse.json(
-        { error: 'URL not found' },
+        { error: 'URL not found or expired' },
         { status: 404 }
       );
     }
 
-    // Check if URL is expired
-    if (isUrlExpired(url)) {
-      return NextResponse.json(
-        { error: 'URL has expired' },
-        { status: 410 }
-      );
-    }
-
     // Increment click count
-    await db.collection(COLLECTION_NAME).updateOne(
-      { _id: url._id },
-      { $inc: { clicks: 1 } }
+    await ShortenedUrlModel.updateOne(
+      { _id: urlData._id },
+      { 
+        $inc: { clicks: 1 },
+        $set: { updatedAt: new Date() }
+      }
     );
 
-    // Redirect to original URL
-    return NextResponse.redirect(url.originalUrl);
-
-  } catch (error: any) {
-    console.error('Error redirecting URL:', error);
+    // Return redirect response
+    return NextResponse.redirect(urlData.originalUrl, 302);
+  } catch (error) {
+    console.error('Redirect error:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -9,21 +9,8 @@ import {
   shareUrl,
   generateQRCodeUrl
 } from '@/lib/urlShortenerClient';
-import type { ShortenedUrl } from '@/schemas/urlShortenerSchema';
-
-interface DisplayUrl extends ShortenedUrl {
-  shortenedUrl: string;
-  isExpired?: boolean;
-}
-
-interface Analytics {
-  totalUrls: number;
-  totalClicks: number;
-  activeUrls: number;
-  expiredUrls: number;
-  averageClicks: number;
-  topPerformingUrl?: DisplayUrl;
-}
+import type { DisplayUrl, Analytics } from './types';
+import URLShortenerSuccessModal from './URLShortenerSuccessModal';
 
 export default function URLShortenerTool() {
   const [originalUrl, setOriginalUrl] = useState('');
@@ -39,6 +26,8 @@ export default function URLShortenerTool() {
   const [showQR, setShowQR] = useState<string | null>(null);
   const [baseUrl, setBaseUrl] = useState('http://localhost:3000');
   const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics'>('create');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [newlyCreatedUrl, setNewlyCreatedUrl] = useState<DisplayUrl | null>(null);
 
   // Load existing URLs on component mount
   useEffect(() => {
@@ -53,7 +42,6 @@ export default function URLShortenerTool() {
     try {
       setIsLoadingUrls(true);
       const response = await getShortenedUrls({ limit: 50, activeOnly: false });
-      console.log('Loaded URLs:', response.data.length, 'URLs');
       setShortenedUrls(response.data);
       
       // Calculate analytics
@@ -68,12 +56,12 @@ export default function URLShortenerTool() {
 
   const calculateAnalytics = (urls: DisplayUrl[]) => {
     const totalUrls = urls.length;
-    const totalClicks = urls.reduce((sum, url) => sum + url.clicks, 0);
+    const totalClicks = urls.reduce((sum, url) => sum + (url.clicks || 0), 0);
     const activeUrls = urls.filter(url => !url.isExpired).length;
     const expiredUrls = urls.filter(url => url.isExpired).length;
     const averageClicks = totalUrls > 0 ? Math.round(totalClicks / totalUrls) : 0;
     const topPerformingUrl = urls.reduce((top, current) => 
-      current.clicks > (top?.clicks || 0) ? current : top, undefined as DisplayUrl | undefined);
+      (current.clicks || 0) > ((top?.clicks || 0)) ? current : top, undefined as DisplayUrl | undefined);
 
     setAnalytics({
       totalUrls,
@@ -85,10 +73,37 @@ export default function URLShortenerTool() {
     });
   };
 
+  const clearForm = () => {
+    setOriginalUrl('');
+    setCustomAlias('');
+    setExpiresInDays(undefined);
+    setExpiresAt('');
+    setError('');
+    setSuccess('');
+  };
+
   const shortenUrl = async () => {
     if (!originalUrl.trim()) {
       setError('Please enter a URL to shorten');
       return;
+    }
+
+    // Validate custom alias if provided
+    if (customAlias.trim()) {
+      if (customAlias.trim().length < 3) {
+        setError('Custom alias must be at least 3 characters long');
+        return;
+      }
+      if (customAlias.trim().length > 20) {
+        setError('Custom alias must be 20 characters or less');
+        return;
+      }
+      // Check for reserved words
+      const reservedWords = ['new', 'admin', 'api', 'auth', 'login', 'logout', 'signin', 'signup', 'tools', 'utilities'];
+      if (reservedWords.includes(customAlias.trim().toLowerCase())) {
+        setError(`"${customAlias.trim()}" is a reserved word. Please choose a different alias.`);
+        return;
+      }
     }
 
     setError('');
@@ -96,10 +111,17 @@ export default function URLShortenerTool() {
     setIsLoading(true);
 
     try {
+      // Format expiresAt for API if it's set
+      let formattedExpiresAt: string | undefined;
+      if (expiresAt) {
+        // Convert to ISO string for API
+        formattedExpiresAt = new Date(expiresAt).toISOString();
+      }
+
       const response = await createShortenedUrl({
         originalUrl: originalUrl.trim(),
         customAlias: customAlias.trim() || undefined,
-        expiresAt: expiresAt || undefined,
+        expiresAt: formattedExpiresAt,
         expiresInDays: expiresAt ? undefined : (expiresInDays || undefined)
       });
 
@@ -110,11 +132,20 @@ export default function URLShortenerTool() {
       setExpiresAt('');
       setSuccess('URL shortened successfully!');
       
+      // Show success modal and switch to manage tab
+      setNewlyCreatedUrl(response.data);
+      setShowSuccessModal(true);
+      setActiveTab('manage');
+      
+      // Recalculate analytics
+      calculateAnalytics([response.data, ...shortenedUrls]);
+      
       // Track usage
       fetch('/api/tools/url-shortener/track-usage', { method: 'POST' }).catch(err => {
         console.error('Usage tracking failed:', err);
       });
     } catch (err: any) {
+      console.error('Failed to shorten URL:', err);
       setError(err.message || 'Failed to shorten URL');
     } finally {
       setIsLoading(false);
@@ -144,7 +175,9 @@ export default function URLShortenerTool() {
 
     try {
       await deleteShortenedUrl(urlId);
-      setShortenedUrls(prev => prev.filter(url => String(url._id) !== urlId));
+      const updatedUrls = shortenedUrls.filter(url => String(url._id) !== urlId);
+      setShortenedUrls(updatedUrls);
+      calculateAnalytics(updatedUrls);
       setSuccess('URL deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -209,27 +242,6 @@ export default function URLShortenerTool() {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Anonymous User Notice */}
-        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <span className="text-yellow-600 dark:text-yellow-400 text-lg">🔐</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Anonymous Session
-              </h3>
-              <div className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                <p>Your URLs are saved using your device fingerprint. They'll persist as long as you use the same browser.</p>
-                <p className="mt-2">
-                  <strong>💡 Pro Tip:</strong> 
-                  Your URLs are saved using your device fingerprint and will persist as long as you use the same browser.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -332,42 +344,37 @@ export default function URLShortenerTool() {
                 type="datetime-local"
                 value={expiresAt}
                 onChange={e => setExpiresAt(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)} // Set minimum to current date/time
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white mt-2"
               />
             </div>
 
-            <button
-              onClick={shortenUrl}
-              disabled={!originalUrl.trim() || isLoading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {isLoading ? 'Creating...' : '✨ Create Shortened URL'}
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={shortenUrl}
+                disabled={isLoading || !originalUrl.trim()}
+                className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                {isLoading ? 'Creating...' : '✨ Create Shortened URL'}
+              </button>
+              <button
+                onClick={clearForm}
+                type="button"
+                className="px-4 py-3 bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium rounded-md"
+              >
+                Clear
+              </button>
+            </div>
 
-            {/* Features */}
             <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-3">
-                🚀 Professional Features:
-              </h3>
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-3">🚀 Professional Features:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-blue-700 dark:text-blue-300">
-                <div className="flex items-center">
-                  <span className="mr-2">✓</span> Custom branded aliases
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2">✓</span> Real-time click analytics
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2">✓</span> Flexible expiration dates
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2">✓</span> QR code generation
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2">✓</span> Link health monitoring
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2">✓</span> Professional dashboard
-                </div>
+                <div className="flex items-center"><span className="mr-2">✓</span> Custom branded aliases</div>
+                <div className="flex items-center"><span className="mr-2">✓</span> Real-time click analytics</div>
+                <div className="flex items-center"><span className="mr-2">✓</span> Flexible expiration dates</div>
+                <div className="flex items-center"><span className="mr-2">✓</span> QR code generation</div>
+                <div className="flex items-center"><span className="mr-2">✓</span> Link health monitoring</div>
+                <div className="flex items-center"><span className="mr-2">✓</span> Professional dashboard</div>
               </div>
             </div>
           </div>
@@ -462,9 +469,9 @@ export default function URLShortenerTool() {
             </div>
           ) : (
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {shortenedUrls.map((url) => (
+              {shortenedUrls.map((url, index) => (
                 <div 
-                  key={String(url._id)}
+                  key={url._id || url.shortCode || `url-${index}`}
                   className={`bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border ${
                     url.isExpired ? 'border-red-200 dark:border-red-800' : 'border-gray-200 dark:border-gray-600'
                   }`}
@@ -677,6 +684,24 @@ export default function URLShortenerTool() {
           <li>• <strong>Professional Dashboard:</strong> Monitor and manage all your links</li>
         </ul>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && newlyCreatedUrl && (
+        <URLShortenerSuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          url={newlyCreatedUrl}
+          onCopySuccess={() => {
+            setSuccess('URL copied to clipboard!');
+            setTimeout(() => setSuccess(''), 3000);
+          }}
+          onCopyError={(message) => setError(message)}
+          onShareSuccess={() => {
+            setSuccess('URL shared successfully!');
+            setTimeout(() => setSuccess(''), 3000);
+          }}
+        />
+      )}
     </div>
   );
 } 

@@ -1,41 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/mongodb';
+import mongoose from 'mongoose';
+import { getEnhancedUserId } from '@/lib/userTracking';
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  if (!slug) {
-    return NextResponse.json({ error: 'Missing tool slug' }, { status: 400 });
-  }
-  
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { slug: string } }
+) {
   try {
-    const db = await getDatabase();
-    
-    // Try to find existing tool first
-    let existingTool = await db.collection('tools').findOne({ slug });
-    
-    if (existingTool) {
-      // Update existing tool
-      await db.collection('tools').updateOne(
-        { slug },
-        { $inc: { usage: 1 } }
-      );
-      return NextResponse.json({ success: true, usage: (existingTool.usage || 0) + 1 });
-    } else {
-      // Create new tool
-      const toolName = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      const newTool = {
-        name: toolName,
-        slug: slug,
-        usage: 1,
-        createdAt: new Date()
-      };
-      
-      await db.collection('tools').insertOne(newTool);
-      return NextResponse.json({ success: true, usage: 1 });
+    // Connect to database
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI!);
     }
-  } catch (e) {
-    console.error('Usage tracking error:', e);
-    // Don't fail the main request if usage tracking fails
-    return NextResponse.json({ success: true, usage: 0 });
+    
+    const { slug } = params;
+    const userId = getEnhancedUserId(request);
+    
+    // Create a new usage record that matches the ToolUsage model schema
+    await mongoose.connection.db.collection('toolusages').insertOne({
+      userId: userId,
+      toolSlug: slug,
+      toolName: slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      usageType: 'generate',
+      metadata: {
+        action: 'tool_usage',
+        timestamp: new Date(),
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '',
+        userAgent: request.headers.get('user-agent') || ''
+      },
+      userAgent: request.headers.get('user-agent') || '',
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    return NextResponse.json({ success: true, userId });
+  } catch (error) {
+    console.error('Usage tracking error:', error);
+    return NextResponse.json({ success: false });
   }
 } 

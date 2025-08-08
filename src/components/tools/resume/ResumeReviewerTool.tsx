@@ -165,18 +165,18 @@ ${analysis.suggestions.map(s => `- ${s}`).join('\n')}
         </div>
 
         {!analysis ? (
-          <Card>
-            <CardHeader>
+        <Card>
+          <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
                 Resume Analysis
               </CardTitle>
-            </CardHeader>
+          </CardHeader>
             <CardContent className="space-y-6">
-              <div>
+            <div>
                 <label className="text-sm font-medium mb-2 block">Paste your resume content *</label>
-                <Textarea 
-                  placeholder="Paste your resume text here for AI-powered review and suggestions..."
+              <Textarea 
+                placeholder="Paste your resume text here for AI-powered review and suggestions..."
                   value={resumeText}
                   onChange={(e) => setResumeText(e.target.value)}
                   rows={12}
@@ -185,12 +185,12 @@ ${analysis.suggestions.map(s => `- ${s}`).join('\n')}
                 <p className="text-xs text-gray-500 mt-1">
                   Include all sections: contact info, summary, experience, education, skills
                 </p>
-              </div>
+            </div>
               
-              <div>
+            <div>
                 <label className="text-sm font-medium mb-2 block">Target Job Title (Optional)</label>
                 <Input 
-                  type="text" 
+                type="text" 
                   placeholder="e.g., Software Engineer, Marketing Manager, Data Analyst"
                   value={targetJobTitle}
                   onChange={(e) => setTargetJobTitle(e.target.value)}
@@ -244,9 +244,9 @@ ${analysis.suggestions.map(s => `- ${s}`).join('\n')}
                       Download Report
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+            </div>
+          </CardContent>
+        </Card>
 
             {/* Analysis Tabs */}
             <Card>

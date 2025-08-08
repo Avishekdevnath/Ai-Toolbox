@@ -1,85 +1,15 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { useEffect, useState } from 'react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasRedirected, setHasRedirected] = useState(false);
-  const router = useRouter();
-
-  // Simple auth check
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('adminToken');
-      const adminInfo = localStorage.getItem('adminInfo');
-
-      if (!token || !adminInfo) {
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        if (!hasRedirected) {
-          setHasRedirected(true);
-          router.push('/admin-login');
-        }
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/admin/verify', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('adminInfo');
-          setIsAuthenticated(false);
-          if (!hasRedirected) {
-            setHasRedirected(true);
-            router.push('/admin-login');
-          }
-        }
-      } catch (error) {
-        setIsAuthenticated(false);
-        if (!hasRedirected) {
-          setHasRedirected(true);
-          router.push('/admin-login');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router, hasRedirected]);
-
-  // Show loading while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner text="Checking authentication..." />
-      </div>
-    );
-  }
-
-  // Don't render anything if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Fixed Admin Header */}

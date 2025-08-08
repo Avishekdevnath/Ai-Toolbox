@@ -10,6 +10,7 @@ import {
   isAnonymousUser,
   getUserIdentifier
 } from '@/schemas/urlShortenerSchema';
+import { NextRequest } from 'next/server';
 
 // Interfaces are now imported from schemas
 
@@ -109,39 +110,79 @@ async function hashString(str: string): Promise<string> {
  * Get or create anonymous user session
  * @returns Promise<AnonymousUserSession>
  */
-export async function getAnonymousUserSession(): Promise<AnonymousUserSession> {
-  if (typeof window === 'undefined') {
-    throw new Error('Anonymous user session can only be created on client-side');
-  }
-
-  // Check if session exists in localStorage
-  const existingSession = localStorage.getItem('url_shortener_session');
-  if (existingSession) {
-    try {
-      const session = JSON.parse(existingSession);
-      // Update last activity
-      session.lastActivity = new Date();
-      localStorage.setItem('url_shortener_session', JSON.stringify(session));
+export async function getAnonymousUserSession(request?: NextRequest): Promise<AnonymousUserSession> {
+  try {
+    // If we're on the server-side and have a request, extract from headers/cookies
+    if (typeof window === 'undefined' && request) {
+      const userAgent = request.headers.get('user-agent') || '';
+      const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                       request.headers.get('x-real-ip') || 
+                       'unknown';
+      
+      // Generate a consistent device fingerprint from server-side data
+      const deviceFingerprint = await hashString(`${userAgent}-${ipAddress}`);
+      const sessionId = generateShortCode(12);
+      
+      const session = {
+        sessionId,
+        deviceFingerprint,
+        createdAt: new Date(),
+        lastActivity: new Date(),
+        ipAddress,
+        userAgent,
+        totalUrlsCreated: 0
+      };
+      
       return session;
-    } catch (e) {
-      // Invalid session, create new one
     }
+
+    // Client-side logic
+    if (typeof window === 'undefined') {
+      throw new Error('Anonymous user session requires either a request object (server-side) or window object (client-side)');
+    }
+
+    // Check if session exists in localStorage
+    const existingSession = localStorage.getItem('url_shortener_session');
+    if (existingSession) {
+      try {
+        const session = JSON.parse(existingSession);
+        // Update last activity
+        session.lastActivity = new Date();
+        localStorage.setItem('url_shortener_session', JSON.stringify(session));
+        return session;
+      } catch (e) {
+        // Invalid session, create new one
+      }
+    }
+
+    // Create new session
+    const deviceFingerprint = await generateDeviceFingerprint();
+    const sessionId = generateShortCode(12);
+    
+    const session: AnonymousUserSession = {
+      sessionId,
+      deviceFingerprint,
+      createdAt: new Date(),
+      lastActivity: new Date(),
+      totalUrlsCreated: 0
+    };
+
+    localStorage.setItem('url_shortener_session', JSON.stringify(session));
+    return session;
+  } catch (error) {
+    console.error('Error in getAnonymousUserSession:', error);
+    // Fallback: create a simple session with timestamp
+    const fallbackFingerprint = `fallback-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const fallbackSession: AnonymousUserSession = {
+      sessionId: `fallback-${Date.now()}`,
+      deviceFingerprint: fallbackFingerprint,
+      createdAt: new Date(),
+      lastActivity: new Date(),
+      totalUrlsCreated: 0
+    };
+    
+    return fallbackSession;
   }
-
-  // Create new session
-  const deviceFingerprint = await generateDeviceFingerprint();
-  const sessionId = generateShortCode(12);
-  
-  const session: AnonymousUserSession = {
-    sessionId,
-    deviceFingerprint,
-    createdAt: new Date(),
-    lastActivity: new Date(),
-    totalUrlsCreated: 0
-  };
-
-  localStorage.setItem('url_shortener_session', JSON.stringify(session));
-  return session;
 }
 
 /**
