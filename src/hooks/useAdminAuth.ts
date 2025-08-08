@@ -38,10 +38,18 @@ export function useAdminAuth() {
 
   const checkAuthStatus = useCallback(async () => {
     try {
+      console.log('🔍 Checking auth status...');
       const token = localStorage.getItem('adminToken');
       const adminInfo = localStorage.getItem('adminInfo');
 
+      console.log('🔍 Auth check - localStorage:', {
+        hasToken: !!token,
+        hasAdminInfo: !!adminInfo,
+        tokenLength: token?.length || 0
+      });
+
       if (!token || !adminInfo) {
+        console.log('❌ No token or admin info found');
         setAuthState({
           isAuthenticated: false,
           isSuperAdmin: false,
@@ -53,14 +61,18 @@ export function useAdminAuth() {
       }
 
       // Verify token with server
+      console.log('🔍 Verifying token with server...');
       const response = await fetch('/api/admin/verify', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('🔍 Verify response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Token verification successful:', data);
         const admin = JSON.parse(adminInfo);
         
         setAuthState({
@@ -71,6 +83,7 @@ export function useAdminAuth() {
           error: null
         });
       } else {
+        console.log('❌ Token verification failed:', response.status);
         // Token is invalid, clear storage
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminInfo');
@@ -84,7 +97,7 @@ export function useAdminAuth() {
         });
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      console.error('❌ Auth check error:', error);
       setAuthState({
         isAuthenticated: false,
         isSuperAdmin: false,

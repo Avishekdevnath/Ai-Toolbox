@@ -17,7 +17,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('🔍 Admin Layout Debug:', {
+      isAuthenticated,
+      isLoading,
+      hasToken: typeof window !== 'undefined' ? !!localStorage.getItem('adminToken') : false,
+      hasAdminInfo: typeof window !== 'undefined' ? !!localStorage.getItem('adminInfo') : false
+    });
+
     if (!isLoading && !isAuthenticated) {
+      console.log('❌ Redirecting to login - not authenticated');
       router.push('/admin-login');
     }
   }, [isAuthenticated, isLoading, router]);
