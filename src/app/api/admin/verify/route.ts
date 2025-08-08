@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { connectToDatabase } from '@/lib/mongodb';
+import { connectToDatabase, getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import mongoose from 'mongoose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -31,7 +30,18 @@ export async function GET(request: NextRequest) {
 
     // Connect to database and verify admin exists
     await connectToDatabase();
-    const db = mongoose.connection.db;
+    const dbConnection = await getDatabase();
+    
+    if (!dbConnection || !dbConnection.db) {
+      console.error('Database connection failed');
+      return NextResponse.json(
+        { success: false, error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    const db = dbConnection.db;
+    console.log('Database connection successful, checking admin user...');
 
     const adminUser = await db.collection('adminusers').findOne({ 
       _id: new ObjectId(decoded.id),
@@ -44,6 +54,8 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    console.log('Admin user verified successfully:', adminUser.email);
 
     return NextResponse.json({
       success: true,

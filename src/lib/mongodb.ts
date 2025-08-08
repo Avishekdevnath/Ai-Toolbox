@@ -19,6 +19,9 @@ export async function connectToDatabase() {
       socketTimeoutMS: 45000,
     });
 
+    // Wait for connection to be ready
+    await mongoose.connection.asPromise();
+    
     isConnected = true;
     console.log('✅ MongoDB connected via Mongoose');
 
@@ -33,6 +36,12 @@ export async function connectToDatabase() {
 
 async function initializeCollections() {
   try {
+    // Ensure connection is ready
+    if (!mongoose.connection.db) {
+      console.log('⚠️  Database not ready, skipping collection initialization');
+      return;
+    }
+    
     const db = mongoose.connection.db;
     
     // List of collections to ensure exist
