@@ -41,6 +41,8 @@ interface DashboardStats {
 }
 
 export default function SuperAdminDashboard() {
+  console.log('🎯 Admin Dashboard Page Loaded!');
+  
   const { isAuthenticated, admin, isLoading } = useAdminAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);

@@ -38,8 +38,23 @@ export default function AdminLoginPage() {
           adminInfo: adminInfo ? JSON.parse(adminInfo) : null
         });
         
-        // Redirect to admin dashboard
-        router.push('/admin');
+        // Debug router
+        console.log('🔄 Attempting redirect to /admin...');
+        
+        // Try multiple redirect methods
+        try {
+          router.push('/admin');
+          console.log('✅ Router.push called successfully');
+          
+          // Force a hard redirect as fallback
+          setTimeout(() => {
+            console.log('🔄 Force redirecting...');
+            window.location.href = '/admin';
+          }, 1000);
+        } catch (error) {
+          console.error('❌ Router error:', error);
+          window.location.href = '/admin';
+        }
       } else {
         console.log('❌ Login failed:', result.error);
         setError(result.error || 'Login failed');
