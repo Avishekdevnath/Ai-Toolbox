@@ -24,10 +24,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       hasAdminInfo: typeof window !== 'undefined' ? !!localStorage.getItem('adminInfo') : false
     });
 
+    // Temporarily disable auth check for debugging
+    /*
     if (!isLoading && !isAuthenticated) {
       console.log('❌ Redirecting to login - not authenticated');
       router.push('/admin-login');
     }
+    */
   }, [isAuthenticated, isLoading, router]);
 
   // Show loading while checking authentication
