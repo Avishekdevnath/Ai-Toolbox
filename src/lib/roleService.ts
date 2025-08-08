@@ -1,5 +1,5 @@
 import { getDatabase } from './mongodb';
-import { UserRole, IUserRole } from '@/models/UserRoleModel';
+import { UserRoleModel as UserRole, IUserRole } from '@/models/UserRoleModel';
 
 export type UserRoleType = 'super_admin' | 'admin' | 'moderator' | 'user';
 export type PermissionType = 

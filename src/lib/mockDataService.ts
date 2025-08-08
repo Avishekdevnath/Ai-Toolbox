@@ -1,7 +1,7 @@
 import { UserModel } from '@/models/UserModel';
 import { UserSettingsModel } from '@/models/UserSettingsModel';
 import { UserAnalysisHistoryModel } from '@/models/UserAnalysisHistoryModel';
-import { ToolUsageModel } from '@/models/ToolUsageModel';
+import { ToolUsage as ToolUsageModel } from '@/models/ToolUsageModel';
 import { UserRoleModel } from '@/models/UserRoleModel';
 
 export interface MockUser {

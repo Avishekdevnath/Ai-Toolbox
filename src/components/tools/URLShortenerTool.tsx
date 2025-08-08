@@ -8,7 +8,7 @@ import {
   copyToClipboard,
   shareUrl,
   generateQRCodeUrl
-} from '@/lib/urlShortenerService';
+} from '@/lib/urlShortenerClient';
 import { ShortenedUrl } from '@/lib/urlShortenerUtils';
 
 interface DisplayUrl extends ShortenedUrl {

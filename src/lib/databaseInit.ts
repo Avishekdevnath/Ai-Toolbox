@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { AdminUserModel } from '@/models/AdminUserModel';
+import { AdminUser } from '@/models/AdminUserModel';
 import bcrypt from 'bcryptjs';
 
 // Database connection function
@@ -32,7 +32,7 @@ export const initializeAdminUsers = async (): Promise<void> => {
     console.log('🔧 Initializing admin users...');
 
     // Check if admin users already exist
-    const existingAdmins = await AdminUserModel.find({});
+    const existingAdmins = await AdminUser.find({});
     
     if (existingAdmins.length > 0) {
       console.log(`✅ Found ${existingAdmins.length} existing admin users`);
@@ -95,7 +95,7 @@ export const initializeAdminUsers = async (): Promise<void> => {
     for (const adminData of adminUsers) {
       const hashedPassword = await bcrypt.hash(adminData.password, 12);
       
-      const adminUser = new AdminUserModel({
+      const adminUser = new AdminUser({
         email: adminData.email,
         password: hashedPassword,
         firstName: adminData.firstName,
@@ -171,7 +171,7 @@ export const createIndexes = async (): Promise<void> => {
     console.log('🔧 Creating database indexes...');
 
     // Admin users indexes
-    await AdminUserModel.createIndexes();
+    await AdminUser.createIndexes();
     console.log('✅ Admin users indexes created');
 
     // Note: Other model indexes will be created when models are first used
@@ -237,7 +237,7 @@ export const checkDatabaseHealth = async (): Promise<{
     await mongoose.connection.db.admin().ping();
 
     // Check admin users count
-    const adminCount = await AdminUserModel.countDocuments();
+    const adminCount = await AdminUser.countDocuments();
 
     return {
       status: 'healthy',

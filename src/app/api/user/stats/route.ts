@@ -1,46 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
-import { UserAnalysisHistory } from '@/models/UserAnalysisHistoryModel';
+import { UserAnalysisHistoryModel } from '@/models/UserAnalysisHistoryModel';
 
 export async function GET(request: NextRequest) {
   try {
     await getDatabase();
-    
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
     }
-
-    // Get user stats with timeout protection
-    const stats = await Promise.race([
-      UserAnalysisHistory.getUserStats(userId),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database timeout')), 5000)
-      )
-    ]);
-
-    return NextResponse.json({
-      success: true,
-      data: stats
-    });
+    const stats = await (UserAnalysisHistoryModel as any).getAnalysisStats(userId);
+    return NextResponse.json({ success: true, data: stats });
   } catch (error) {
-    console.error('Error fetching user stats:', error);
-    
-    // Return sample data on error
-    return NextResponse.json({
-      success: true,
-      data: {
-        totalAnalyses: 0,
-        recentActivity: [],
-        popularTools: [],
-        averageTime: 0
-      }
-    });
+    return NextResponse.json({ success: true, data: { overall: { totalAnalyses: 0, successfulAnalyses: 0, failedAnalyses: 0, averageDuration: 0, totalDuration: 0 }, byTool: [] } });
   }
 }
 

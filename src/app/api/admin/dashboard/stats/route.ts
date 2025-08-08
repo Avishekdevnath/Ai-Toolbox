@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
+import { connectToDatabase, getDatabase } from '@/lib/mongodb';
 import { AdminVerificationService } from '@/lib/adminVerificationService';
-import { User } from '@/models/UserModel';
 import { AdminUser } from '@/models/AdminUserModel';
 import { ToolUsage } from '@/models/ToolUsageModel';
 import { AdminActivity } from '@/models/AdminActivityModel';
@@ -39,8 +38,16 @@ export async function GET(request: NextRequest) {
     const dbResponseTime = dbConnectionTime;
     
     // Get collection count
-    const collections = await Promise.all([
-      User.countDocuments(),
+    const db = await getDatabase();
+    const [
+      totalUsers,
+      totalAdmins,
+      totalAnalyses,
+      totalActivities,
+      totalNotifications,
+      totalSettings
+    ] = await Promise.all([
+      db.collection('users').countDocuments(),
       AdminUser.countDocuments(),
       ToolUsage.countDocuments(),
       AdminActivity.countDocuments(),
@@ -55,23 +62,14 @@ export async function GET(request: NextRequest) {
     const activeEndpoints = 25; // Approximate number of API endpoints
 
     // Project Quality Metrics
-    const totalUsers = await User.countDocuments();
-    const totalAdmins = await AdminUser.countDocuments();
     const systemUptime = 99.9; // Simulated uptime percentage
     const lastBackup = new Date().toISOString().split('T')[0]; // Today's date
 
     // Growth Metrics
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const newUsersToday = await User.countDocuments({
-      createdAt: { $gte: today }
-    });
-
-    const totalAnalyses = await ToolUsage.countDocuments();
-    
-    const activeUsers = await User.countDocuments({
-      lastLoginAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
-    });
+    const newUsersToday = await db.collection('users').countDocuments({ createdAt: { $gte: today } });
+    const activeUsers = await db.collection('users').countDocuments({ lastLoginAt: { $gte: new Date(Date.now() - 24*60*60*1000) } });
 
     const stats = {
       // Database Health

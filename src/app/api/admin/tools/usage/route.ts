@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { AdminVerificationService } from '@/lib/adminVerificationService';
 import { ToolUsage } from '@/models/ToolUsageModel';
-import { User } from '@/models/UserModel';
 import { tools } from '@/data/tools';
 
 export async function GET(request: NextRequest) {

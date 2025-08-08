@@ -1,43 +1,23 @@
 import { getDatabase } from '@/lib/mongodb';
-import { 
-  User, 
-  CreateUserRequest, 
-  UpdateUserRequest, 
-  UserStats,
-  defaultUserPreferences,
-  defaultUserProfile,
-  defaultUserSecurity,
-  defaultUserActivity,
-  defaultUserSubscription
-} from '@/schemas/userSchema';
+import { User } from '@/schemas/userSchema';
 
 export class UserModel {
   private static collectionName = 'users';
 
-  static async create(userData: CreateUserRequest): Promise<User> {
+  static async create(userData: { email: string; name: string; password?: string; image?: string }): Promise<User> {
     const db = await getDatabase();
-    
-    const user: User = {
+    const user: any = {
       email: userData.email.toLowerCase(),
       name: userData.name,
-      password: userData.password,
       image: userData.image,
       emailVerified: false,
-      profile: defaultUserProfile,
-      preferences: defaultUserPreferences,
-      security: defaultUserSecurity,
-      activity: defaultUserActivity,
-      subscription: defaultUserSubscription,
       createdAt: new Date(),
       updatedAt: new Date(),
       isActive: true,
-      role: 'user',
-      permissions: ['basic_access'],
-      accounts: []
+      role: 'user'
     };
-
     const result = await db.collection(this.collectionName).insertOne(user);
-    return { ...user, _id: result.insertedId };
+    return { ...user, _id: result.insertedId } as User;
   }
 
   static async findById(id: string): Promise<User | null> {
@@ -66,7 +46,7 @@ export class UserModel {
     }) as Promise<User | null>;
   }
 
-  static async update(id: string, updateData: UpdateUserRequest): Promise<boolean> {
+  static async update(id: string, updateData: any): Promise<boolean> {
     const db = await getDatabase();
     const { ObjectId } = await import('mongodb');
     
@@ -162,7 +142,7 @@ export class UserModel {
     return result.deletedCount > 0;
   }
 
-  static async getStats(): Promise<UserStats> {
+  static async getStats(): Promise<any> {
     const db = await getDatabase();
     
     const [

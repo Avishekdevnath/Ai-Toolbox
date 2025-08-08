@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { ToolUsageModel } from '@/models/ToolUsageModel';
+import { ToolUsage as ToolUsageModel } from '@/models/ToolUsageModel';
 import { createHash } from 'crypto';
 
 export interface TrackUsageRequest {
