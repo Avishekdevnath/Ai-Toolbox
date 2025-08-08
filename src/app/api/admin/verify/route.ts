@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { connectToDatabase, getDatabase } from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -30,8 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Connect to database and verify admin exists
     await connectToDatabase();
-    const dbConnection = await getDatabase();
-    const db = dbConnection.db;
+    const db = mongoose.connection.db;
 
     const adminUser = await db.collection('adminusers').findOne({ 
       _id: new ObjectId(decoded.id),

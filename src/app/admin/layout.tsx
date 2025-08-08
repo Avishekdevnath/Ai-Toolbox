@@ -15,6 +15,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasRedirected, setHasRedirected] = useState(false);
   const router = useRouter();
 
   // Simple auth check
@@ -26,7 +27,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       if (!token || !adminInfo) {
         setIsAuthenticated(false);
         setIsLoading(false);
-        router.push('/admin-login');
+        if (!hasRedirected) {
+          setHasRedirected(true);
+          router.push('/admin-login');
+        }
         return;
       }
 
@@ -43,18 +47,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           localStorage.removeItem('adminToken');
           localStorage.removeItem('adminInfo');
           setIsAuthenticated(false);
-          router.push('/admin-login');
+          if (!hasRedirected) {
+            setHasRedirected(true);
+            router.push('/admin-login');
+          }
         }
       } catch (error) {
         setIsAuthenticated(false);
-        router.push('/admin-login');
+        if (!hasRedirected) {
+          setHasRedirected(true);
+          router.push('/admin-login');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, hasRedirected]);
 
   // Show loading while checking authentication
   if (isLoading) {
