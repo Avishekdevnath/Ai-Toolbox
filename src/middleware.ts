@@ -71,6 +71,11 @@ export function middleware(request: NextRequest) {
 
     // Block access to admin API routes from non-admin sources
     if (pathname.startsWith('/api/admin/')) {
+      // Allow admin login endpoint without authentication
+      if (pathname === '/api/admin/auth/login') {
+        return response;
+      }
+      
       const authHeader = request.headers.get('authorization');
       const adminToken = request.cookies.get('adminToken')?.value;
       
