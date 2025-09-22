@@ -18,8 +18,32 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '50')));
-    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'));
+    // Support page or offset
+    const pageParam = parseInt(searchParams.get('page') || '0');
+    const offset = searchParams.has('offset')
+      ? Math.max(0, parseInt(searchParams.get('offset') || '0'))
+      : (pageParam > 0 ? (pageParam - 1) * limit : 0);
     const exportFormat = searchParams.get('export') || 'json';
+    // Optional server-side filtering by field values
+    const filterField = searchParams.get('filterField') || '';
+    let filterValues: string[] = [];
+    if (searchParams.has('filterValues')) {
+      try {
+        const raw = searchParams.get('filterValues') || '[]';
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) filterValues = parsed.map(String);
+      } catch {}
+    }
+
+    // Optional selection of specific response IDs
+    let selectedIds: string[] = [];
+    if (searchParams.has('selectedIds')) {
+      try {
+        const raw = searchParams.get('selectedIds') || '[]';
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) selectedIds = parsed.map(String);
+      } catch {}
+    }
     const exportCsv = exportFormat === 'csv';
     const exportExcel = exportFormat === 'excel';
     const exportPdf = exportFormat === 'pdf';
@@ -32,9 +56,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!form) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
     if (String(form.ownerId) !== String(claims.id)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
+    const baseQuery: any = { formId: form._id };
+    if (filterField && filterValues.length > 0) {
+      baseQuery.answers = {
+        $elemMatch: {
+          fieldId: filterField,
+          value: { $in: filterValues }
+        }
+      };
+    }
+    if (selectedIds.length > 0) {
+      baseQuery._id = { $in: selectedIds.map(id => new mongoose.Types.ObjectId(id)) };
+    }
+
     const [items, total] = await Promise.all([
-      FormResponse.find({ formId: form._id }).sort({ submittedAt: -1 }).skip(offset).limit(limit).lean(),
-      FormResponse.countDocuments({ formId: form._id }),
+      FormResponse.find(baseQuery).sort({ submittedAt: -1 }).skip(offset).limit(limit).lean(),
+      FormResponse.countDocuments(baseQuery),
     ]);
 
     if (exportCsv) {

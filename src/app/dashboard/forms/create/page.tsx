@@ -43,7 +43,6 @@ const FIELD_TYPES = [
   { value: 'date', label: 'Date', icon: 'Date' },
   { value: 'dropdown', label: 'Dropdown', icon: '▼' },
   { value: 'radio', label: 'Multiple Choice', icon: '○' },
-  { value: 'single_select', label: 'Single Select', icon: '◉' },
   { value: 'checkbox', label: 'Checkboxes', icon: '☑' },
   { value: 'section', label: 'Section Break', icon: '—' },
 ];
@@ -54,7 +53,7 @@ const createDefaultField = (type = 'short_text') => ({
   label: '',
   type,
   required: false,
-  options: type === 'dropdown' || type === 'radio' || type === 'checkbox' || type === 'single_select' ? ['Option 1'] : [],
+  options: type === 'dropdown' || type === 'radio' || type === 'checkbox' ? ['Option 1'] : [],
   placeholder: '',
   helpText: '',
   quiz: {
@@ -80,8 +79,8 @@ export default function FormBuilder() {
     allowMultipleSubmissions: true,
     allowAnonymous: false,
     identitySchema: {
-      requireName: true,
-      requireEmail: true,
+      requireName: false,
+      requireEmail: false,
       requireStudentId: false,
     },
     startAt: null,
@@ -745,58 +744,7 @@ export default function FormBuilder() {
                     </div>
                   )}
                   
-                  {/* Google Forms-style Single Select */}
-                  {field.type === 'single_select' && (
-                    <div className="mt-1 space-y-2">
-                      {field.options?.map((option, i) => (
-                        <div key={i} className="flex items-center">
-                          <div className="relative flex items-center justify-center">
-                            <div className="w-5 h-5 border-2 border-gray-400 rounded-full"></div>
-                            {i === 0 && (
-                              <div className="absolute w-3 h-3 bg-gray-500 rounded-full"></div>
-                            )}
-                          </div>
-                          {activeField === field.id ? (
-                            <div className="ml-3 flex-1 flex items-center">
-                              <input
-                                type="text"
-                                value={option}
-                                onChange={(e) => updateOption(field.id, i, e.target.value)}
-                                className="flex-1 p-1.5 text-sm border border-gray-300 rounded-md"
-                              />
-                              <button 
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  removeOption(field.id, i);
-                                }}
-                                className="ml-2 p-1 text-gray-500 hover:text-red-500"
-                                type="button"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="ml-3 text-base text-gray-800">{option}</span>
-                          )}
-                        </div>
-                      ))}
-                      
-                      {activeField === field.id && (
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addOption(field.id);
-                          }}
-                          className="flex items-center text-xs text-gray-600 hover:text-gray-800 pl-8 mt-2"
-                          type="button"
-                        >
-                          <Plus size={14} className="mr-1" /> Add option
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {/* Single-select is represented by radio (Multiple Choice) */}
 
                   {field.type === 'checkbox' && (
                     <div className="mt-1 space-y-1">
@@ -978,10 +926,10 @@ export default function FormBuilder() {
             {activeField === field.id && (
               <div className="bg-gray-50 border-t border-gray-200 p-2">
                 <div className="flex flex-wrap gap-1">
-                  {(formType === 'quiz'
-                    ? FIELD_TYPES.filter(t => ['radio', 'checkbox'].includes(t.value))
-                    : FIELD_TYPES
-                  ).map((type) => (
+                      {(formType === 'quiz'
+                        ? FIELD_TYPES.filter(t => ['radio', 'checkbox'].includes(t.value))
+                        : FIELD_TYPES
+                      ).map((type) => (
                     <button
                       key={type.value}
                       onClick={(e) => {
@@ -992,7 +940,7 @@ export default function FormBuilder() {
                         const newType = type.value;
                         
                         // Define compatible field types that should preserve options
-                        const optionBasedTypes = ['dropdown', 'radio', 'checkbox', 'single_select'];
+                        const optionBasedTypes = ['dropdown', 'radio', 'checkbox'];
                         const isCurrentOptionBased = optionBasedTypes.includes(currentType);
                         const isNewOptionBased = optionBasedTypes.includes(newType);
                         

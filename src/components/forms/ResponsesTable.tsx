@@ -16,14 +16,20 @@ import {
   MoreVertical,
   Eye,
   Trash2,
-  Download
+  Download,
+  Filter
 } from 'lucide-react';
 
 interface ResponsesTableProps {
   formId: string;
   form: any;
   searchTerm: string;
+  filterFieldId?: string;
+  filterValues?: string[];
   updateTotalResponses: (total: number) => void;
+  onSelectionChange?: (ids: string[]) => void;
+  onQuickFilter?: (fieldId: string, values: string[]) => void;
+  onOpenFilterModal?: (fieldId: string) => void;
 }
 
 interface FormResponse {
@@ -42,7 +48,7 @@ interface FormResponse {
   responder?: any;
 }
 
-export default function ResponsesTable({ formId, form, searchTerm, updateTotalResponses }: ResponsesTableProps) {
+export default function ResponsesTable({ formId, form, searchTerm, filterFieldId, filterValues, updateTotalResponses, onSelectionChange, onQuickFilter, onOpenFilterModal }: ResponsesTableProps) {
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -50,10 +56,12 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
   const [sortField, setSortField] = useState('submittedAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [responsesPerPage] = useState(10);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
 
   useEffect(() => {
     fetchResponses();
-  }, [formId, page, sortField, sortDirection, searchTerm]);
+  }, [formId, page, sortField, sortDirection, searchTerm, filterFieldId, JSON.stringify(filterValues || [])]);
 
   const fetchResponses = async () => {
     setLoading(true);
@@ -65,6 +73,10 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
         sortDirection,
         ...(searchTerm && { search: searchTerm })
       });
+      if (filterFieldId && filterValues && filterValues.length > 0) {
+        params.set('filterField', filterFieldId);
+        params.set('filterValues', JSON.stringify(filterValues));
+      }
 
       const response = await fetch(`/api/forms/${formId}/responses?${params}`);
       if (!response.ok) {
@@ -77,6 +89,11 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
         setResponses(validResponses);
         setTotalResponses(data.data.total);
         updateTotalResponses(data.data.total);
+        // Drop selections not on current page
+        const currentIds = new Set(validResponses.map((r: any) => r._id));
+        const nextSel = new Set(Array.from(selectedIds).filter(id => currentIds.has(id)));
+        setSelectedIds(nextSel);
+        onSelectionChange && onSelectionChange(Array.from(nextSel));
       } else {
         throw new Error(data.error || 'Failed to fetch responses');
       }
@@ -90,8 +107,31 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
     }
   };
 
-  const handleSortChange = (field: string) => {
-    if (sortField === field) {
+  const toggleSelectAll = () => {
+    const pageIds = responses.map(r => r._id);
+    const allSelected = pageIds.every(id => selectedIds.has(id));
+    const next = new Set(selectedIds);
+    if (allSelected) {
+      pageIds.forEach(id => next.delete(id));
+    } else {
+      pageIds.forEach(id => next.add(id));
+    }
+    setSelectedIds(next);
+    onSelectionChange && onSelectionChange(Array.from(next));
+  };
+
+  const toggleSelectOne = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+    onSelectionChange && onSelectionChange(Array.from(next));
+  };
+
+  const handleSortChange = (field: string, direction?: 'asc' | 'desc') => {
+    if (direction) {
+      setSortField(field);
+      setSortDirection(direction);
+    } else if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
@@ -119,6 +159,16 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
     return sortDirection === 'asc' ? 
       <ChevronUp size={14} className="text-blue-600" /> : 
       <ChevronDown size={14} className="text-blue-600" />;
+  };
+
+  const uniqueValuesForField = (fieldId: string): string[] => {
+    const setVals = new Set<string>();
+    responses.forEach(r => {
+      const v = r?.data?.[fieldId];
+      if (Array.isArray(v)) v.forEach(x => setVals.add(String(x)));
+      else if (v !== undefined && v !== null && String(v).trim() !== '') setVals.add(String(v));
+    });
+    return Array.from(setVals).sort((a, b) => a.localeCompare(b));
   };
 
   const handleViewResponse = (response: FormResponse) => {
@@ -373,16 +423,23 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
         </div>
       </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      {/* Table (horizontal scroll only inside card) */}
+      <div className="flex-1 overflow-x-auto">
+        <table className="min-w-max divide-y divide-gray-200 text-[13px]">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
-              {/* Serial number column */}
+              {/* Select + Serial */}
               <th
                 scope="col"
-                className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-12"
+                className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-14"
               >
+                <input
+                  type="checkbox"
+                  aria-label="Select all"
+                  checked={responses.length > 0 && responses.every(r => selectedIds.has(r._id))}
+                  onChange={toggleSelectAll}
+                  className="mr-2 align-middle"
+                />
                 #
               </th>
 
@@ -447,13 +504,35 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
                 <th
                   key={field.id}
                   scope="col"
-                  className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => handleSortChange(`data.${field.id}`)}
+                  className="relative px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-100 transition-colors"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>{field.label || field.id}</span>
-                    {getSortIcon(`data.${field.id}`)}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      className="text-left flex items-center gap-1 cursor-pointer"
+                      onClick={() => handleSortChange(`data.${field.id}`)}
+                    >
+                      <div className="relative group">
+                        <span className="inline-block max-w-[100px] truncate align-bottom">{field.label || field.id}</span>
+                        <div className="pointer-events-none absolute left-0 top-full mt-1 z-50 hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded shadow-lg max-w-xs whitespace-normal">
+                          {field.label || field.id}
+                        </div>
+                      </div>
+                      {getSortIcon(`data.${field.id}`)}
+                    </button>
+                    <button
+                      className="text-gray-400 hover:text-gray-700 border border-gray-300 rounded p-0.5 leading-none"
+                      title="Filter values"
+                      onClick={(e) => { e.stopPropagation(); onOpenFilterModal && onOpenFilterModal(field.id); }}
+                    >
+                      <Filter size={12} />
+                    </button>
+                    <div className="flex items-center gap-1">
+                      <button className="text-gray-400 hover:text-gray-700" title="Sort A→Z" onClick={(e) => { e.stopPropagation(); handleSortChange(`data.${field.id}`, 'asc'); }}>A</button>
+                      <button className="text-gray-400 hover:text-gray-700" title="Sort Z→A" onClick={(e) => { e.stopPropagation(); handleSortChange(`data.${field.id}`, 'desc'); }}>Z</button>
+                    </div>
                   </div>
+
+                  {/* Column menu now triggers an external modal via onOpenFilterModal */}
                 </th>
               ))}
 
@@ -466,11 +545,18 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-100">
             {responses.map((response, idx) => (
-              <tr key={response._id} className="hover:bg-gray-50 transition-colors">
-                {/* Serial number */}
+              <tr key={response._id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} hover:bg-gray-100 transition-colors`}>
+                {/* Select + Serial */}
                 <td className="px-4 py-3 whitespace-nowrap text-xs font-medium text-gray-900">
+                  <input
+                    type="checkbox"
+                    aria-label="Select row"
+                    checked={selectedIds.has(response._id)}
+                    onChange={() => toggleSelectOne(response._id)}
+                    className="mr-2 align-middle"
+                  />
                   {startIndex + idx + 1}
                 </td>
 
@@ -481,27 +567,35 @@ export default function ResponsesTable({ formId, form, searchTerm, updateTotalRe
 
                 {/* Identity columns - only show if data exists */}
                 {hasIdentityName && (
-                  <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
-                    {response.identity?.name || 'Not provided'}
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    <span className="truncate max-w-[140px] block" title={response.identity?.name || 'Not provided'}>
+                      {response.identity?.name || 'Not provided'}
+                    </span>
                   </td>
                 )}
 
                 {hasIdentityEmail && (
-                  <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
-                    <span className="truncate max-w-32">{response.identity?.email || 'Not provided'}</span>
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    <span className="truncate max-w-32 block" title={response.identity?.email || 'Not provided'}>{response.identity?.email || 'Not provided'}</span>
                   </td>
                 )}
 
                 {hasIdentityStudentId && (
-                  <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
-                    {response.identity?.studentId || 'Not provided'}
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    <span className="truncate max-w-[120px] block" title={response.identity?.studentId || 'Not provided'}>
+                      {response.identity?.studentId || 'Not provided'}
+                    </span>
                   </td>
                 )}
 
                 {/* Form fields */}
                 {form?.fields?.filter((f: any) => f.type !== 'section').map((field: any) => (
-                  <td key={field.id} className="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
-                    <div className="max-w-xs truncate">
+                  <td key={field.id} className="px-4 py-3 text-xs text-gray-900">
+                    <div className="max-w-[140px] truncate" title={
+                      typeof response.data?.[field.id] === 'object' 
+                        ? JSON.stringify(response.data?.[field.id]) 
+                        : String(response.data?.[field.id] || '')
+                    }>
                       {renderFieldValue(field, response.data?.[field.id])}
                     </div>
                   </td>

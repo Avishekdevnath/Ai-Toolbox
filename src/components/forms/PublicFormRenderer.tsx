@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,6 +140,17 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
     console.warn('User exited fullscreen mode');
   };
 
+  // Lightweight public branding for all public forms
+  const Branding = () => (
+    <div className="mt-6 text-center">
+      <Link href="/" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 text-xs text-gray-600 bg-white hover:bg-gray-50 transition-colors">
+        <span className="font-semibold">AI Toolbox</span>
+        <span className="text-gray-400">•</span>
+        <span>by Avishek</span>
+      </Link>
+    </div>
+  );
+
   const submit = useCallback(async (e: React.FormEvent) => {
     console.log('📝 Submit function called', { isQuiz, quizExpired, submitting });
     e.preventDefault();
@@ -263,7 +275,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
   // Show quiz start button for quizzes (always require explicit start)
   if (isQuiz && !quizStarted) {
     return (
-      <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-2">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-2">
         <div className="w-full max-w-md">
           {/* Header Section */}
           <div className="text-center mb-4">
@@ -372,7 +384,8 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
               </div>
             </CardContent>
           </Card>
-        </div>
+        <Branding />
+      </div>
       </div>
     );
   }
@@ -388,37 +401,43 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
 
     if (showCorrectAnswers) {
       return (
-        <CorrectAnswersView
-          formData={schema}
-          answers={submittedAnswers}
-          onBack={() => setShowCorrectAnswers(false)}
-        />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
+          <CorrectAnswersView
+            formData={schema}
+            answers={submittedAnswers}
+            onBack={() => setShowCorrectAnswers(false)}
+          />
+          <Branding />
+        </div>
       );
     }
 
     return (
-      <QuizResults
-        score={score}
-        maxScore={max}
-        responder={responder}
-        durationMs={durationMs}
-        startTime={quizStartTime}
-        endTime={quizEndTime}
-        answers={submittedAnswers}
-        formData={schema}
-        onViewAnswers={() => setShowCorrectAnswers(true)}
-        onClose={() => {
-          // Navigate to AI toolbox home page
-          router.push('/');
-        }}
-      />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
+        <QuizResults
+          score={score}
+          maxScore={max}
+          responder={responder}
+          durationMs={durationMs}
+          startTime={quizStartTime}
+          endTime={quizEndTime}
+          answers={submittedAnswers}
+          formData={schema}
+          onViewAnswers={() => setShowCorrectAnswers(true)}
+          onClose={() => {
+            // Navigate to AI toolbox home page
+            router.push('/');
+          }}
+        />
+        <Branding />
+      </div>
     );
   }
 
   if (result && !isQuiz && submittedSnapshot) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="w-full max-w-xl shadow-lg">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
+        <Card className="w-full max-w-3xl md:max-w-4xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">Thank you!</CardTitle>
           </CardHeader>
@@ -441,14 +460,15 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
             <div className="text-center text-sm text-gray-500">You may now close this tab.</div>
           </CardContent>
         </Card>
+        <Branding />
       </div>
     );
   }
 
   if (result) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="w-full max-w-md shadow-lg">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
+        <Card className="w-full max-w-lg md:max-w-xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">Thank you!</CardTitle>
           </CardHeader>
@@ -457,14 +477,15 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
             <div className="text-center text-sm text-gray-500">You may now close this tab.</div>
           </CardContent>
         </Card>
+        <Branding />
       </div>
     );
   }
 
   if (!isQuiz) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 p-4">
-        <Card className="w-full max-w-xl shadow-xl">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
+        <Card className="w-full max-w-3xl md:max-w-4xl shadow-xl">
           <CardHeader>
             <CardTitle className="text-3xl font-semibold">{schema.title}</CardTitle>
             {schema.description && <p className="text-gray-600 mt-1">{schema.description}</p>}
@@ -581,12 +602,13 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
             </form>
           </CardContent>
         </Card>
+        <Branding />
       </div>
     );
   }
 
   return (
-    <div className={`max-w-4xl mx-auto p-4 space-y-6 relative ${themeClasses.container}`}>
+    <div className={`max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4 space-y-6 relative ${themeClasses.container}`}>
       {/* Watermark */}
       {isQuiz && quizStarted && (
         <div className="pointer-events-none select-none fixed inset-0 z-30 overflow-hidden" style={{opacity:0.07}}>
@@ -802,6 +824,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
           </form>
         </CardContent>
       </Card>
+      <Branding />
     </div>
   );
 }

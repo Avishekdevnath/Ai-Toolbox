@@ -48,11 +48,19 @@ export default function FormResponsesPage() {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [form, setForm] = useState<FormData | null>(null);
+  const [zoom, setZoom] = useState<number>(100);
   const [totalResponses, setTotalResponses] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filterFieldId, setFilterFieldId] = useState<string>('');
+  const [filterValues, setFilterValues] = useState<string[]>([]);
+  const [availableValues, setAvailableValues] = useState<string[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const [modalFieldId, setModalFieldId] = useState<string | null>(null);
+  const [valueSearch, setValueSearch] = useState('');
 
   useEffect(() => {
     fetchFormDetails();
@@ -101,7 +109,15 @@ export default function FormResponsesPage() {
     setShowExportDropdown(false);
     
     try {
-      const response = await fetch(`/api/forms/${formId}/responses?export=${format}`);
+      const params = new URLSearchParams({ export: format });
+      if (filterFieldId && filterValues.length > 0) {
+        params.set('filterField', filterFieldId);
+        params.set('filterValues', JSON.stringify(filterValues));
+      }
+      if (selectedRowIds.length > 0) {
+        params.set('selectedIds', JSON.stringify(selectedRowIds));
+      }
+      const response = await fetch(`/api/forms/${formId}/responses?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error(`Export failed: ${response.statusText}`);
@@ -277,6 +293,29 @@ export default function FormResponsesPage() {
     );
   }
 
+  // Build available option values when field changes using a lightweight fetch to first page
+  useEffect(() => {
+    const loadValues = async () => {
+      setAvailableValues([]);
+      if (!filterFieldId) return;
+      try {
+        const res = await fetch(`/api/forms/${formId}/responses?page=1&limit=100&sortField=submittedAt&sortDirection=desc`);
+        const data = await res.json();
+        if (data?.success) {
+          const items = data.data.items || [];
+          const setVals = new Set<string>();
+          items.forEach((it: any) => {
+            const v = it?.data?.[filterFieldId];
+            if (Array.isArray(v)) v.forEach((x: any) => setVals.add(String(x)));
+            else if (v !== undefined && v !== null) setVals.add(String(v));
+          });
+          setAvailableValues(Array.from(setVals));
+        }
+      } catch {}
+    };
+    loadValues();
+  }, [filterFieldId, formId]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
@@ -394,38 +433,127 @@ export default function FormResponsesPage() {
       {/* Main Content */}
       <div className="p-3">
         {/* Search and Filters */}
-        <div className="mb-4">
-          <div className="flex items-center space-x-4">
+        <div className="mb-3">
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-3 gap-2">
+            {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Search responses..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search responses..."
+                  className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-800 text-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 text-sm">
-                <Filter size={14} />
-                <span className="font-medium">Filters</span>
+
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="text-xs text-gray-500">Zoom</span>
+              <button
+                className="px-2 py-1 border border-gray-300 rounded-md text-xs"
+                onClick={() => setZoom(z => Math.max(50, z - 10))}
+                title="Zoom out"
+              >
+                -
+              </button>
+              <span className="w-10 text-center text-xs text-gray-700">{zoom}%</span>
+              <button
+                className="px-2 py-1 border border-gray-300 rounded-md text-xs"
+                onClick={() => setZoom(z => Math.min(150, z + 10))}
+                title="Zoom in"
+              >
+                +
+              </button>
+              <button
+                className="px-2 py-1 border border-gray-300 rounded-md text-xs"
+                onClick={() => setZoom(100)}
+                title="Reset zoom"
+              >
+                100%
               </button>
             </div>
           </div>
         </div>
 
+        {/* Filters Modal */}
+        {(showFiltersModal || modalFieldId) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => { setShowFiltersModal(false); setModalFieldId(null); }}></div>
+            <div className="relative bg-white w-full max-w-lg rounded-xl shadow-xl border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-semibold">Select values</div>
+                <button className="text-gray-500 text-sm" onClick={() => { setShowFiltersModal(false); setModalFieldId(null); }}>Close</button>
+              </div>
+              <div className="mb-2">
+                <input
+                  value={valueSearch}
+                  onChange={(e) => setValueSearch(e.target.value)}
+                  placeholder="Search values"
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div className="max-h-64 overflow-auto border border-gray-100 rounded-md">
+                {availableValues
+                  .filter(v => v.toLowerCase().includes(valueSearch.toLowerCase()))
+                  .map(v => {
+                    const active = filterValues.includes(v);
+                    return (
+                      <label key={v} className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer ${active ? 'bg-gray-50' : ''}`}>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setFilterValues(prev => checked ? Array.from(new Set([...(prev||[]), v])) : prev.filter(x => x !== v));
+                            }}
+                          />
+                          <span className="truncate max-w-[340px]">{v}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                {availableValues.length === 0 && (
+                  <div className="p-3 text-xs text-gray-500">No values available for this field yet</div>
+                )}
+              </div>
+              <div className="mt-3 flex items-center justify-between">
+                <div className="text-xs text-gray-500">{filterValues.length} selected</div>
+                <div className="flex items-center gap-2">
+                  <button className="text-xs px-3 py-1.5 border border-gray-300 rounded-md" onClick={() => setFilterValues([])}>Clear</button>
+                  <button className="text-xs px-3 py-1.5 bg-black text-white rounded-md" onClick={() => { setShowFiltersModal(false); setModalFieldId(null); }}>Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Responses Table */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <ResponsesTable 
-            formId={formId} 
-            form={form}
-            searchTerm={searchTerm}
-            updateTotalResponses={updateTotalResponses}
-          />
+          <div
+            className="w-full"
+            style={{ 
+              transform: `scale(${zoom/100})`, 
+              transformOrigin: 'top left',
+              width: zoom < 100 ? `${100/zoom * 100}%` : '100%',
+              minWidth: '100%'
+            }}
+          >
+            <ResponsesTable 
+              formId={formId} 
+              form={form}
+              searchTerm={searchTerm}
+              filterFieldId={filterFieldId}
+              filterValues={filterValues}
+              updateTotalResponses={updateTotalResponses}
+              onSelectionChange={setSelectedRowIds}
+              onQuickFilter={(fid, vals) => { setFilterFieldId(fid); setFilterValues(vals || []); setShowFiltersModal(false); setModalFieldId(null); }}
+              onOpenFilterModal={(fid) => { setFilterFieldId(fid); setModalFieldId(fid); setShowFiltersModal(true); setValueSearch(''); }}
+            />
+          </div>
         </div>
       </div>
     </div>

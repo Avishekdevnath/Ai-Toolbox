@@ -16,6 +16,11 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
   const [submitted, setSubmitted] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   
+  // Normalize legacy field types (e.g., map 'single_select' to 'radio')
+  const normalizedFields = (formSchema.fields || []).map((f: any) => (
+    f?.type === 'single_select' ? { ...f, type: 'radio' } : f
+  ));
+  
   // For quiz forms with authentication step
   const [showQuizQuestions, setShowQuizQuestions] = useState(formSchema.type !== 'quiz');
   const [authData, setAuthData] = useState({
@@ -362,8 +367,8 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
           )}
         </div>
         
-        {/* Identity fields if required and not a quiz */}
-        {formSchema.settings?.identitySchema && formSchema.type !== 'quiz' && (
+        {/* Identity fields are only handled in the quiz auth step; never show for non-quiz */}
+        {false && (
           <div className="bg-white rounded-lg shadow-sm mb-6 p-8">
             <h2 className="text-lg font-semibold mb-4">Your Information</h2>
             
@@ -425,7 +430,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
         
         <form onSubmit={handleSubmit}>
           {/* Form fields */}
-          {formSchema.fields.map((field) => (
+          {normalizedFields.map((field) => (
             <div 
               key={field.id} 
               className={`bg-white rounded-lg shadow-sm mb-6 p-8 ${field.type === 'section' ? 'border-t-4 border-black' : ''}`}
@@ -572,35 +577,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                 </div>
               )}
               
-              {/* Single Select - Google Forms style */}
-              {field.type === 'single_select' && (
-                <div className="space-y-3">
-                  {field.options?.map((option, i) => (
-                    <div key={i} className="flex items-center">
-                      <div 
-                        onClick={() => handleChange(field.id, option)}
-                        className="relative flex items-center justify-center cursor-pointer"
-                      >
-                        <div className={`w-5 h-5 border-2 rounded-full transition-colors ${
-                          formData[field.id] === option ? 'border-gray-600' : 'border-gray-300'
-                        }`}></div>
-                        {formData[field.id] === option && (
-                          <div className="absolute w-3 h-3 bg-gray-600 rounded-full"></div>
-                        )}
-                      </div>
-                      <label 
-                        onClick={() => handleChange(field.id, option)}
-                        className="ml-3 text-base text-gray-800 cursor-pointer"
-                      >
-                        {option}
-                      </label>
-                    </div>
-                  ))}
-                  {validationErrors[field.id] && (
-                    <p className="mt-1 text-sm text-red-500 error-message">{validationErrors[field.id]}</p>
-                  )}
-                </div>
-              )}
+              {/* 'single_select' is normalized to radio above */}
               
               {/* Checkboxes */}
               {field.type === 'checkbox' && (
