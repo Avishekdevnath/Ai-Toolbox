@@ -159,8 +159,12 @@ export default function SwotAnalysisTool() {
       if (data.success) {
         setSwotAnalysis(data.result);
         setStep(3);
-        // Increment usage count
-        fetch('/api/tools/swot-analysis/track-usage', { method: 'POST' });
+        // Track tool usage for analytics
+        fetch('/api/tools/swot-analysis/track-usage', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usageType: 'generate' })
+        });
       } else {
         throw new Error(data.error || 'Failed to generate analysis');
       }

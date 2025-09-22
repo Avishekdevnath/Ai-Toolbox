@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { UserAnalysisHistory } from '@/models/UserAnalysisHistoryModel';
+import { ToolUsage } from '@/models/ToolUsageModel';
+import { UserSession } from '@/models/UserSessionModel';
 import { verifyAccessToken } from '@/lib/auth/jwt';
 
 export async function GET(request: NextRequest) {
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch stats and recent activity concurrently with timeout protection
-    const [stats, activity] = await Promise.all([
+    const [stats, analysisActivity, distinctTools, toolActivity, sessionCounts] = await Promise.all([
       Promise.race([
         (UserAnalysisHistory as any).getUserStats(userId),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
@@ -35,12 +37,29 @@ export async function GET(request: NextRequest) {
       Promise.race([
         (UserAnalysisHistory as any).getRecentActivity(userId, 5),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
+      ]),
+      Promise.race([
+        ToolUsage.distinct('toolSlug', { userId }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
+      ]),
+      Promise.race([
+        (ToolUsage as any).find({ userId }).sort({ createdAt: -1 }).limit(5).lean(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
+      ]),
+      Promise.race([
+        (async () => {
+          const [logins, sessions] = await Promise.all([
+            UserSession.countDocuments({ userId, sessionType: 'login' }),
+            UserSession.countDocuments({ userId })
+          ]);
+          return { logins, sessions };
+        })(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
       ])
     ]);
 
-
-    const recentActivity = Array.isArray(activity)
-      ? activity.map((a: any) => ({
+    const recentFromAnalyses = Array.isArray(analysisActivity)
+      ? analysisActivity.map((a: any) => ({
           id: String(a._id || ''),
           action: a.result?.message || `Used ${a.toolName || a.toolSlug || 'tool'}`,
           tool: a.toolName || a.toolSlug,
@@ -48,14 +67,33 @@ export async function GET(request: NextRequest) {
         }))
       : [];
 
+    const recentFromToolUsage = Array.isArray(toolActivity)
+      ? toolActivity.map((t: any) => ({
+          id: String(t._id || ''),
+          action: `Activity: ${t.usageType || 'view'}`,
+          tool: t.toolName || t.toolSlug,
+          timestamp: (t.createdAt instanceof Date ? t.createdAt : new Date(t.createdAt)).toISOString(),
+        }))
+      : [];
+
+    // Merge and sort recent activity, dedupe by id
+    const mergedActivity = [...recentFromAnalyses, ...recentFromToolUsage]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const seen = new Set<string>();
+    const recentActivity = mergedActivity.filter(item => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    }).slice(0, 5);
+
     return NextResponse.json({
       success: true,
       data: {
         userStats: {
           totalAnalyses: (stats as any)?.totalAnalyses ?? 0,
-          totalToolsUsed: (stats as any)?.uniqueTools ?? 0,
-          sessionCount: 0,
-          loginCount: 0,
+          totalToolsUsed: Array.isArray(distinctTools) ? distinctTools.length : ((stats as any)?.uniqueTools ?? 0),
+          sessionCount: (sessionCounts as any)?.sessions ?? 0,
+          loginCount: (sessionCounts as any)?.logins ?? 0,
           providers: [],
           lastActivityAt: (stats as any)?.lastActivityAt ?? null,
           toolsUsed: [],

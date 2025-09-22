@@ -18,6 +18,7 @@ interface SnippetEditorHeaderProps {
   onShare: () => void;
   onSave: () => void;
   onCreateNew: () => void;
+  ownerName?: string;
 }
 
 export default function SnippetEditorHeader({
@@ -33,7 +34,8 @@ export default function SnippetEditorHeader({
   onCopy,
   onShare,
   onSave,
-  onCreateNew
+  onCreateNew,
+  ownerName
 }: SnippetEditorHeaderProps) {
   return (
     <div className="border-b border-gray-800 bg-gray-900 px-4 py-2">
@@ -61,6 +63,9 @@ export default function SnippetEditorHeader({
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span>Live</span>
             </div>
+          )}
+          {ownerName && (
+            <span className="text-xs text-blue-400 ml-2">Owner: {ownerName}</span>
           )}
           {shareUrl && (
             <div className="hidden sm:flex items-center gap-2">

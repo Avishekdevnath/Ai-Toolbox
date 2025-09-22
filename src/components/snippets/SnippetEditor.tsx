@@ -27,6 +27,7 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
   const router = useRouter();
   const { user } = useSelector((state: RootState) => state.auth);
   const userId = user?.id;
+  const isOwner = !!(userId && (initialData as any)?.ownerId && (initialData as any).ownerId === userId);
   const [title, setTitle] = useState(initialData?.title || '');
   const [language, setLanguage] = useState(initialData?.language || 'javascript');
   const [content, setContent] = useState(initialData?.content || '');
@@ -122,7 +123,13 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
     
     // Check if user is logged in
     if (!userId) {
-      console.error('User not logged in, cannot save snippet');
+      if (!isAutoSave) {
+        // Show login prompt for manual saves
+        const shouldLogin = confirm('You need to be logged in to save snippets. Would you like to sign in?');
+        if (shouldLogin) {
+          window.location.href = '/sign-in';
+        }
+      }
       return;
     }
     
@@ -255,6 +262,7 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
           onShare={handleShare}
           onSave={() => handleSave()}
           onCreateNew={handleCreateNew}
+          ownerName={isOwner ? (user?.username || user?.email || 'Owner') : undefined}
         />
       </div>
 

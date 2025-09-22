@@ -19,11 +19,10 @@ export class AnalyticsService {
         userId: eventData.userId || 'anonymous',
         toolSlug: eventData.toolSlug,
         toolName: eventData.toolName,
-        eventType: eventData.eventType,
-        source: eventData.source || 'unknown',
-        category: eventData.category || 'general',
+        usageType: eventData.eventType as 'view' | 'generate' | 'download' | 'share',
         metadata: eventData.metadata || {},
-        timestamp: new Date()
+        userAgent: eventData.source || 'unknown',
+        ipAddress: eventData.category || 'unknown'
       });
 
       await toolUsage.save();
@@ -47,8 +46,8 @@ export class AnalyticsService {
             _id: '$toolSlug',
             totalUsage: { $sum: 1 },
             uniqueUsers: { $addToSet: '$userId' },
-            eventTypes: { $addToSet: '$eventType' },
-            lastUsed: { $max: '$timestamp' }
+            usageTypes: { $addToSet: '$usageType' },
+            lastUsed: { $max: '$createdAt' }
           }
         },
         {
@@ -56,7 +55,7 @@ export class AnalyticsService {
             toolSlug: '$_id',
             totalUsage: 1,
             uniqueUsers: { $size: '$uniqueUsers' },
-            eventTypes: 1,
+            usageTypes: 1,
             lastUsed: 1
           }
         },
@@ -113,7 +112,7 @@ export class AnalyticsService {
         {
           $match: {
             userId,
-            timestamp: { $gte: startDate }
+            createdAt: { $gte: startDate }
           }
         },
         {
@@ -121,7 +120,7 @@ export class AnalyticsService {
             _id: {
               toolSlug: '$toolSlug',
               toolName: '$toolName',
-              date: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }
+              date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
             },
             usage: { $sum: 1 }
           }
@@ -156,7 +155,7 @@ export class AnalyticsService {
       const totalUsage = await ToolUsage.countDocuments();
       const uniqueUsers = (await ToolUsage.distinct('userId')).length;
       const popularTools = await this.getPopularTools(5);
-      const recentActivity = await ToolUsage.find({}, null, { sort: { createdAt: -1 }, limit: 10 });
+      const recentActivity = await (ToolUsage as any).find({}).sort({ createdAt: -1 }).limit(10);
 
       return {
         totalUsage,

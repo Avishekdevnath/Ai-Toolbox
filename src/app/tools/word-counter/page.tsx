@@ -3,8 +3,10 @@
 import WordCounterTool from '@/components/tools/WordCounterTool';
 import Navbar from "@/components/Navbar";
 import NewFooter from "@/components/NewFooter";
+import useToolTracking from '@/hooks/useToolTracking';
 
 export default function WordCounterPage() {
+  useToolTracking('word-counter', 'Word Counter', 'view');
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
