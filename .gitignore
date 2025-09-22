@@ -79,3 +79,4 @@ $RECYCLE.BIN/
 *.backup
 *.old
 .env.local
+.env*
