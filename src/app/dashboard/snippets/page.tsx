@@ -22,12 +22,26 @@ export default function SnippetsDashboardPage() {
 
   useEffect(() => {
     const fetchList = async () => {
-      const res = await fetch(`/api/snippets?ownerId=${userId}`);
-      if (res.ok) {
-        const { data } = await res.json();
-        setItems(data);
+      try {
+        const res = await fetch(`/api/snippets?owner=me`, {
+          headers: {
+            'x-user-id': userId || '',
+          },
+        });
+        if (res.ok) {
+          const { data } = await res.json();
+          // Ensure data is an array
+          setItems(Array.isArray(data?.items) ? data.items : []);
+        } else {
+          console.error('Failed to fetch snippets:', res.statusText);
+          setItems([]);
+        }
+      } catch (error) {
+        console.error('Error fetching snippets:', error);
+        setItems([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     if (userId) fetchList();
   }, [userId]);
@@ -43,7 +57,9 @@ export default function SnippetsDashboardPage() {
     <div className="px-4 py-8 max-w-5xl mx-auto space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">My Snippets</h1>
-        <Link href="/s/new"><Button>Create Snippet</Button></Link>
+        <Link href="/s/new" target="_blank" rel="noopener noreferrer">
+          <Button>Create Snippet</Button>
+        </Link>
       </div>
       {loading ? (
         <div>Loading...</div>

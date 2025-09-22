@@ -8,6 +8,8 @@ import CodeBlock from './CodeBlock';
 import SnippetEditorHeader from './SnippetEditorHeader';
 import { useRouter } from 'next/navigation';
 import { useRealtimeCollaboration } from '@/hooks/useRealtimeCollaboration';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
 import dynamic from 'next/dynamic';
 
 export interface SnippetEditorProps {
@@ -23,6 +25,8 @@ export interface SnippetEditorProps {
 
 function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorProps) {
   const router = useRouter();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const userId = user?.id;
   const [title, setTitle] = useState(initialData?.title || '');
   const [language, setLanguage] = useState(initialData?.language || 'javascript');
   const [content, setContent] = useState(initialData?.content || '');
@@ -116,6 +120,12 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
   const handleSave = async (isAutoSave = false) => {
     if (isSaving || !initialData?.slug) return;
     
+    // Check if user is logged in
+    if (!userId) {
+      console.error('User not logged in, cannot save snippet');
+      return;
+    }
+    
     setIsSaving(true);
     try {
       const payload = {
@@ -126,10 +136,14 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
       };
 
       console.log('Saving snippet:', payload); // Debug log
+      console.log('User ID:', userId); // Debug log
 
       const response = await fetch(`/api/snippets/${initialData.slug}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': userId
+        },
         body: JSON.stringify(payload)
       });
 

@@ -17,7 +17,11 @@ interface SnippetTableProps {
 }
 
 export default function SnippetTable({ items, onDelete }: SnippetTableProps) {
-  if (items.length === 0) return <div>No snippets yet.</div>;
+  // Safety check to ensure items is an array
+  if (!Array.isArray(items) || items.length === 0) {
+    return <div>No snippets yet.</div>;
+  }
+  
   return (
     <table className="w-full text-sm border-collapse">
       <thead>
@@ -41,7 +45,9 @@ export default function SnippetTable({ items, onDelete }: SnippetTableProps) {
             <td className="py-2">{new Date(s.updatedAt).toLocaleString()}</td>
             <td className="py-2">{s.isPublic ? 'Public' : 'Private'}</td>
             <td className="py-2 flex gap-2">
-              <Link href={`/dashboard/snippets/${s.slug}/edit`}><Button size="sm">Edit</Button></Link>
+              <Link href={`/s/${s.slug}/edit`} target="_blank" rel="noopener noreferrer">
+                <Button size="sm">Edit</Button>
+              </Link>
               <Button variant="destructive" size="sm" onClick={() => onDelete(s.slug)}>Delete</Button>
             </td>
           </tr>

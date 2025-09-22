@@ -1,9 +1,9 @@
 "use client";
 import { Button } from '@/components/ui/button';
-import { Copy, Pencil, Flag, Download, Image } from 'lucide-react';
+import { Copy, Pencil, Flag, Image } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { downloadCodeAsImage, downloadCodeAsSVG } from '@/utils/codeImageUtils';
+import { downloadCodeAsImage } from '@/utils/codeImageUtils';
 
 export interface SnippetActionsProps {
   slug: string;
@@ -36,18 +36,6 @@ export default function SnippetActions({ slug, code }: SnippetActionsProps) {
     }
   };
 
-  const handleDownloadSVG = () => {
-    try {
-      const success = downloadCodeAsSVG('code-display', `snippet-${slug}`);
-      if (!success) {
-        alert('Failed to download SVG. Please try again.');
-      }
-    } catch (error) {
-      console.error('SVG download error:', error);
-      alert('Failed to download SVG. Please try again.');
-    }
-  };
-
   return (
     <div className="flex gap-2">
       <div title={copied ? 'Copied!' : 'Copy code'}>
@@ -68,16 +56,6 @@ export default function SnippetActions({ slug, code }: SnippetActionsProps) {
         >
           <Image className="w-3 h-3" />
           {downloading ? '...' : 'PNG'}
-        </Button>
-      </div>
-      
-      <div title="Download as SVG">
-        <Button 
-          onClick={handleDownloadSVG} 
-          className="bg-gray-700 hover:bg-gray-600 text-white border-0 px-3 py-1.5 rounded-md font-normal text-xs transition-colors duration-200 flex items-center gap-1.5"
-        >
-          <Download className="w-3 h-3" />
-          SVG
         </Button>
       </div>
       

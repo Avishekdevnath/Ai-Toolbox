@@ -33,8 +33,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { slug: 
   const userId = request.headers.get('x-user-id');
 
   // Ownership / permission logic
+  console.log('API Debug - User ID:', userId);
+  console.log('API Debug - Snippet Owner ID:', snippet.ownerId);
+  console.log('API Debug - Owner ID String:', String(snippet.ownerId));
+  
   if (snippet.ownerId) {
     if (!userId || String(snippet.ownerId) !== userId) {
+      console.log('API Debug - Forbidden: User ID mismatch');
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
   } else {
