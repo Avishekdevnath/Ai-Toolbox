@@ -397,7 +397,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
       </div>
 
       {/* Table (horizontal scroll only inside card) */}
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto relative">
         <table className="min-w-max divide-y divide-gray-200 text-[13px]">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
@@ -486,7 +486,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                     >
                       <div className="relative group">
                         <span className="inline-block max-w-[100px] truncate align-bottom">{field.label || field.id}</span>
-                        <div className="pointer-events-none absolute left-0 top-full mt-1 z-50 hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded shadow-lg max-w-xs whitespace-normal">
+                        <div className="pointer-events-none absolute left-0 top-full mt-1 z-20 hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded shadow-lg max-w-xs whitespace-normal">
                           {field.label || field.id}
                         </div>
                       </div>

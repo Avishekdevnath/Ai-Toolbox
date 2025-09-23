@@ -48,7 +48,7 @@ export default function DeleteConfirmationModal({
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full">
+      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full flex flex-col max-h-[80vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
@@ -67,7 +67,7 @@ export default function DeleteConfirmationModal({
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-3">
             <div className="flex items-start space-x-2">
               <div className="flex-shrink-0">
