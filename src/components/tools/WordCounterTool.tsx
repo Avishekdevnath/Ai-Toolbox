@@ -106,6 +106,19 @@ export default function WordCounterTool() {
 
   useEffect(() => {
     analyzeText(text);
+    
+    // Track text analysis when text is provided
+    if (text.trim()) {
+      try {
+        fetch('/api/tools/word-counter/track-usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usageType: 'generate' })
+        });
+      } catch (error) {
+        console.error('Failed to track usage:', error);
+      }
+    }
   }, [text]);
 
   const clearText = () => {

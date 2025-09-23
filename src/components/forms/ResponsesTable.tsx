@@ -30,6 +30,8 @@ interface ResponsesTableProps {
   onSelectionChange?: (ids: string[]) => void;
   onQuickFilter?: (fieldId: string, values: string[]) => void;
   onOpenFilterModal?: (fieldId: string) => void;
+  onViewResponse?: (response: FormResponse) => void;
+  onDeleteResponse?: (response: FormResponse) => void;
 }
 
 interface FormResponse {
@@ -48,7 +50,7 @@ interface FormResponse {
   responder?: any;
 }
 
-export default function ResponsesTable({ formId, form, searchTerm, filterFieldId, filterValues, updateTotalResponses, onSelectionChange, onQuickFilter, onOpenFilterModal }: ResponsesTableProps) {
+export default function ResponsesTable({ formId, form, searchTerm, filterFieldId, filterValues, updateTotalResponses, onSelectionChange, onQuickFilter, onOpenFilterModal, onViewResponse, onDeleteResponse }: ResponsesTableProps) {
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -172,18 +174,9 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
   };
 
   const handleViewResponse = (response: FormResponse) => {
-    // Create a modal or detailed view for the response
-    const responseData = {
-      id: response._id,
-      submittedAt: response.submittedAt || response.createdAt,
-      identity: response.identity,
-      data: response.data,
-      formFields: form?.fields || []
-    };
-    
-    // For now, show in an alert - you can replace this with a modal
-    const responseText = JSON.stringify(responseData, null, 2);
-    alert(`Response Details:\n\n${responseText}`);
+    if (onViewResponse) {
+      onViewResponse(response);
+    }
   };
 
   const handleDownloadResponse = (response: FormResponse) => {
@@ -344,29 +337,9 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
     });
   };
 
-  const handleDeleteResponse = async (response: FormResponse) => {
-    if (!confirm('Are you sure you want to delete this response? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response_api = await fetch(`/api/forms/${formId}/responses/${response._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response_api.ok) {
-        throw new Error('Failed to delete response');
-      }
-
-      // Refresh the responses list
-      await fetchResponses();
-      alert('Response deleted successfully');
-    } catch (error) {
-      console.error('Error deleting response:', error);
-      alert('Failed to delete response. Please try again.');
+  const handleDeleteResponse = (response: FormResponse) => {
+    if (onDeleteResponse) {
+      onDeleteResponse(response);
     }
   };
 

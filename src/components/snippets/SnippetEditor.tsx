@@ -163,6 +163,14 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
       const result = await response.json();
       console.log('Save successful:', result); // Debug log
       setLastSaved(new Date());
+      // Track generate/save usage
+      try {
+        await fetch('/api/tools/code-share/track-usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usageType: 'generate', userId })
+        });
+      } catch {}
     } catch (error) {
       console.error('Error saving snippet:', error);
       // You might want to show a toast notification here
@@ -187,6 +195,14 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      // Track share usage
+      try {
+        await fetch('/api/tools/code-share/track-usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usageType: 'share', userId })
+        });
+      } catch {}
     }
   };
 

@@ -191,7 +191,7 @@ export const downloadCodeAsImage = async (elementId: string, filename: string = 
     console.log('Code lines:', lines.length);
     console.log('Title:', title);
     console.log('Language:', language);
-    
+
     // Create download link
     const link = document.createElement('a');
     link.download = `${filename}.png`;

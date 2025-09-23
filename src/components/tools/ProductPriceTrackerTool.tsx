@@ -50,6 +50,17 @@ export default function ProductPriceTrackerTool() {
         if (!trackedProducts.find(p => p.title === data.title)) {
           setTrackedProducts(prev => [data, ...prev.slice(0, 4)]); // Keep last 5
         }
+        
+        // Track successful price analysis
+        try {
+          fetch('/api/tools/price-tracker/track-usage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usageType: 'generate' })
+          });
+        } catch (error) {
+          console.error('Failed to track usage:', error);
+        }
       }
     } catch (e) {
       setError('Failed to fetch product information. Please try again.');

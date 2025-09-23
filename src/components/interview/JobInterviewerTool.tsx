@@ -191,6 +191,17 @@ export default function JobInterviewerTool() {
         isTimerRunning: true,
         loading: false
       }));
+
+      // Track successful job-specific interview session start
+      try {
+        await fetch('/api/tools/job-interviewer/track-usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usageType: 'generate' })
+        });
+      } catch (error) {
+        console.error('Failed to track usage:', error);
+      }
     } catch (error) {
       setState(prev => ({
         ...prev,

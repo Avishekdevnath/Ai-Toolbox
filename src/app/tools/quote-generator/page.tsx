@@ -3,8 +3,10 @@
 import QuoteGeneratorTool from '@/components/tools/QuoteGeneratorTool';
 import Navbar from "@/components/Navbar";
 import NewFooter from "@/components/NewFooter";
+import useToolTracking from '@/hooks/useToolTracking';
 
 export default function QuoteGeneratorPage() {
+  useToolTracking('quote-generator', 'Quote Generator', 'view');
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Navbar />

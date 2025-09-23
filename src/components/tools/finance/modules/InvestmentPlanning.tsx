@@ -370,6 +370,16 @@ export default function InvestmentPlanning({ onBack }: BaseModuleProps) {
 
       if (data.success && data.analysis) {
         setAnalysis(data.analysis);
+        // Track successful investment analysis generation
+        try {
+          await fetch('/api/tools/finance-advisor/track-usage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usageType: 'generate' })
+          });
+        } catch (error) {
+          console.error('Failed to track usage:', error);
+        }
       }
     } catch (error) {
       console.error('Error submitting form:', error);

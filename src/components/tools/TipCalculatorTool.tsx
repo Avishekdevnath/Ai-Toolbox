@@ -94,6 +94,17 @@ export default function TipCalculatorTool() {
       taxAmount: tax,
       subtotal
     });
+
+    // Track successful tip calculation
+    try {
+      fetch('/api/tools/tip-calculator/track-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usageType: 'generate' })
+      });
+    } catch (error) {
+      console.error('Failed to track usage:', error);
+    }
   };
 
   const handleTipSuggestion = (percentage: number) => {

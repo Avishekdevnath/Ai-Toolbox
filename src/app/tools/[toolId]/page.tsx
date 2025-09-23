@@ -6,6 +6,7 @@ import { useState } from 'react';
 import ToolSidebar from '@/components/ToolSidebar';
 import Navbar from '@/components/Navbar';
 import NewFooter from '@/components/NewFooter';
+import useToolTracking from '@/hooks/useToolTracking';
 
 // Import individual tool components
 import SwotAnalysisTool from '@/components/tools/SwotAnalysisTool';
@@ -150,6 +151,8 @@ export default function ToolPage() {
   }
 
   const ToolComponent = tool.component;
+  // Track generic tool views for dynamic route
+  useToolTracking(toolId, tool.name, 'view');
 
   return (
     <div className="min-h-screen bg-gray-50">

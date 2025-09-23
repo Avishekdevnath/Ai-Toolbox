@@ -289,6 +289,16 @@ export default function GeneralFinancialHealth({ onBack }: BaseModuleProps) {
       
       if (data.success && data.analysis) {
         setAiAnalysis(data.analysis);
+        // Track successful AI analysis generation
+        try {
+          await fetch('/api/tools/finance-advisor/track-usage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usageType: 'generate' })
+          });
+        } catch (error) {
+          console.error('Failed to track usage:', error);
+        }
       } else {
         console.error('AI Analysis failed:', data.error);
       }

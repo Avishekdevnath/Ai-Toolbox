@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import ResponsesTable from '@/components/forms/ResponsesTable';
+import ViewResponseModal from '@/components/forms/ViewResponseModal';
+import DeleteConfirmationModal from '@/components/forms/DeleteConfirmationModal';
 
 interface FormResponsesPageProps {
   params: {
@@ -60,6 +62,10 @@ export default function FormResponsesPage() {
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [modalFieldId, setModalFieldId] = useState<string | null>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedResponse, setSelectedResponse] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [valueSearch, setValueSearch] = useState('');
 
   useEffect(() => {
@@ -273,6 +279,45 @@ export default function FormResponsesPage() {
     setTotalResponses(total);
   };
 
+  // Modal handlers
+  const handleViewResponse = (response: any) => {
+    setSelectedResponse(response);
+    setViewModalOpen(true);
+  };
+
+  const handleDeleteResponse = (response: any) => {
+    setSelectedResponse(response);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedResponse) return;
+    
+    setIsDeleting(true);
+    try {
+      const response_api = await fetch(`/api/forms/${formId}/responses/${selectedResponse._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response_api.ok) {
+        throw new Error('Failed to delete response');
+      }
+
+      // Refresh the page data
+      await fetchFormDetails();
+      setDeleteModalOpen(false);
+      setSelectedResponse(null);
+    } catch (error) {
+      console.error('Error deleting response:', error);
+      alert('Failed to delete response. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -454,7 +499,7 @@ export default function FormResponsesPage() {
               <span className="text-xs text-gray-500">Zoom</span>
               <button
                 className="px-2 py-1 border border-gray-300 rounded-md text-xs"
-                onClick={() => setZoom(z => Math.max(50, z - 10))}
+                onClick={() => setZoom(z => Math.max(50, z - 5))}
                 title="Zoom out"
               >
                 -
@@ -462,7 +507,7 @@ export default function FormResponsesPage() {
               <span className="w-10 text-center text-xs text-gray-700">{zoom}%</span>
               <button
                 className="px-2 py-1 border border-gray-300 rounded-md text-xs"
-                onClick={() => setZoom(z => Math.min(150, z + 10))}
+                onClick={() => setZoom(z => Math.min(150, z + 5))}
                 title="Zoom in"
               >
                 +
@@ -552,10 +597,35 @@ export default function FormResponsesPage() {
               onSelectionChange={setSelectedRowIds}
               onQuickFilter={(fid, vals) => { setFilterFieldId(fid); setFilterValues(vals || []); setShowFiltersModal(false); setModalFieldId(null); }}
               onOpenFilterModal={(fid) => { setFilterFieldId(fid); setModalFieldId(fid); setShowFiltersModal(true); setValueSearch(''); }}
+              onViewResponse={handleViewResponse}
+              onDeleteResponse={handleDeleteResponse}
             />
           </div>
         </div>
       </div>
+
+      {/* View Response Modal */}
+      <ViewResponseModal
+        isOpen={viewModalOpen}
+        onClose={() => {
+          setViewModalOpen(false);
+          setSelectedResponse(null);
+        }}
+        response={selectedResponse}
+        formFields={form?.fields || []}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setSelectedResponse(null);
+        }}
+        onConfirm={confirmDelete}
+        response={selectedResponse}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

@@ -162,6 +162,17 @@ export default function ResumeReviewerTool() {
       }
 
       setAnalysis({ loading: false, result: data.analysis!, error: null });
+      
+      // Track successful resume analysis generation
+      try {
+        await fetch('/api/tools/resume-reviewer/track-usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usageType: 'generate' })
+        });
+      } catch (error) {
+        console.error('Failed to track usage:', error);
+      }
     } catch (error) {
       setAnalysis({
         loading: false,
