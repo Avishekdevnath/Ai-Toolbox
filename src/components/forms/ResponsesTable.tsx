@@ -387,17 +387,18 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
   return (
     <div className="h-full flex flex-col">
       {/* Table Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-900">Responses</h3>
           <div className="flex items-center space-x-2 text-xs text-gray-500">
-            <span>Showing {startIndex + 1}-{Math.min(startIndex + responsesPerPage, totalResponses)} of {totalResponses}</span>
+            <span className="hidden sm:inline">Showing {startIndex + 1}-{Math.min(startIndex + responsesPerPage, totalResponses)} of {totalResponses}</span>
+            <span className="sm:hidden">{totalResponses} total</span>
           </div>
         </div>
       </div>
 
       {/* Table (horizontal scroll only inside card) */}
-      <div className="flex-1 overflow-x-auto relative">
+      <div className="flex-1 overflow-x-auto relative responsive-table">
         <table className="min-w-max divide-y divide-gray-200 text-[13px]">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>

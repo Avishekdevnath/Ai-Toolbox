@@ -365,26 +365,26 @@ export default function FormResponsesPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-4 py-3">
+        <div className="px-3 sm:px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Left Section */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
               <button 
                 onClick={() => router.push('/dashboard/forms')} 
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
               >
                 <ArrowLeft size={20} />
               </button>
               
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
                   <FileBarChart className="w-4 h-4 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                     {form?.title || 'Form Responses'}
                   </h1>
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                  <div className="hidden sm:flex items-center space-x-4 text-xs text-gray-500">
                     <span className="flex items-center space-x-1">
                       <Hash size={12} />
                       <span>{totalResponses} {totalResponses === 1 ? 'response' : 'responses'}</span>
@@ -394,12 +394,15 @@ export default function FormResponsesPage() {
                       <span>Last updated: {new Date().toLocaleDateString()}</span>
                     </span>
                   </div>
+                  <div className="sm:hidden text-xs text-gray-500">
+                    {totalResponses} {totalResponses === 1 ? 'response' : 'responses'}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Right Section */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
@@ -410,21 +413,29 @@ export default function FormResponsesPage() {
 
               <button
                 onClick={() => router.push(`/dashboard/forms/${formId}/edit`)}
-                className="flex items-center space-x-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
               >
                 <Edit3 size={14} />
                 <span className="font-medium">Edit Form</span>
+              </button>
+              
+              <button
+                onClick={() => router.push(`/dashboard/forms/${formId}/edit`)}
+                className="sm:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Edit Form"
+              >
+                <Edit3 size={16} />
               </button>
 
               <div className="relative">
                 <button
                   id="export-button"
-                  className="flex items-center space-x-2 px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm"
                   onClick={() => setShowExportDropdown(!showExportDropdown)}
                   disabled={isExporting}
                 >
                   <Download size={14} />
-                  <span>Export</span>
+                  <span className="hidden sm:inline">Export</span>
                   <Filter size={12} className="ml-1" />
                 </button>
                 
@@ -476,10 +487,10 @@ export default function FormResponsesPage() {
       </div>
 
       {/* Main Content */}
-      <div className="p-3">
+      <div className="p-2 sm:p-3">
         {/* Search and Filters */}
         <div className="mb-3">
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-3 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-2">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
@@ -494,8 +505,8 @@ export default function FormResponsesPage() {
               </div>
             </div>
 
-            {/* Zoom Controls */}
-            <div className="flex items-center gap-2 ml-auto">
+            {/* Zoom Controls - Hidden on mobile */}
+            <div className="hidden md:flex items-center gap-2 ml-auto">
               <span className="text-xs text-gray-500">Zoom</span>
               <button
                 className="px-2 py-1 border border-gray-300 rounded-md text-xs"
@@ -579,7 +590,7 @@ export default function FormResponsesPage() {
         {/* Responses Table */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div
-            className="w-full"
+            className="w-full zoom-container"
             style={{ 
               transform: `scale(${zoom/100})`, 
               transformOrigin: 'top left',

@@ -283,16 +283,16 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
       </div>
 
       {/* Editor Controls */}
-      <div className="flex-shrink-0 border-b border-gray-800 bg-gray-900 px-4 py-2">
-        <div className="flex items-center justify-between gap-3">
+      <div className="flex-shrink-0 border-b border-gray-800 bg-gray-900 px-3 sm:px-4 py-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <Input
             placeholder="Untitled snippet"
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className="bg-white border-gray-300 text-black placeholder-gray-500 text-sm flex-1 max-w-md"
+            className="bg-white border-gray-300 text-black placeholder-gray-500 text-sm flex-1 w-full sm:max-w-md"
           />
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
               <div className="relative">
                 <input
@@ -309,7 +309,7 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
                   } mt-0.5`}></div>
                 </div>
               </div>
-              <span className="text-xs font-medium">
+              <span className="text-xs font-medium hidden sm:inline">
                 {isPublic ? 'Public' : 'Private'}
               </span>
             </label>

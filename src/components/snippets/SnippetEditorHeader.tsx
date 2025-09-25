@@ -38,60 +38,71 @@ export default function SnippetEditorHeader({
   ownerName
 }: SnippetEditorHeaderProps) {
   return (
-    <div className="border-b border-gray-800 bg-gray-900 px-4 py-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <h1 className="text-base font-medium truncate">
+    <div className="border-b border-gray-800 bg-gray-900 px-3 sm:px-4 py-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* Left Section - Title and Status */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <h1 className="text-sm sm:text-base font-medium truncate">
             {isNew ? 'New Code Snippet' : 'Edit Code Snippet'}
           </h1>
-          {shareUrl && isConnected && (
-            <div className="flex items-center gap-1 text-xs text-green-400">
-              <Users className="w-3 h-3" />
-              <span>{activeUsers.length + 1} online</span>
-            </div>
-          )}
-          {lastSaved && (
-            <span className="text-xs text-gray-400">
-              Saved {lastSaved.toLocaleTimeString()}
-            </span>
-          )}
-          {isSaving && (
-            <span className="text-xs text-yellow-400">Saving...</span>
-          )}
-          {isConnected && (
-            <div className="flex items-center gap-1 text-xs text-green-400">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>Live</span>
-            </div>
-          )}
-          {ownerName && (
-            <span className="text-xs text-blue-400 ml-2">Owner: {ownerName}</span>
-          )}
+          
+          {/* Status indicators - responsive layout */}
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+            {shareUrl && isConnected && (
+              <div className="flex items-center gap-1 text-xs text-green-400">
+                <Users className="w-3 h-3" />
+                <span className="hidden sm:inline">{activeUsers.length + 1} online</span>
+                <span className="sm:hidden">{activeUsers.length + 1}</span>
+              </div>
+            )}
+            
+            {lastSaved && (
+              <span className="text-xs text-gray-400 hidden sm:inline">
+                Saved {lastSaved.toLocaleTimeString()}
+              </span>
+            )}
+            
+            {isSaving && (
+              <span className="text-xs text-yellow-400">Saving...</span>
+            )}
+            
+            {isConnected && (
+              <div className="flex items-center gap-1 text-xs text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="hidden sm:inline">Live</span>
+              </div>
+            )}
+            
+            {ownerName && (
+              <span className="text-xs text-blue-400 hidden sm:inline">Owner: {ownerName}</span>
+            )}
+          </div>
+          
+          {/* Share URL - hidden on mobile */}
           {shareUrl && (
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <span className="text-xs text-gray-400">URL:</span>
               <code className="text-xs bg-gray-800 px-2 py-1 rounded text-green-400 truncate max-w-xs">
                 {shareUrl}
               </code>
-              <span className="text-xs text-gray-500 hidden lg:inline">(Anyone with this link can edit)</span>
+              <span className="text-xs text-gray-500">(Anyone with this link can edit)</span>
             </div>
           )}
         </div>
         
-        <div className="flex items-center gap-3 flex-shrink-0">
-        </div>
-        
-        <div className="flex items-center gap-1 relative z-50 flex-wrap">
+        {/* Right Section - Action Buttons */}
+        <div className="flex items-center gap-1 relative z-50 flex-shrink-0 flex-wrap sm:flex-nowrap">
           <div className="relative group">
             <Button
               variant="outline"
               size="sm"
               onClick={onCreateNew}
+              aria-label="Create new snippet"
               className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black p-2 rounded-md cursor-pointer"
             >
               <Plus className="w-4 h-4" />
             </Button>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
               Create new snippet
             </div>
           </div>
@@ -101,11 +112,12 @@ export default function SnippetEditorHeader({
               variant="outline"
               size="sm"
               onClick={onTogglePreview}
+              aria-label={showPreview ? 'Hide preview' : 'Show preview'}
               className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black p-2 rounded-md cursor-pointer"
             >
               {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
               {showPreview ? 'Hide Preview' : 'Show Preview'}
             </div>
           </div>
@@ -115,11 +127,12 @@ export default function SnippetEditorHeader({
               variant="outline"
               size="sm"
               onClick={onCopy}
+              aria-label={copied ? 'Copied' : 'Copy code'}
               className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black p-2 rounded-md cursor-pointer"
             >
               <Copy className="w-4 h-4" />
             </Button>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
               {copied ? 'Copied!' : 'Copy code'}
             </div>
           </div>
@@ -130,11 +143,12 @@ export default function SnippetEditorHeader({
               size="sm"
               onClick={onShare}
               className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black disabled:opacity-50 p-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+              aria-label="Share snippet"
               disabled={!shareUrl}
             >
               <Share2 className="w-4 h-4" />
             </Button>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
               {copied ? 'Link copied!' : 'Share snippet'}
             </div>
           </div>
@@ -143,11 +157,12 @@ export default function SnippetEditorHeader({
             <Button
               onClick={onSave}
               disabled={isSaving}
+              aria-label={isSaving ? 'Saving' : 'Save snippet'}
               className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
             </Button>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
               {isSaving ? 'Saving...' : 'Save snippet'}
             </div>
           </div>

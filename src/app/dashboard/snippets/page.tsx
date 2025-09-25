@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 
 interface SnippetItem {
   slug: string;
@@ -54,15 +55,18 @@ export default function SnippetsDashboardPage() {
   };
 
   return (
-    <div className="px-4 py-8 max-w-5xl mx-auto space-y-4">
+    <div className="px-3 sm:px-4 py-6 sm:py-8 max-w-5xl mx-auto space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">My Snippets</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">My Snippets</h1>
         <Link href="/s/new" target="_blank" rel="noopener noreferrer">
-          <Button>Create Snippet</Button>
+          <Button size="sm" className="flex items-center gap-2">
+            <Plus size={16} />
+            <span className="hidden sm:inline">Create Snippet</span>
+          </Button>
         </Link>
       </div>
       {loading ? (
-        <div>Loading...</div>
+        <div className="text-center py-8">Loading...</div>
       ) : (
         <SnippetTable items={items} onDelete={handleDelete} />
       )}

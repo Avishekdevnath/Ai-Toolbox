@@ -93,7 +93,12 @@ const navigationItems: NavItem[] = [
   },
 ];
 
-export default function DashboardSidebar() {
+interface DashboardSidebarProps {
+  isMobileMenuOpen?: boolean;
+  onMobileMenuClose?: () => void;
+}
+
+export default function DashboardSidebar({ isMobileMenuOpen = false, onMobileMenuClose }: DashboardSidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const pathname = usePathname();
   const { user } = useAuth();
@@ -118,8 +123,10 @@ export default function DashboardSidebar() {
   const filteredItems = navigationItems.filter(item => hasRole(item.roles));
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-300 h-full hidden lg:block">
-      <div className="p-6 h-full">
+    <aside className={`w-full lg:w-64 bg-white border-r border-gray-300 h-auto lg:h-full transition-transform duration-300 ease-in-out ${
+      isMobileMenuOpen ? 'block' : 'hidden lg:block'
+    }`}>
+      <div className="p-4 lg:p-6 h-full">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Dashboard</h2>
         
         <nav className="space-y-2">
@@ -143,6 +150,8 @@ export default function DashboardSidebar() {
                     onClick={() => {
                       if (hasChildren) {
                         toggleExpanded(item.title);
+                      } else {
+                        onMobileMenuClose?.();
                       }
                     }}
                   >
@@ -181,6 +190,7 @@ export default function DashboardSidebar() {
                                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                               )}
+                              onClick={() => onMobileMenuClose?.()}
                             >
                               <child.icon className="w-4 h-4" />
                               <span>{child.title}</span>

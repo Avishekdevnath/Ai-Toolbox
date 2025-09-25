@@ -4,10 +4,15 @@ import { useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, Search, LogOut, Home, User as UserIcon, Loader2 } from 'lucide-react';
+import { Bell, Search, LogOut, Home, User as UserIcon, Loader2, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function DashboardHeader() {
+interface DashboardHeaderProps {
+  isMobileMenuOpen?: boolean;
+  onMobileMenuToggle?: () => void;
+}
+
+export default function DashboardHeader({ isMobileMenuOpen = false, onMobileMenuToggle }: DashboardHeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -29,6 +34,14 @@ export default function DashboardHeader() {
   return (
     <header className="h-14 border-b bg-white flex items-center justify-between px-4 gap-4">
       <div className="flex items-center gap-3 min-w-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={onMobileMenuToggle}
+        >
+          {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </Button>
         <div className="font-semibold text-gray-900 text-sm sm:text-base">Dashboard</div>
         <div className="hidden md:flex items-center gap-2 text-xs text-gray-400">
           <span className="h-1.5 w-1.5 rounded-full bg-gray-300" />

@@ -33,3 +33,19 @@ body {
   box-shadow: none !important;
   border-color: #000 !important;
 }
+
+/* Mobile responsiveness fixes */
+@media (max-width: 767px) {
+  /* Disable zoom transforms on mobile */
+  .zoom-container {
+    transform: none !important;
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+  
+  /* Ensure tables are responsive on mobile */
+  .responsive-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

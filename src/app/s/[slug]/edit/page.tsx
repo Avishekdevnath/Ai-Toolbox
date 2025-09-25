@@ -1,6 +1,5 @@
 import { getCodeSnippetModel } from '@/models/CodeSnippetModel';
 import { notFound } from 'next/navigation';
-import SnippetEditor from '@/components/snippets/SnippetEditor';
 import EditSnippetClient from './EditSnippetClient';
 
 interface EditPageProps {
@@ -20,7 +19,19 @@ export default async function EditSnippetPage({ params }: EditPageProps) {
       notFound();
     }
 
-    return <EditSnippetClient snippet={snippet} />;
+    // Pass only serializable fields to the client
+    return (
+      <EditSnippetClient
+        initialData={{
+          slug: String(snippet.slug),
+          title: snippet.title ?? '',
+          language: String(snippet.language ?? 'javascript'),
+          content: String(snippet.content ?? ''),
+          isPublic: Boolean(snippet.isPublic),
+        }}
+        isNew={false}
+      />
+    );
   } catch (error) {
     console.error('Error fetching snippet:', error);
     notFound();
