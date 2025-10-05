@@ -10,6 +10,11 @@ export default async function DashboardPage() {
   const token = cookieStore.get('user_session')?.value;
   const claims = token ? verifyAccessToken(token) : null;
   if (!claims) redirect('/sign-in');
+  
+  // Redirect admin users to admin dashboard
+  if (claims.role === 'admin') {
+    redirect('/admin');
+  }
 
   return (
     <div className="space-y-6">

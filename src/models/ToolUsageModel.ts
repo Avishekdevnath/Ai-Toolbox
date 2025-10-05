@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IToolUsage extends Document {
   userId: string;
@@ -10,6 +10,12 @@ export interface IToolUsage extends Document {
   ipAddress?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IToolUsageModel extends Model<IToolUsage> {
+  getToolUsageStats(days?: number): Promise<any[]>;
+  getRecentActivity(limit?: number): Promise<any[]>;
+  getUserActivity(userId: string, days?: number): Promise<any[]>;
 }
 
 const ToolUsageSchema = new Schema<IToolUsage>({
@@ -110,4 +116,4 @@ ToolUsageSchema.statics.getUserActivity = async function(userId: string, days: n
   .lean();
 };
 
-export const ToolUsage = mongoose.models.ToolUsage || mongoose.model<IToolUsage>('ToolUsage', ToolUsageSchema); 
+export const ToolUsage = mongoose.models.ToolUsage as IToolUsageModel || mongoose.model<IToolUsage, IToolUsageModel>('ToolUsage', ToolUsageSchema); 

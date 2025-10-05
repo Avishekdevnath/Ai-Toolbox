@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IAdminActivity extends Document {
   adminId: string;
@@ -19,6 +19,11 @@ export interface IAdminActivity extends Document {
   errorMessage?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IAdminActivityModel extends Model<IAdminActivity> {
+  getRecentActivity(limit?: number): Promise<any[]>;
+  logActivity(activityData: any): Promise<any>;
 }
 
 const AdminActivitySchema = new Schema<IAdminActivity>({
@@ -195,4 +200,4 @@ AdminActivitySchema.statics.getActivityStats = async function(days: number = 30)
   ]);
 };
 
-export const AdminActivity = mongoose.models.AdminActivity || mongoose.model<IAdminActivity>('AdminActivity', AdminActivitySchema); 
+export const AdminActivity = mongoose.models.AdminActivity as IAdminActivityModel || mongoose.model<IAdminActivity, IAdminActivityModel>('AdminActivity', AdminActivitySchema); 

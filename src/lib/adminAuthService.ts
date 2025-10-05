@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
-import { AdminUser, IAdminUser } from '@/models/AdminUserModel';
+import { AuthUserModel, AuthUserDoc } from '@/models/AuthUserModel';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-export type AdminRole = 'super_admin' | 'admin' | 'moderator';
+export type AdminRole = 'admin' | 'user';
 export type PermissionType =
   | 'manage_users' | 'manage_tools' | 'view_analytics' | 'manage_system'
   | 'manage_content' | 'view_audit_logs' | 'manage_admins' | 'view_dashboard' | 'manage_settings';
@@ -61,10 +61,7 @@ export class AdminAuthService {
       console.log('🔍 Attempting to authenticate admin:', email);
       
       // Find admin user by email
-      const adminUser = await AdminUser.findOne({ 
-        email: email.toLowerCase(),
-        isActive: true 
-      }).exec();
+      const adminUser = await AuthUserModel.findByEmail(email);
       
       if (!adminUser) {
         console.log('❌ Admin user not found:', email);
@@ -74,26 +71,24 @@ export class AdminAuthService {
         };
       }
       
-      console.log('✅ Admin user found:', adminUser.email, 'Role:', adminUser.role);
-      
-      // Check if account is locked
-      if (adminUser.isLocked()) {
-        console.log('🔒 Account is locked for:', email);
+      // Check if user has admin role
+      if (adminUser.role !== 'admin') {
+        console.log('❌ User is not an admin:', email, 'Role:', adminUser.role);
         return {
           success: false,
-          error: 'Account is temporarily locked due to too many failed login attempts'
+          error: 'Access denied: Admin privileges required'
         };
       }
       
+      console.log('✅ Admin user found:', adminUser.email, 'Role:', adminUser.role);
+      
       // Verify password
       console.log('🔐 Verifying password for:', email);
-      const isPasswordValid = await adminUser.comparePassword(password);
+      const bcrypt = require('bcryptjs');
+      const isPasswordValid = await bcrypt.compare(password, adminUser.passwordHash);
       
       if (!isPasswordValid) {
         console.log('❌ Invalid password for:', email);
-        // Increment failed login attempts
-        await adminUser.incrementLoginAttempts();
-        
         return {
           success: false,
           error: 'Invalid email or password'
@@ -102,19 +97,19 @@ export class AdminAuthService {
       
       console.log('✅ Password verified for:', email);
       
-      // Reset login attempts on successful login
-      await adminUser.resetLoginAttempts();
+      // Update last login
+      await AuthUserModel.updateLastLogin(adminUser._id.toString());
       
       // Create admin session
       const adminSession: AdminSession = {
         id: adminUser._id.toString(),
         email: adminUser.email,
         role: adminUser.role,
-        permissions: adminUser.permissions as PermissionType[],
+        permissions: ['manage_users', 'manage_tools', 'view_analytics', 'manage_system', 'manage_content', 'view_audit_logs', 'view_dashboard', 'manage_settings'],
         firstName: adminUser.firstName,
         lastName: adminUser.lastName,
-        isActive: adminUser.isActive,
-        lastLoginAt: adminUser.lastLoginAt,
+        isActive: true,
+        lastLoginAt: new Date(),
       };
       
       console.log('✅ Admin session created for:', email);
@@ -198,9 +193,9 @@ export class AdminAuthService {
       }
       
       // Get fresh admin data from database
-      const adminUser = await AdminUser.findById(decoded.id).select('-password').exec();
+      const adminUser = await AuthUserModel.findById(decoded.id);
       
-      if (!adminUser || !adminUser.isActive) {
+      if (!adminUser || adminUser.role !== 'admin') {
         return null;
       }
       
@@ -208,11 +203,11 @@ export class AdminAuthService {
         id: adminUser._id.toString(),
         email: adminUser.email,
         role: adminUser.role,
-        permissions: adminUser.permissions as PermissionType[],
+        permissions: ['manage_users', 'manage_tools', 'view_analytics', 'manage_system', 'manage_content', 'view_audit_logs', 'view_dashboard', 'manage_settings'],
         firstName: adminUser.firstName,
         lastName: adminUser.lastName,
-        isActive: adminUser.isActive,
-        lastLoginAt: adminUser.lastLoginAt,
+        isActive: true,
+        lastLoginAt: new Date(),
       };
       
     } catch (error) {

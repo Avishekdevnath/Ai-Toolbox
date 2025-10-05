@@ -19,6 +19,7 @@ export interface SnippetEditorProps {
     language: string;
     content: string;
     isPublic: boolean;
+    ownerId?: string;
   };
   isNew?: boolean;
 }
@@ -27,7 +28,8 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
   const router = useRouter();
   const { user } = useSelector((state: RootState) => state.auth);
   const userId = user?.id;
-  const isOwner = !!(userId && (initialData as any)?.ownerId && (initialData as any).ownerId === userId);
+  const isOwner = !!(userId && initialData?.ownerId && initialData.ownerId === userId);
+  const hasOwner = !!initialData?.ownerId;
   const [title, setTitle] = useState(initialData?.title || '');
   const [language, setLanguage] = useState(initialData?.language || 'javascript');
   const [content, setContent] = useState(initialData?.content || '');
@@ -40,6 +42,7 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastCursorPosition = useRef<number>(0);
 
@@ -121,18 +124,6 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
   const handleSave = async (isAutoSave = false) => {
     if (isSaving || !initialData?.slug) return;
     
-    // Check if user is logged in
-    if (!userId) {
-      if (!isAutoSave) {
-        // Show login prompt for manual saves
-        const shouldLogin = confirm('You need to be logged in to save snippets. Would you like to sign in?');
-        if (shouldLogin) {
-          window.location.href = '/sign-in';
-        }
-      }
-      return;
-    }
-    
     setIsSaving(true);
     try {
       const payload = {
@@ -143,26 +134,48 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
       };
 
       console.log('Saving snippet:', payload); // Debug log
-      console.log('User ID:', userId); // Debug log
+      console.log('User ID:', userId || 'anonymous'); // Debug log
+
+      const headers: Record<string, string> = { 
+        'Content-Type': 'application/json',
+      };
+      
+      // Add user ID header if user is logged in
+      if (userId) {
+        headers['x-user-id'] = userId;
+      }
 
       const response = await fetch(`/api/snippets/${initialData.slug}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-id': userId
-        },
+        headers,
         body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
+        if (response.status === 403) {
+          // Permission denied
+          const errorData = await response.json();
+          console.error('Save forbidden:', errorData.error);
+          
+          if (!isAutoSave) {
+            alert(errorData.error || 'You do not have permission to edit this snippet.');
+          }
+          return;
+        }
+        
         const errorText = await response.text();
         console.error('Save failed:', errorText);
+        
+        if (!isAutoSave) {
+          alert(`Failed to save snippet: ${errorText}`);
+        }
         throw new Error(`Failed to save snippet: ${errorText}`);
       }
 
       const result = await response.json();
       console.log('Save successful:', result); // Debug log
       setLastSaved(new Date());
+      
       // Track generate/save usage
       try {
         await fetch('/api/tools/code-share/track-usage', {
@@ -173,7 +186,10 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
       } catch {}
     } catch (error) {
       console.error('Error saving snippet:', error);
-      // You might want to show a toast notification here
+      
+      if (!isAutoSave) {
+        alert('An error occurred while saving. Please try again.');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -260,6 +276,14 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
     }
   };
 
+  // Synchronize scroll between textarea and line numbers
+  const handleScroll = () => {
+    if (textareaRef.current && lineNumbersRef.current) {
+      const scrollTop = textareaRef.current.scrollTop;
+      lineNumbersRef.current.style.transform = `translateY(-${scrollTop}px)`;
+    }
+  };
+
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
       {/* Header */}
@@ -293,13 +317,15 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
           />
           
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+            <label className={`flex items-center gap-2 text-xs text-gray-300 ${isOwner || !hasOwner ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
               <div className="relative">
                 <input
                   type="checkbox"
                   checked={isPublic}
                   onChange={(e) => handleVisibilityChange(e.target.checked)}
+                  disabled={!isOwner && hasOwner}
                   className="sr-only"
+                  title={!isOwner && hasOwner ? 'Only the owner can change visibility' : ''}
                 />
                 <div className={`w-10 h-5 rounded-full transition-colors duration-200 ${
                   isPublic ? 'bg-blue-600' : 'bg-gray-600'
@@ -322,13 +348,21 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
         {/* Code Editor */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 flex bg-black min-h-0">
-            {/* Line Numbers */}
-            <div className="bg-gray-900 text-gray-500 text-xs font-mono py-4 px-2 select-none border-r border-gray-700 flex-shrink-0 overflow-hidden">
-              {content.split('\n').map((_, index) => (
-                <div key={index} className="leading-4 text-right">
-                  {index + 1}
-                </div>
-              ))}
+            {/* Line Numbers Container */}
+            <div className="bg-gray-900 border-r border-gray-700 flex-shrink-0 overflow-hidden relative" style={{ width: '60px' }}>
+              <div 
+                ref={lineNumbersRef}
+                className="text-gray-500 text-xs font-mono py-4 px-2 select-none absolute top-0 left-0 right-0"
+                style={{ 
+                  transform: 'translateY(0px)', // Will be updated by scroll sync
+                }}
+              >
+                {content.split('\n').map((_, index) => (
+                  <div key={index} className="leading-4 text-right h-4">
+                    {index + 1}
+                  </div>
+                ))}
+              </div>
             </div>
             {/* Code Textarea */}
             <textarea
@@ -338,6 +372,7 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
               onKeyUp={handleCursorChange}
               onMouseUp={handleCursorChange}
               onFocus={handleCursorChange}
+              onScroll={handleScroll}
               placeholder="Start typing your code here..."
               className="flex-1 bg-black text-white p-4 font-mono text-xs resize-none outline-none leading-4 overflow-auto min-h-0"
               style={{ tabSize: 2 }}

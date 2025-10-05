@@ -21,13 +21,15 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronRight,
-  Home
+  Home,
+  Mail,
+  User
 } from 'lucide-react';
 
 interface AdminUser {
   id: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'moderator';
+  role: 'admin' | 'user';
   permissions: string[];
   firstName?: string;
   lastName?: string;
@@ -150,6 +152,26 @@ export default function AdminSidebar() {
         { name: 'User Analytics', href: '/admin/analytics/users', icon: Users },
         { name: 'Tool Analytics', href: '/admin/analytics/tools', icon: Wrench },
         { name: 'System Analytics', href: '/admin/analytics/system', icon: Activity },
+      ]
+    },
+    {
+      name: 'Contact',
+      href: '/admin/contact/info',
+      icon: Mail,
+      permission: 'manage_system',
+      children: [
+        { name: 'Contact Info', href: '/admin/contact/info', icon: Settings },
+        { name: 'Messages', href: '/admin/contact/messages', icon: FileText },
+        { name: 'Contact Collection', href: '/admin/contact/collection', icon: Database },
+      ]
+    },
+    {
+      name: 'About',
+      href: '/admin/about/info',
+      icon: User,
+      permission: 'manage_system',
+      children: [
+        { name: 'About Info', href: '/admin/about/info', icon: User },
       ]
     },
     {

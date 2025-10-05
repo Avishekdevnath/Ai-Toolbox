@@ -126,7 +126,7 @@ export default function SettingsPage() {
           {/* Settings Content */}
           <div className="lg:col-span-3">
             <Card className="p-4 md:p-6">
-              {activeComponent && <activeComponent />}
+              {activeComponent && React.createElement(activeComponent)}
             </Card>
           </div>
         </div>

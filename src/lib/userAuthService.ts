@@ -248,26 +248,36 @@ export class UserAuthService {
    */
   static async getUserSession(request?: NextRequest): Promise<UserSession | null> {
     try {
-      await this.ensureConnection();
-      
       let token: string | undefined;
       
       if (request) {
+        // Server-side: get token from request cookies
         token = request.cookies.get(this.SESSION_COOKIE_NAME)?.value;
       } else {
-        const cookieStore = await cookies();
-        token = cookieStore.get(this.SESSION_COOKIE_NAME)?.value;
+        // Server-side: get token from cookies() function
+        try {
+          const cookieStore = await cookies();
+          token = cookieStore.get(this.SESSION_COOKIE_NAME)?.value;
+        } catch (error) {
+          // If cookies() fails (e.g., in client context), return null
+          console.log('🔐 No server-side cookie access available');
+          return null;
+        }
       }
       
       if (!token) {
         return null;
       }
       
+      // Verify token first (fast, no DB). Only hit DB if valid
       const decoded = this.verifyUserToken(token);
       if (!decoded) {
         return null;
       }
       
+      // Connect to DB only when we need fresh user data
+      await this.ensureConnection();
+
       // Get fresh user data from database
       const user = await AuthUserModel.findById(decoded.id);
       

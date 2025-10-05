@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 let isConnected = false;
+let listenersAttached = false;
 
 export async function connectToDatabase() {
   if (isConnected) {
@@ -16,29 +17,35 @@ export async function connectToDatabase() {
     // Enhanced connection options with better error handling
     await mongoose.connect(mongoUri, {
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000, // Increased from 5000
+      serverSelectionTimeoutMS: 5000, // Reduced for faster failure detection
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000, // Added connection timeout
+      connectTimeoutMS: 5000, // Reduced for faster failure detection
       bufferCommands: false, // Disable mongoose buffering
       retryWrites: true,
       retryReads: true,
+      maxIdleTimeMS: 30000,
+      heartbeatFrequencyMS: 10000,
     });
 
-    // Handle connection events
-    mongoose.connection.on('error', (err) => {
-      console.error('❌ MongoDB connection error:', err);
-      isConnected = false;
-    });
+    // Handle connection events - only attach once
+    if (!listenersAttached) {
+      mongoose.connection.on('error', (err) => {
+        console.error('❌ MongoDB connection error:', err);
+        isConnected = false;
+      });
 
-    mongoose.connection.on('disconnected', () => {
-      console.warn('⚠️ MongoDB disconnected');
-      isConnected = false;
-    });
+      mongoose.connection.on('disconnected', () => {
+        console.warn('⚠️ MongoDB disconnected');
+        isConnected = false;
+      });
 
-    mongoose.connection.on('reconnected', () => {
-      console.log('✅ MongoDB reconnected');
-      isConnected = true;
-    });
+      mongoose.connection.on('reconnected', () => {
+        console.log('✅ MongoDB reconnected');
+        isConnected = true;
+      });
+
+      listenersAttached = true;
+    }
 
     isConnected = true;
     console.log('✅ MongoDB connected via Mongoose');

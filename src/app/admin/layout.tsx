@@ -5,6 +5,9 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
+// Force dynamic rendering for admin routes that use cookies
+export const dynamic = 'force-dynamic';
+
 interface AdminLayoutProps {
   children: React.ReactNode;
 }

@@ -38,18 +38,19 @@ export async function GET(request: NextRequest) {
     if (search) {
       query.$or = [
         { email: { $regex: search, $options: 'i' } },
-        { name: { $regex: search, $options: 'i' } },
-        { clerkId: { $regex: search, $options: 'i' } }
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } }
       ];
     }
 
     if (status) {
       if (status === 'active') {
-        query.isActive = true;
+        // For authusers, we consider all users as active by default
+        // You could add an isActive field if needed
       } else if (status === 'inactive') {
-        query.isActive = false;
-      } else {
-        query.status = status;
+        // No inactive users in current schema
+        query._id = { $in: [] }; // Empty result
       }
     }
 
@@ -66,26 +67,26 @@ export async function GET(request: NextRequest) {
 
     // Get users with pagination
     const [users, totalUsers] = await Promise.all([
-      db.collection('users')
+      db.collection('authusers')
         .find(query)
         .sort(sort)
         .skip(skip)
         .limit(limit)
         .toArray(),
-      db.collection('users').countDocuments(query)
+      db.collection('authusers').countDocuments(query)
     ]);
 
-    // Get admin users if the current user is a super admin
+    // Get admin users from authusers collection
     let adminUsers: any[] = [];
-    if (adminSession.role === 'super_admin') {
-      adminUsers = await db.collection('adminusers')
-        .find({ isActive: true })
+    if (adminSession.role === 'admin') {
+      adminUsers = await db.collection('authusers')
+        .find({ role: 'admin' })
         .sort({ createdAt: -1 })
         .toArray();
       
       // Remove password field from admin users
       adminUsers = adminUsers.map(user => {
-        const { password, ...userWithoutPassword } = user;
+        const { passwordHash, ...userWithoutPassword } = user;
         return userWithoutPassword;
       });
     }
@@ -200,8 +201,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Only super_admin can create users
-    if (adminSession.role !== 'super_admin') {
+    // Only admin can create users
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }

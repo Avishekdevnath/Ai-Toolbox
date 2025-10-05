@@ -37,11 +37,11 @@ export async function GET(request: NextRequest) {
       systemHealth
     ] = await Promise.all([
       // Total users
-      db.collection('users').countDocuments({}).catch(() => 0),
+      db.collection('authusers').countDocuments({}).catch(() => 0),
       
-      // Active users (users with activity in last 7 days)
-      db.collection('users').countDocuments({
-        'activity.lastActivityAt': { 
+      // Active users (users updated in last 7 days)
+      db.collection('authusers').countDocuments({
+        updatedAt: { 
           $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) 
         }
       }).catch(() => 0),

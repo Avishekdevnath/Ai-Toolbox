@@ -22,12 +22,14 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  loading: false,
+  loading: true, // Start with loading true to show loading state on initial load
   error: '',
 };
 
 export const fetchSession = createAsyncThunk('auth/fetchSession', async () => {
   try {
+    console.log('🔄 Starting fetchSession...');
+    
     // Add timeout to prevent hanging
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -41,6 +43,8 @@ export const fetchSession = createAsyncThunk('auth/fetchSession', async () => {
     });
     
     clearTimeout(timeoutId);
+    
+    console.log('📡 fetchSession response:', res.status, res.statusText);
     
     if (!res.ok) {
       // 401 is expected when not authenticated, don't throw error
@@ -121,8 +125,17 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchSession.pending, (state) => { state.loading = true; state.error = ''; })
-      .addCase(fetchSession.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; })
+      .addCase(fetchSession.pending, (state) => { 
+        if (state.user === null) { // Only set loading if we don't have a user yet
+          state.loading = true; 
+        }
+        state.error = ''; 
+      })
+      .addCase(fetchSession.fulfilled, (state, action) => { 
+        state.loading = false; 
+        state.user = action.payload; 
+        state.error = '';
+      })
       .addCase(fetchSession.rejected, (state, action) => { 
         state.loading = false; 
         // Don't set error for timeouts, just log them
@@ -132,7 +145,10 @@ const authSlice = createSlice({
         } else {
           state.error = action.error.message || 'Failed';
         }
-        state.user = null; 
+        // Only clear user if we don't have an initial user
+        if (!state.user) {
+          state.user = null; 
+        }
       })
 
       .addCase(loginThunk.pending, (state) => { state.loading = true; state.error = ''; })

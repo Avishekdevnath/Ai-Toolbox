@@ -17,8 +17,8 @@ export interface IPendingRegistration extends Document {
 }
 
 const PendingRegistrationSchema = new Schema<IPendingRegistration>({
-  email: { type: String, required: true, lowercase: true, trim: true, index: true },
-  username: { type: String, required: true, lowercase: true, trim: true, index: true },
+  email: { type: String, required: true, lowercase: true, trim: true },
+  username: { type: String, required: true, lowercase: true, trim: true },
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, required: true, trim: true },
   phoneNumber: { type: String },
@@ -29,6 +29,7 @@ const PendingRegistrationSchema = new Schema<IPendingRegistration>({
   attempts: { type: Number, default: 0 },
 }, { timestamps: true, collection: 'pendingregistrations' });
 
+// Create indexes separately to avoid duplicates
 PendingRegistrationSchema.index({ email: 1 }, { unique: false });
 PendingRegistrationSchema.index({ username: 1 }, { unique: false });
 

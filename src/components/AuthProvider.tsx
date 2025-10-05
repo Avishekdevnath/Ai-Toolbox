@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, startTransition } from 'react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { store } from '@/lib/store';
-import { fetchSession, loginThunk, logoutThunk, registerThunk } from '@/lib/store/authSlice';
+import { fetchSession, loginThunk, logoutThunk, registerThunk, setUser, setLoading } from '@/lib/store/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 
 type Role = 'admin' | 'user';
@@ -30,24 +30,35 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function AuthStateBridge({ children }: { children: React.ReactNode }) {
+function AuthStateBridge({ children, initialUser }: { children: React.ReactNode; initialUser?: AuthUser }) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const loading = useAppSelector((s) => s.auth.loading);
   const error = useAppSelector((s) => s.auth.error);
 
   useEffect(() => {
-    // Only fetch session once when component mounts
-    console.log('🔄 AuthStateBridge: Fetching session...');
-    dispatch(fetchSession());
+    // Seed initial user immediately (no network) if provided
+    if (initialUser && !user) {
+      dispatch(setUser(initialUser));
+      dispatch(setLoading(false));
+    }
+    // Always fetch session on mount to restore state from cookies
+    if (typeof window !== 'undefined') {
+      startTransition(() => {
+        dispatch(fetchSession());
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
   useEffect(() => {
-    console.log('🔍 AuthStateBridge: State changed:', {
-      loading,
-      user: user ? `${user.username} (${user.email})` : 'null',
-      error
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AuthStateBridge: State changed:', {
+        loading,
+        user: user ? `${user.username} (${user.email})` : 'null',
+        error
+      });
+    }
   }, [loading, user, error]);
 
   const ctx: AuthContextValue = {
@@ -66,15 +77,13 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
     },
   };
 
-  return (
-    <AuthContext.Provider value={ctx}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={ctx}>{children}</AuthContext.Provider>;
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children, initialUser }: { children: React.ReactNode; initialUser?: AuthUser }) {
   return (
     <ReduxProvider store={store}>
-      <AuthStateBridge>{children}</AuthStateBridge>
+      <AuthStateBridge initialUser={initialUser}>{children}</AuthStateBridge>
     </ReduxProvider>
   );
 }

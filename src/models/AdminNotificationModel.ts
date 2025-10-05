@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IAdminNotification extends Document {
   title: string;
@@ -22,6 +22,11 @@ export interface IAdminNotification extends Document {
   updatedAt: Date;
   readAt?: Date;
   dismissedAt?: Date;
+}
+
+export interface IAdminNotificationModel extends Model<IAdminNotification> {
+  getUnreadCount(adminId: string, adminRole: string): Promise<number>;
+  createNotification(notificationData: any): Promise<any>;
 }
 
 const AdminNotificationSchema = new Schema<IAdminNotification>({
@@ -130,10 +135,20 @@ AdminNotificationSchema.statics.getNotificationsForAdmin = async function(adminI
   priority?: string;
 } = {}) {
   const query: any = {
-    $or: [
-      { targetAdmins: adminId },
-      { targetRoles: adminRole },
-      { targetRoles: { $exists: false }, targetAdmins: { $exists: false } }
+    $and: [
+      {
+        $or: [
+          { targetAdmins: adminId },
+          { targetRoles: adminRole },
+          { targetRoles: { $exists: false }, targetAdmins: { $exists: false } }
+        ]
+      },
+      {
+        $or: [
+          { expiresAt: { $exists: false } },
+          { expiresAt: { $gt: new Date() } }
+        ]
+      }
     ],
     isDismissed: false,
   };
@@ -149,12 +164,6 @@ AdminNotificationSchema.statics.getNotificationsForAdmin = async function(adminI
   if (options.priority) {
     query.priority = options.priority;
   }
-
-  // Filter out expired notifications
-  query.$or = [
-    { expiresAt: { $exists: false } },
-    { expiresAt: { $gt: new Date() } }
-  ];
 
   return this.find(query)
     .sort({ priority: -1, createdAt: -1 })
@@ -180,17 +189,23 @@ AdminNotificationSchema.statics.dismissNotification = async function(notificatio
 
 AdminNotificationSchema.statics.getUnreadCount = async function(adminId: string, adminRole: string) {
   const query = {
-    $or: [
-      { targetAdmins: adminId },
-      { targetRoles: adminRole },
-      { targetRoles: { $exists: false }, targetAdmins: { $exists: false } }
+    $and: [
+      {
+        $or: [
+          { targetAdmins: adminId },
+          { targetRoles: adminRole },
+          { targetRoles: { $exists: false }, targetAdmins: { $exists: false } }
+        ]
+      },
+      {
+        $or: [
+          { expiresAt: { $exists: false } },
+          { expiresAt: { $gt: new Date() } }
+        ]
+      }
     ],
     isRead: false,
-    isDismissed: false,
-    $or: [
-      { expiresAt: { $exists: false } },
-      { expiresAt: { $gt: new Date() } }
-    ]
+    isDismissed: false
   };
 
   return this.countDocuments(query).exec();
@@ -202,4 +217,4 @@ AdminNotificationSchema.statics.cleanupExpiredNotifications = async function() {
   }).exec();
 };
 
-export const AdminNotification = mongoose.models.AdminNotification || mongoose.model<IAdminNotification>('AdminNotification', AdminNotificationSchema); 
+export const AdminNotification = mongoose.models.AdminNotification as IAdminNotificationModel || mongoose.model<IAdminNotification, IAdminNotificationModel>('AdminNotification', AdminNotificationSchema); 

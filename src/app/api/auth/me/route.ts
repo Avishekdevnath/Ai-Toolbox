@@ -3,7 +3,7 @@ import { UserAuthService } from '@/lib/userAuthService';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔐 Getting current user session');
+    console.log('🔐 Getting current user session from:', request.url);
 
     // Get current user session
     const userSession = await UserAuthService.getUserSession(request);

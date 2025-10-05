@@ -4,7 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import GlobalNotificationProvider from '@/components/GlobalNotificationProvider';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'AI Toolbox - Your Ultimate AI Tools Collection',

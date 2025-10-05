@@ -3,9 +3,6 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -32,6 +29,15 @@ body {
   filter: grayscale(1) !important;
   box-shadow: none !important;
   border-color: #000 !important;
+}
+
+/* Hide scrollbars for line numbers */
+.line-numbers-no-scrollbar {
+  -webkit-overflow-scrolling: touch;
+}
+
+.line-numbers-no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 /* Mobile responsiveness fixes */
