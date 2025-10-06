@@ -25,6 +25,7 @@ export function useRealtimeCollaboration({
   const lastSyncRef = useRef<number>(0);
   const userIdRef = useRef<string>(Math.random().toString(36).substring(2, 15));
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Poll for updates
@@ -61,20 +62,55 @@ export function useRealtimeCollaboration({
     }
   }, [snippetId, isLocalChange, onContentChange, onTitleChange, onLanguageChange, onVisibilityChange]);
 
-  // Start polling - temporarily disabled to test auto-save
+  // Start SSE subscription and refresh on visibility/focus
   useEffect(() => {
-    if (snippetId) {
-      pollForUpdates(); // Initial fetch
-      // pollIntervalRef.current = setInterval(pollForUpdates, 3000); // Poll every 3 seconds to reduce conflicts
-    }
+    if (!snippetId) return;
+
+    // Initial fetch
+    pollForUpdates();
+
+    // Subscribe to server-sent events for updates-after-save
+    try {
+      const es = new EventSource(`/api/collaborate/${snippetId}?stream=1`);
+      eventSourceRef.current = es;
+      es.addEventListener('update', () => {
+        // Only fetch fresh data when server signals an update
+        pollForUpdates();
+      });
+      // Optional: handle errors
+      es.onerror = () => {
+        // fallback: refresh once on error
+        pollForUpdates();
+      };
+    } catch {}
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        pollForUpdates();
+      }
+    };
+    const handleFocus = () => {
+      pollForUpdates();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
       }
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null as any;
       }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [snippetId, pollForUpdates]);
 
