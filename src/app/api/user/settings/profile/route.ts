@@ -15,10 +15,47 @@ const ProfileUpdateSchema = z.object({
   dateFormat: z.enum(['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']).optional()
 });
 
+// GET - Fetch profile settings
+export async function GET(request: NextRequest) {
+  try {
+    const token = await getAuthCookie();
+    const claims = token ? verifyAccessToken(token) : null;
+    if (!claims) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectToDatabase();
+
+    const settings = await UserSettings.getUserSettings(claims.id);
+
+    return NextResponse.json({
+      success: true,
+      data: settings?.profile || {
+        displayName: '',
+        bio: '',
+        avatar: '',
+        timezone: 'UTC',
+        language: 'en',
+        dateFormat: 'MM/DD/YYYY'
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching profile settings:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch profile settings' },
+      { status: 500 }
+    );
+  }
+}
+
 // PATCH - Update profile settings
 export async function PATCH(request: NextRequest) {
   try {
-    const token = getAuthCookie();
+    const token = await getAuthCookie();
     const claims = token ? verifyAccessToken(token) : null;
     if (!claims) {
       return NextResponse.json(

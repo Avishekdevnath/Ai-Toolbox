@@ -56,7 +56,7 @@ export const lightTheme: ThemeColors = {
   // Text colors
   textPrimary: 'text-gray-900',
   textSecondary: 'text-gray-700',
-  textMuted: 'text-gray-500',
+  textMuted: 'text-gray-600',
   
   // Border colors
   border: 'border-gray-200',
@@ -101,7 +101,7 @@ export const darkTheme: ThemeColors = {
   // Text colors
   textPrimary: 'text-white',
   textSecondary: 'text-gray-300',
-  textMuted: 'text-gray-400',
+  textMuted: 'text-gray-300',
   
   // Border colors
   border: 'border-gray-600',
@@ -158,12 +158,12 @@ export function getQuizThemeClasses(theme: Theme) {
     
     // Form elements
     label: `${colors.quizText} text-base font-medium`,
-    helpText: `${colors.textMuted} text-xs`,
+    helpText: `${colors.textMuted} text-sm`,
     
     // Input fields
-    input: `w-full px-3 py-2 ${colors.inputBorder} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${colors.inputBackground} ${colors.inputText}`,
-    textarea: `w-full px-3 py-2 ${colors.inputBorder} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${colors.inputBackground} ${colors.inputText}`,
-    select: `w-full px-3 py-2 ${colors.inputBorder} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${colors.inputBackground} ${colors.inputText}`,
+    input: `w-full px-3 py-2 border ${colors.inputBorder} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${colors.inputBackground} ${colors.inputText}`,
+    textarea: `w-full px-3 py-2 border ${colors.inputBorder} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${colors.inputBackground} ${colors.inputText}`,
+    select: `w-full px-3 py-2 border ${colors.inputBorder} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${colors.inputBackground} ${colors.inputText}`,
     
     // Radio buttons
     radioContainer: `space-y-2`,

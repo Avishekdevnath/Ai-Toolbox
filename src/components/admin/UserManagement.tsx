@@ -113,6 +113,13 @@ export default function UserManagement() {
         const regularUsers = data.data.users || [];
         const adminUsers = data.data.adminUsers || [];
         
+        console.log('📊 Fetched data:', {
+          regularUsers: regularUsers.length,
+          adminUsers: adminUsers.length,
+          regularUserIds: regularUsers.map(u => u._id),
+          adminUserIds: adminUsers.map(u => u._id)
+        });
+        
         // Transform admin users to match user format
         const transformedAdminUsers = adminUsers.map((adminUser: any) => ({
           _id: adminUser._id,
@@ -135,10 +142,41 @@ export default function UserManagement() {
           }
         }));
 
-        // Combine and sort all users by creation date
-        const allUsers = [...regularUsers, ...transformedAdminUsers].sort((a, b) => 
+        // Combine and deduplicate users by ID, then sort by creation date
+        const userMap = new Map();
+        
+        // Add regular users first
+        regularUsers.forEach(user => {
+          userMap.set(user._id, user);
+        });
+        
+        // Add admin users, but don't overwrite existing ones to avoid duplicates
+        transformedAdminUsers.forEach(adminUser => {
+          if (!userMap.has(adminUser._id)) {
+            userMap.set(adminUser._id, adminUser);
+          } else {
+            // If user exists as both regular and admin, merge the data
+            const existingUser = userMap.get(adminUser._id);
+            userMap.set(adminUser._id, {
+              ...existingUser,
+              ...adminUser,
+              // Preserve original role if it's more specific
+              role: existingUser.role === 'admin' || existingUser.role === 'super_admin' 
+                ? existingUser.role 
+                : adminUser.role
+            });
+          }
+        });
+        
+        const allUsers = Array.from(userMap.values()).sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
+
+        console.log('🔄 Final users:', {
+          totalUsers: allUsers.length,
+          userIds: allUsers.map(u => u._id),
+          uniqueIds: [...new Set(allUsers.map(u => u._id))].length
+        });
 
         setUsers(allUsers);
         setPagination(data.data.pagination);
@@ -446,8 +484,8 @@ export default function UserManagement() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
-                      <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
+                    {users.map((user, index) => (
+                      <tr key={`${user._id}-${index}`} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div>
                             <div className="font-medium flex items-center gap-2">

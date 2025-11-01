@@ -13,7 +13,12 @@
     "test:ci": "jest --ci --coverage --watchAll=false",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "check-db": "node scripts/check-database-connection.js"
+    "check-db": "node scripts/check-database-connection.js",
+    "load-test": "node scripts/load-test.js --url http://localhost:3000 --concurrent 100 --requests 1000",
+    "load-test:heavy": "node scripts/load-test.js --url http://localhost:3000 --concurrent 500 --requests 10000",
+    "load-test:stress": "node scripts/load-test.js --url http://localhost:3000 --concurrent 1000 --requests 50000",
+    "metrics": "curl http://localhost:3000/api/metrics/performance | node -e \"console.log(JSON.stringify(JSON.parse(require('fs').readFileSync(0, 'utf-8')), null, 2))\"",
+    "health": "curl http://localhost:3000/api/system/health | node -e \"console.log(JSON.stringify(JSON.parse(require('fs').readFileSync(0, 'utf-8')), null, 2))\""
   },
   "dependencies": {
     "@google-cloud/vision": "^5.2.0",
@@ -39,6 +44,7 @@
     "bcryptjs": "^3.0.2",
     "canvas": "^3.1.2",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",

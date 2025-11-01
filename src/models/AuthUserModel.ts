@@ -11,6 +11,11 @@ export interface AuthUserDoc {
   phoneNumber?: string;
   passwordHash: string;
   role: 'admin' | 'user';
+  profilePicture?: {
+    url: string;
+    cloudinaryPublicId: string;
+    uploadedAt: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +28,11 @@ const AuthUserSchema = new Schema<AuthUserDoc>({
   phoneNumber: { type: String },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['admin', 'user'], default: 'user', index: true },
+  profilePicture: {
+    url: { type: String },
+    cloudinaryPublicId: { type: String },
+    uploadedAt: { type: Date }
+  }
 }, { timestamps: true, collection: 'authusers' });
 
 // Ensure indexes are created

@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
 
   // Image optimization
   images: {
-    domains: ['images.clerk.dev', 'img.clerk.com', 'lh3.googleusercontent.com'],
+    domains: ['images.clerk.dev', 'img.clerk.com', 'lh3.googleusercontent.com', 'res.cloudinary.com'],
     formats: ['image/webp', 'image/avif'],
   },
 

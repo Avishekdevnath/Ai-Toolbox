@@ -49,10 +49,10 @@ export default function PublicFormPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="text-center">
-          <Loader2 className="animate-spin h-12 w-12 mx-auto mb-4 text-black" />
-          <p className="text-gray-600">Loading form...</p>
+          <Loader2 className="animate-spin h-12 w-12 mx-auto mb-4 text-black dark:text-white" />
+          <p className="text-gray-700 dark:text-gray-300">Loading form...</p>
         </div>
       </div>
     );
@@ -60,15 +60,15 @@ export default function PublicFormPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
         <div className="text-center max-w-md">
           <div className="bg-red-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
             <AlertCircle size={32} className="text-red-500" />
           </div>
           <h2 className="text-xl font-bold text-red-600 mb-2">Error</h2>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-700 dark:text-gray-300">{error}</p>
           <button
-            className="mt-6 px-4 py-2 bg-black text-white rounded-md"
+            className="mt-6 px-4 py-2 bg-black text-white dark:bg-white dark:text-black rounded-md"
             onClick={() => router.back()}
           >
             Go Back

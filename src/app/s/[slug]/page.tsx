@@ -9,7 +9,14 @@ import dynamic from 'next/dynamic';
 // Client-side only components to prevent hydration issues
 const SnippetActions = dynamic(() => import('@/components/snippets/SnippetActions'), {
   ssr: false,
-  loading: () => <div className="w-20 h-8 bg-gray-700 rounded animate-pulse"></div>
+  loading: () => (
+    <div className="flex gap-1 sm:gap-1.5">
+      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-800 rounded-md animate-pulse"></div>
+      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-800 rounded-md animate-pulse"></div>
+      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-800 rounded-md animate-pulse"></div>
+      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-800 rounded-md animate-pulse"></div>
+    </div>
+  )
 });
 
 interface SnippetResponse {
@@ -30,6 +37,7 @@ export default function PublicSnippetPage({ params }: { params: Promise<{ slug: 
   const [data, setData] = useState<SnippetResponse['data'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [wordWrap, setWordWrap] = useState(false);
 
   useEffect(() => {
     const fetchSnippet = async () => {
@@ -58,10 +66,10 @@ export default function PublicSnippetPage({ params }: { params: Promise<{ slug: 
 
   if (loading) {
     return (
-      <div className="h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading snippet...</p>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 border-2 sm:border-3 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm sm:text-base md:text-lg">Loading snippet...</p>
         </div>
       </div>
     );
@@ -72,63 +80,65 @@ export default function PublicSnippetPage({ params }: { params: Promise<{ slug: 
   }
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Sticky Navigation Header */}
       <div className="sticky top-0 z-10">
         <SnippetHeader />
       </div>
 
-      {/* Sticky Snippet Header */}
-      <div className="sticky top-12 z-10 border-b border-gray-800 bg-gray-900">
-        <div className="max-w-6xl mx-auto px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">&lt;/&gt;</span>
-              </div>
-              <div>
-                <h1 className="text-sm font-semibold text-white">
-                  {data.title || 'Untitled Snippet'}
-                </h1>
-                <p className="text-gray-400 text-xs">
-                  {data.language.toUpperCase()} • {data.ownerId ? 'User' : 'Anonymous'} • {new Date(data.createdAt).toLocaleDateString()}
-                </p>
-              </div>
+      {/* Compact Header - Icon Only */}
+      <div className="sticky top-12 z-10 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-2 sm:px-3 py-1.5 sm:py-2">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Title only */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <h1 className="text-xs sm:text-sm font-medium text-white truncate">
+                {data.title || 'Untitled'}
+              </h1>
             </div>
             
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-xs text-gray-400">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>{data.viewCount} views</span>
+            {/* Right: Compact icons & actions */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              {/* View count - icon only on mobile */}
+              <div className="flex items-center gap-1 text-gray-400">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span className="text-xs hidden sm:inline">{data.viewCount}</span>
               </div>
-              <SnippetActions slug={data.slug} code={data.content} />
+              
+              <SnippetActions 
+                slug={data.slug} 
+                code={data.content}
+                wordWrap={wordWrap}
+                onWordWrapToggle={() => setWordWrap(!wordWrap)}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Scrollable Code Display */}
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto px-4 py-2">
-          <div id="code-display" className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
-            {/* Language Header */}
-            <div className="bg-gray-800 px-3 py-2 border-b border-gray-700 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              </div>
-              <div className="text-xs text-gray-400 font-mono language-label">
-                {data.language.toUpperCase()}
-              </div>
-            </div>
-            
-            {/* Code Content */}
-            <div className="p-0">
+      {/* Clean Code Display - No decorations */}
+      <div className="flex-1 overflow-auto bg-gray-950">
+        <div className="max-w-7xl mx-auto">
+          <div id="code-display" className="overflow-hidden">
+            {/* Code Content - Clean & Minimal */}
+            <div 
+              className={wordWrap ? 'overflow-hidden' : 'overflow-x-auto'}
+              style={{
+                wordBreak: 'normal', // Don't break words aggressively
+                overflowWrap: wordWrap ? 'anywhere' : 'normal', // Only break when absolutely necessary
+                hyphens: wordWrap ? 'auto' : 'manual', // Add hyphens for better readability
+                display: 'flex', // Use flexbox for better alignment
+                alignItems: 'flex-start', // Align items to top
+              }}
+            >
               <CodeBlock 
                 code={data.content} 
                 language={data.language}
-                className="text-xs leading-relaxed"
+                className="text-xs sm:text-sm leading-relaxed"
+                wordWrap={wordWrap}
               />
             </div>
           </div>

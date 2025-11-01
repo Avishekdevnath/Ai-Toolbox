@@ -5,8 +5,31 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check admin authentication
-    const adminSession = await AdminAuthService.getAdminSession(request);
+    // Check admin authentication - try both admin and user sessions
+    let adminSession = await AdminAuthService.getAdminSession(request);
+    
+    // If no admin session, try user session with admin role
+    if (!adminSession) {
+      const { getAuthCookie } = await import('@/lib/auth/cookies');
+      const { verifyAccessToken } = await import('@/lib/auth/jwt');
+      
+      const token = await getAuthCookie();
+      const claims = token ? verifyAccessToken(token) : null;
+      
+      if (claims && (claims.role === 'admin' || claims.role === 'super_admin')) {
+        adminSession = {
+          id: claims.id,
+          email: claims.email,
+          role: claims.role,
+          permissions: ['manage_users', 'manage_tools', 'view_analytics', 'manage_system', 'manage_content', 'view_audit_logs', 'view_dashboard', 'manage_settings'],
+          firstName: claims.name.split(' ')[0] || '',
+          lastName: claims.name.split(' ').slice(1).join(' ') || '',
+          isActive: true,
+          lastLoginAt: new Date(),
+        };
+      }
+    }
+    
     if (!adminSession) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -14,8 +37,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Only super_admin can view admin users
-    if (adminSession.role !== 'super_admin') {
+    // Only admin or super_admin can view admin users
+    if (adminSession.role !== 'admin' && adminSession.role !== 'super_admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -116,8 +139,31 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check admin authentication
-    const adminSession = await AdminAuthService.getAdminSession(request);
+    // Check admin authentication - try both admin and user sessions
+    let adminSession = await AdminAuthService.getAdminSession(request);
+    
+    // If no admin session, try user session with admin role
+    if (!adminSession) {
+      const { getAuthCookie } = await import('@/lib/auth/cookies');
+      const { verifyAccessToken } = await import('@/lib/auth/jwt');
+      
+      const token = await getAuthCookie();
+      const claims = token ? verifyAccessToken(token) : null;
+      
+      if (claims && (claims.role === 'admin' || claims.role === 'super_admin')) {
+        adminSession = {
+          id: claims.id,
+          email: claims.email,
+          role: claims.role,
+          permissions: ['manage_users', 'manage_tools', 'view_analytics', 'manage_system', 'manage_content', 'view_audit_logs', 'view_dashboard', 'manage_settings'],
+          firstName: claims.name.split(' ')[0] || '',
+          lastName: claims.name.split(' ').slice(1).join(' ') || '',
+          isActive: true,
+          lastLoginAt: new Date(),
+        };
+      }
+    }
+    
     if (!adminSession) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -128,7 +174,7 @@ export async function POST(request: NextRequest) {
     // Only super_admin can create admin users
     if (adminSession.role !== 'super_admin') {
       return NextResponse.json(
-        { success: false, error: 'Insufficient permissions' },
+        { success: false, error: 'Insufficient permissions - Super admin required' },
         { status: 403 }
       );
     }

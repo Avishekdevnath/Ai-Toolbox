@@ -110,28 +110,138 @@ export interface CodeBlockProps {
   code: string;
   language: string;
   className?: string;
+  wordWrap?: boolean;
 }
 
-export default function CodeBlock({ code, language, className }: CodeBlockProps) {
-  const style = CODE_STYLE;
-  const customStyle = CODE_CUSTOM_STYLE;
+export default function CodeBlock({ code, language, className, wordWrap = false }: CodeBlockProps) {
+  // Create dynamic style based on wordWrap
+  const dynamicStyle = useMemo(() => {
+    const baseStyle = { ...CODE_STYLE };
+    
+    if (wordWrap) {
+      // For word wrap: preserve whitespace but allow wrapping at natural break points
+      return {
+        ...baseStyle,
+        'code[class*="language-"]': {
+          ...baseStyle['code[class*="language-"]'],
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'normal', // Don't break words aggressively
+          overflowWrap: 'anywhere', // Only break when absolutely necessary
+          hyphens: 'auto', // Add hyphens when breaking long words
+        },
+        'pre[class*="language-"]': {
+          ...baseStyle['pre[class*="language-"]'],
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'normal',
+          overflowWrap: 'anywhere',
+          hyphens: 'auto',
+        },
+      };
+    } else {
+      // For no wrap: preserve exact formatting
+      return {
+        ...baseStyle,
+        'code[class*="language-"]': {
+          ...baseStyle['code[class*="language-"]'],
+          whiteSpace: 'pre',
+          wordBreak: 'normal',
+          overflowWrap: 'normal',
+        },
+        'pre[class*="language-"]': {
+          ...baseStyle['pre[class*="language-"]'],
+          whiteSpace: 'pre',
+          wordBreak: 'normal',
+          overflowWrap: 'normal',
+        },
+      };
+    }
+  }, [wordWrap]);
+
+  const customStyle = useMemo(() => ({
+    ...CODE_CUSTOM_STYLE,
+    whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
+    wordBreak: 'normal', // Always normal, let overflowWrap handle breaking
+    overflowWrap: wordWrap ? 'anywhere' : 'normal',
+    hyphens: wordWrap ? 'auto' : 'manual',
+    margin: 0, // Remove default margins
+    padding: 0, // Remove default padding
+  }), [wordWrap]);
+
+  // Split code into lines for custom line numbering
+  const lines = code.split('\n');
+  
   return (
-    <div className={className}>
-      <SyntaxHighlighter
-        language={language}
-        PreTag="div"
-        style={style}
-        customStyle={customStyle}
-        wrapLines
-        showLineNumbers
-        lineNumberStyle={{
-          color: '#6b7280',
-          marginRight: '1rem',
-          userSelect: 'none'
-        }}
-      >
-        {code}
-      </SyntaxHighlighter>
+    <div className={`${className} code-block-container`} style={{
+      display: 'flex',
+      position: 'relative',
+      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+    }}>
+      <style jsx>{`
+        .code-block-container {
+          background: #0a0a0a;
+          border-radius: 0;
+        }
+        
+        .line-numbers {
+          background: #0a0a0a;
+          color: #6b7280;
+          padding: 0.75em 1rem 0.75em 0;
+          user-select: none;
+          text-align: right;
+          min-width: 3rem;
+          flex-shrink: 0;
+          border-right: 1px solid #1f2937;
+        }
+        
+        .code-content {
+          flex: 1;
+          overflow: ${wordWrap ? 'visible' : 'auto'};
+          padding: 0.75em 0;
+        }
+        
+        .code-content :global(pre) {
+          margin: 0;
+          padding: 0;
+          background: transparent;
+          font-size: inherit;
+          line-height: inherit;
+        }
+        
+        .code-content :global(code) {
+          background: transparent;
+          padding: 0;
+          font-size: inherit;
+          line-height: inherit;
+        }
+      `}</style>
+      
+      {/* Custom Line Numbers */}
+      <div className="line-numbers">
+        {lines.map((_, index) => (
+          <div key={index} style={{
+            lineHeight: '1.5em',
+            height: wordWrap ? 'auto' : '1.5em',
+            minHeight: '1.5em',
+          }}>
+            {index + 1}
+          </div>
+        ))}
+      </div>
+      
+      {/* Code Content */}
+      <div className="code-content">
+        <SyntaxHighlighter
+          language={language}
+          PreTag="div"
+          style={dynamicStyle}
+          customStyle={customStyle}
+          wrapLines={false}
+          wrapLongLines={false}
+          showLineNumbers={false} // Disable built-in line numbers
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
     </div>
   );
 }

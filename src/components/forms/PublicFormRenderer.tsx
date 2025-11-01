@@ -143,9 +143,13 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
   // Lightweight public branding for all public forms
   const Branding = () => (
     <div className="mt-6 text-center">
-      <Link href="/" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 text-xs text-gray-600 bg-white hover:bg-gray-50 transition-colors">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 text-xs text-gray-700 bg-white hover:bg-gray-50
+        dark:border-gray-700 dark:text-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+      >
         <span className="font-semibold">AI Toolbox</span>
-        <span className="text-gray-400">•</span>
+        <span className="text-gray-400 dark:text-gray-400">•</span>
         <span>by Avishek</span>
       </Link>
     </div>
@@ -484,30 +488,37 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
 
   if (!isQuiz) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
-        <Card className="w-full max-w-3xl md:max-w-4xl shadow-xl">
+      <div className={`min-h-screen flex flex-col items-center justify-center p-4 md:p-6 ${themeClasses.container}`}>
+        <Card className={`w-full max-w-3xl md:max-w-4xl shadow-xl ${themeClasses.card}`}>
           <CardHeader>
-            <CardTitle className="text-3xl font-semibold">{schema.title}</CardTitle>
-            {schema.description && <p className="text-gray-600 mt-1">{schema.description}</p>}
+            <CardTitle className={themeClasses.title}>{schema.title}</CardTitle>
+            {schema.description && <p className={`${themeClasses.description} mt-1`}>{schema.description}</p>}
           </CardHeader>
           <CardContent>
-            {error && <div className="text-red-600 text-sm mb-3 p-3 bg-red-50 rounded">{error}</div>}
-            {msg && <div className="text-green-600 text-sm mb-3 p-3 bg-green-50 rounded">{msg}</div>}
+            {error && (
+              <div className="text-red-600 dark:text-red-300 text-sm mb-3 p-3 bg-red-50 dark:bg-red-900/20 rounded">
+                {error}
+              </div>
+            )}
+            {msg && (
+              <div className="text-green-600 dark:text-green-300 text-sm mb-3 p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                {msg}
+              </div>
+            )}
 
             <form onSubmit={submit} className="space-y-6">
               {schema.fields.map((f) => (
                 <div key={f.id} className="space-y-2">
-                  <label className="block text-base font-medium text-gray-900">
+                  <label className={themeClasses.label}>
                     {f.label}
-                    {f.required && <span className="text-red-500 ml-1">*</span>}
+                    {f.required && <span className={themeClasses.required}>*</span>}
                   </label>
 
-                  {f.helpText && <p className="text-xs text-gray-500 mb-1">{f.helpText}</p>}
+                  {f.helpText && <p className={`${themeClasses.helpText} mb-1`}>{f.helpText}</p>}
 
-                  {/* SHORT TEXT*/}
                   {f.type === 'short_text' && (
                     <input
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={themeClasses.input}
                       value={values[f.id] || ''}
                       onChange={(e) => handleChange(f, e.target.value)}
                       required={f.required}
@@ -515,10 +526,9 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
                     />
                   )}
 
-                  {/* LONG TEXT*/}
                   {f.type === 'long_text' && (
                     <textarea
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={themeClasses.textarea}
                       rows={4}
                       value={values[f.id] || ''}
                       onChange={(e) => handleChange(f, e.target.value)}
@@ -527,11 +537,10 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
                     />
                   )}
 
-                  {/* EMAIL*/}
                   {f.type === 'email' && (
                     <input
                       type="email"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={themeClasses.input}
                       value={values[f.id] || ''}
                       onChange={(e) => handleChange(f, e.target.value)}
                       required={f.required}
@@ -539,11 +548,10 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
                     />
                   )}
 
-                  {/* NUMBER */}
                   {f.type === 'number' && (
                     <input
                       type="number"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={themeClasses.input}
                       value={values[f.id] || ''}
                       onChange={(e) => handleChange(f, e.target.value)}
                       required={f.required}
@@ -551,11 +559,10 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
                     />
                   )}
 
-                  {/* RADIO */}
                   {(f.type === 'radio' || f.type === 'single_select') && (
-                    <div className="space-y-2">
+                    <div className={themeClasses.radioContainer}>
                       {(f.options || []).map((o) => (
-                        <label key={o} className="flex items-center gap-2 text-sm text-gray-800">
+                        <label key={o} className={themeClasses.radioLabel}>
                           <input
                             type="radio"
                             name={f.id}
@@ -563,21 +570,21 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
                             checked={values[f.id] === o}
                             onChange={() => handleChange(f, o)}
                             required={f.required}
+                            className={themeClasses.radioInput}
                           />
-                          <span>{o}</span>
+                          <span className={themeClasses.radioText}>{o}</span>
                         </label>
                       ))}
                     </div>
                   )}
 
-                  {/* CHECKBOX */}
                   {f.type === 'checkbox' && (
-                    <div className="space-y-2 text-sm text-gray-800">
+                    <div className={themeClasses.checkboxContainer}>
                       {(f.options || []).map((o) => {
                         const arr: string[] = values[f.id] || [];
                         const checked = arr.includes(o);
                         return (
-                          <label key={o} className="flex items-center gap-2">
+                          <label key={o} className={themeClasses.checkboxLabel}>
                             <input
                               type="checkbox"
                               checked={checked}
@@ -586,8 +593,9 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
                                 if (e.target.checked) next.add(o); else next.delete(o);
                                 handleChange(f, Array.from(next));
                               }}
+                              className={themeClasses.checkboxInput}
                             />
-                            <span>{o}</span>
+                            <span className={themeClasses.checkboxText}>{o}</span>
                           </label>
                         );
                       })}
@@ -596,7 +604,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
                 </div>
               ))}
 
-              <Button type="submit" disabled={submitting} className="w-full">
+              <Button type="submit" disabled={submitting} className={themeClasses.button}>
                 {submitting ? 'Submitting...' : 'Submit'}
               </Button>
             </form>
