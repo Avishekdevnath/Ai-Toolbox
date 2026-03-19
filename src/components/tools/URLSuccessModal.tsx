@@ -21,10 +21,10 @@ export default function URLSuccessModal({
   onDelete,
   isAuthenticated = false
 }: URLSuccessModalProps) {
-  if (!recentUrl) return null;
-
   const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  if (!recentUrl) return null;
 
   const handleCopy = async (text: string) => {
     const success = await copyToClipboard(text);

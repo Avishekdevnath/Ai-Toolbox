@@ -1,20 +1,123 @@
-// Client-side authentication service (for use in client components)
+'use client';
+
+export type AuthRole = 'admin' | 'user';
+
 export interface AuthUser {
   id: string;
-  email: string;
+  username: string;
   firstName: string;
   lastName: string;
-  isAdmin: boolean;
-  provider?: string;
+  email: string;
+  phoneNumber?: string;
+  role: AuthRole;
 }
 
 export interface AuthSession {
+  token: string;
   user: AuthUser;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
 
-// Client-side authentication service class
+type PersistedAuthSession = {
+  token: string;
+  user: AuthUser;
+  isAdmin: boolean;
+};
+
+const USER_SESSION_STORAGE_KEY = 'user-session';
+const ADMIN_SESSION_STORAGE_KEY = 'admin-session';
+
+function decodeJwtPayload(token: string): { exp?: number } | null {
+  try {
+    const [, payload] = token.split('.');
+    if (!payload) {
+      return null;
+    }
+
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    const decoded = window.atob(paddedBase64);
+
+    return JSON.parse(decoded) as { exp?: number };
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+
+  if (!payload?.exp) {
+    return false;
+  }
+
+  return payload.exp * 1000 <= Date.now();
+}
+
+function normalizeUser(userData: Partial<AuthUser>, fallbackRole: AuthRole): AuthUser {
+  return {
+    id: userData.id || '',
+    username: userData.username || userData.email || '',
+    firstName: userData.firstName || '',
+    lastName: userData.lastName || '',
+    email: userData.email || '',
+    phoneNumber: userData.phoneNumber,
+    role: userData.role || fallbackRole,
+  };
+}
+
+function readSession(storageKey: string, fallbackRole: AuthRole): AuthSession | null {
+  try {
+    const rawValue = localStorage.getItem(storageKey);
+    if (!rawValue) {
+      return null;
+    }
+
+    const parsed = JSON.parse(rawValue) as Partial<PersistedAuthSession>;
+    if (!parsed?.token || !parsed.user) {
+      localStorage.removeItem(storageKey);
+      return null;
+    }
+
+    if (isTokenExpired(parsed.token)) {
+      localStorage.removeItem(storageKey);
+      return null;
+    }
+
+    const user = normalizeUser(parsed.user, fallbackRole);
+
+    return {
+      token: parsed.token,
+      user,
+      isAuthenticated: true,
+      isAdmin: parsed.isAdmin ?? user.role === 'admin',
+    };
+  } catch (error) {
+    console.error('Error getting client session:', error);
+    localStorage.removeItem(storageKey);
+    return null;
+  }
+}
+
+function writeSession(storageKey: string, sessionData: PersistedAuthSession): AuthSession {
+  const user = normalizeUser(sessionData.user, sessionData.isAdmin ? 'admin' : 'user');
+  const persistedSession: PersistedAuthSession = {
+    token: sessionData.token,
+    user,
+    isAdmin: sessionData.isAdmin,
+  };
+
+  localStorage.setItem(storageKey, JSON.stringify(persistedSession));
+
+  return {
+    token: persistedSession.token,
+    user,
+    isAuthenticated: true,
+    isAdmin: persistedSession.isAdmin,
+  };
+}
+
 export class ClientAuthService {
   private static instance: ClientAuthService;
   private currentSession: AuthSession | null = null;
@@ -28,130 +131,76 @@ export class ClientAuthService {
     return ClientAuthService.instance;
   }
 
-  // Get current authentication session (client-side only)
   public getCurrentSession(): AuthSession | null {
     try {
-      // Check admin session first
-      const adminSession = localStorage.getItem('admin-session');
+      const adminSession = readSession(ADMIN_SESSION_STORAGE_KEY, 'admin');
       if (adminSession) {
-        const session = JSON.parse(adminSession);
-        this.currentSession = {
-          user: session.user,
-          isAuthenticated: true,
-          isAdmin: true
-        };
-        return this.currentSession;
+        this.currentSession = adminSession;
+        return adminSession;
       }
 
-      // Check user session
-      const userSession = localStorage.getItem('user-session');
+      const userSession = readSession(USER_SESSION_STORAGE_KEY, 'user');
       if (userSession) {
-        const session = JSON.parse(userSession);
-        this.currentSession = {
-          user: session.user,
-          isAuthenticated: true,
-          isAdmin: false
-        };
-        return this.currentSession;
+        this.currentSession = userSession;
+        return userSession;
       }
 
-      // No session found
       this.currentSession = null;
       return null;
     } catch (error) {
       console.error('Error getting client session:', error);
+      this.currentSession = null;
       return null;
     }
   }
 
-  // Check if user is authenticated
   public isAuthenticated(): boolean {
-    const session = this.getCurrentSession();
-    return session?.isAuthenticated || false;
+    return Boolean(this.getCurrentSession()?.isAuthenticated);
   }
 
-  // Check if user is admin
   public isAdmin(): boolean {
-    const session = this.getCurrentSession();
-    return session?.isAdmin || false;
+    return Boolean(this.getCurrentSession()?.isAdmin);
   }
 
-  // Get current user
   public getCurrentUser(): AuthUser | null {
-    const session = this.getCurrentSession();
-    return session?.user || null;
+    return this.getCurrentSession()?.user || null;
   }
 
-  // Sign out
   public signOut(): void {
     try {
-      // Clear sessions
-      localStorage.removeItem('admin-session');
-      localStorage.removeItem('user-session');
-      
-      // Clear current session
+      localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+      localStorage.removeItem(USER_SESSION_STORAGE_KEY);
       this.currentSession = null;
     } catch (error) {
       console.error('Error during sign out:', error);
     }
   }
 
-  // Create admin session (for admin login)
-  public createAdminSession(adminData: any): void {
-    const authUser: AuthUser = {
-      id: adminData.id,
-      email: adminData.email,
-      firstName: adminData.firstName,
-      lastName: adminData.lastName,
-      isAdmin: true
-    };
-
-    const session: AuthSession = {
-      user: authUser,
-      isAuthenticated: true,
-      isAdmin: true
-    };
-
-    localStorage.setItem('admin-session', JSON.stringify({
-      user: authUser,
+  public createAdminSession(adminData: { token: string; user: Partial<AuthUser> }): void {
+    this.currentSession = writeSession(ADMIN_SESSION_STORAGE_KEY, {
       token: adminData.token,
-      isAdmin: true
-    }));
-
-    this.currentSession = session;
+      user: {
+        ...adminData.user,
+        role: 'admin',
+      },
+      isAdmin: true,
+    });
   }
 
-  // Create user session (for regular users)
-  public createUserSession(userData: any): void {
-    const authUser: AuthUser = {
-      id: userData.id,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      isAdmin: false,
-      provider: userData.provider
-    };
-
-    const session: AuthSession = {
-      user: authUser,
-      isAuthenticated: true,
-      isAdmin: false
-    };
-
-    localStorage.setItem('user-session', JSON.stringify({
-      user: authUser,
-      isAdmin: false,
-      provider: userData.provider
-    }));
-
-    this.currentSession = session;
+  public createUserSession(userData: { token: string; user: Partial<AuthUser> }): void {
+    this.currentSession = writeSession(USER_SESSION_STORAGE_KEY, {
+      token: userData.token,
+      user: {
+        ...userData.user,
+        role: userData.user.role || 'user',
+      },
+      isAdmin: userData.user.role === 'admin',
+    });
   }
 }
 
-// Export singleton instance for client-side use
 export const clientAuthService = ClientAuthService.getInstance();
 
-// Helper functions for client-side authentication
 export function getClientSession(): AuthSession | null {
   return clientAuthService.getCurrentSession();
 }
@@ -168,14 +217,14 @@ export function getClientUser(): AuthUser | null {
   return clientAuthService.getCurrentUser();
 }
 
-export function createClientAdminSession(adminData: any): void {
+export function createClientAdminSession(adminData: { token: string; user: Partial<AuthUser> }): void {
   clientAuthService.createAdminSession(adminData);
 }
 
-export function createClientUserSession(userData: any): void {
+export function createClientUserSession(userData: { token: string; user: Partial<AuthUser> }): void {
   clientAuthService.createUserSession(userData);
 }
 
 export function signOutClient(): void {
   clientAuthService.signOut();
-} 
+}

@@ -1,48 +1,63 @@
-import React from 'react';
+import * as React from 'react';
+import { Slot } from '@radix-ui/react-slot';
+import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
-interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  variant?: 'default' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-  type?: 'button' | 'submit' | 'reset';
+const variantStyles = {
+  primary: 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]',
+  default: 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]', // alias for backward compat
+  secondary: 'bg-[var(--color-muted)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]',
+  outline: 'border border-[var(--color-border)] bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-muted)]',
+  ghost: 'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-muted)]',
+  destructive: 'bg-[var(--color-destructive)] text-white hover:opacity-90',
+  link: 'bg-transparent text-[var(--color-primary)] underline-offset-4 hover:underline p-0 h-auto',
+};
+
+const sizeStyles = {
+  sm: 'h-8 px-3 text-sm gap-1.5',
+  md: 'h-10 px-4 py-2 text-sm gap-2',
+  lg: 'h-12 px-6 text-base gap-2',
+  icon: 'h-10 w-10 p-0',
+};
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: keyof typeof variantStyles;
+  size?: keyof typeof sizeStyles;
+  loading?: boolean;
+  asChild?: boolean;
 }
 
-export function Button({ 
-  children, 
-  onClick, 
-  disabled = false, 
-  variant = 'default',
-  size = 'md',
-  className = '',
-  type = 'button'
-}: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
-  const variantClasses = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
-    ghost: 'text-gray-700 hover:bg-gray-100'
-  };
-  
-  const sizeClasses = {
-    sm: 'h-8 px-3 text-sm',
-    md: 'h-10 px-4 py-2',
-    lg: 'h-12 px-6 text-lg'
-  };
-  
-  const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
-  
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={classes}
-    >
-      {children}
-    </button>
-  );
-} 
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = 'primary', size = 'md', loading = false, asChild = false, disabled, children, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button';
+    const sharedProps = {
+      className: cn(
+        'inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-150 cursor-pointer',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2',
+        'disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed',
+        variantStyles[variant],
+        sizeStyles[size],
+        className
+      ),
+      ...props,
+    };
+
+    if (asChild) {
+      return (
+        <Slot ref={ref} {...sharedProps}>
+          {children}
+        </Slot>
+      );
+    }
+
+    return (
+      <button ref={ref} disabled={disabled || loading} {...sharedProps}>
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {children}
+      </button>
+    );
+  }
+);
+Button.displayName = 'Button';
+
+export { Button };

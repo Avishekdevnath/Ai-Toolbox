@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
-  processResumeFile, 
+  storeUploadedResumeFile, 
   storeAnalysisInDB, 
   getStoredAnalysis
 } from '@/lib/enhancedResumeUtils';
 import {
-  ResumeRequest,
   ResumeResponse,
-  ResumeAnalysis
 } from '@/schemas/resumeSchema';
-import { buildResumeAnalysisPrompt } from '@/lib/resumePromptBuilder';
-import { generateGeminiResponse } from '@/lib/gemini';
+import { buildResumeFileAnalysisPrompt } from '@/lib/resumePromptBuilder';
+import { analyzeResumeFileWithOpenAI } from '@/lib/openaiResumeService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,64 +76,24 @@ export async function POST(request: NextRequest) {
 
     console.log('Processing resume file:', file.name, 'Type:', file.type, 'Size:', file.size);
 
-    // Process the file with OCR and storage
-    const { text, resumeId, googleDriveId } = await processResumeFile(file);
-
-    console.log('Text extracted successfully. Length:', text.length);
-    console.log('Resume stored in DB with ID:', resumeId);
-    if (googleDriveId) {
-      console.log('File uploaded to Google Drive with ID:', googleDriveId);
-    }
-
-    // Validate extracted text
-    if (!text || text.trim().length < 50) {
-      return NextResponse.json({
-        success: false,
-        error: 'Could not extract sufficient text from the document. Please ensure the document contains readable text or try uploading a different format.'
-      } as ResumeResponse);
-    }
-
-    // Build the analysis prompt
-    const prompt = buildResumeAnalysisPrompt({
-      resumeText: text,
+    const prompt = buildResumeFileAnalysisPrompt({
       industry,
       jobTitle,
       experienceLevel,
-      fileName: file.name
+      fileName: file.name,
     });
 
-    console.log('Sending analysis request to Gemini...');
+    console.log('Sending uploaded resume to OpenAI for analysis...');
+    const analysis = await analyzeResumeFileWithOpenAI(file, prompt);
+    console.log('OpenAI resume analysis generated successfully');
 
-    // Generate AI analysis
-    const aiResponse = await generateGeminiResponse(prompt);
-
-    if (!aiResponse.success || !aiResponse.text) {
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to generate AI analysis. Please try again.'
-      } as ResumeResponse);
+    const { resumeId, blobPathname, blobUrl } = await storeUploadedResumeFile(file);
+    console.log('Resume stored in DB with ID:', resumeId);
+    if (blobPathname) {
+      console.log('File uploaded to Vercel Blob with pathname:', blobPathname);
     }
-
-    console.log('AI analysis generated successfully');
-
-    // Parse the AI response
-    let analysis: ResumeAnalysis;
-    try {
-      analysis = JSON.parse(aiResponse.text);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to parse AI analysis response. Please try again.'
-      } as ResumeResponse);
-    }
-
-    // Validate analysis structure
-    if (!analysis.overallScore || !analysis.strengths || !analysis.weaknesses) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid analysis structure received from AI. Please try again.'
-      } as ResumeResponse);
+    if (blobUrl) {
+      console.log('Private blob URL created:', blobUrl);
     }
 
     // Store analysis in MongoDB
@@ -163,7 +121,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: `Resume analysis failed: ${errorMessage}`
-    } as ResumeResponse);
+    } as ResumeResponse, { status: 500 });
   }
 }
 

@@ -61,11 +61,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Login successful',
+      token,
       user: {
         id: authResult.user.id,
         email: authResult.user.email,
         username: authResult.user.username,
-        name: authResult.user.name,
+        firstName: authResult.user.firstName || '',
+        lastName: authResult.user.lastName || '',
+        phoneNumber: authResult.user.phoneNumber,
         role: authResult.user.role,
       },
       timestamp: new Date().toISOString()

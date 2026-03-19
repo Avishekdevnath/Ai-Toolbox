@@ -1,48 +1,48 @@
-import React from 'react';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
-interface InputProps {
-  id?: string;
-  name?: string;
-  type?: string;
-  value?: string | number;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  className?: string;
-  disabled?: boolean;
-  required?: boolean;
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  helperText?: string;
+  error?: string;
 }
 
-export function Input({ 
-  id,
-  name,
-  type = 'text',
-  value,
-  onChange,
-  placeholder,
-  min,
-  max,
-  step,
-  className = '',
-  disabled = false,
-  required = false
-}: InputProps) {
-  return (
-    <input
-      id={id}
-      name={name}
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      min={min}
-      max={max}
-      step={step}
-      disabled={disabled}
-      required={required}
-      className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    />
-  );
-} 
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, label, helperText, error, id, required, ...props }, ref) => {
+    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+    return (
+      <div className="w-full">
+        {label && (
+          <label htmlFor={inputId} className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            {label}
+            {required && <span className="text-[var(--color-destructive)] ml-0.5">*</span>}
+          </label>
+        )}
+        <input
+          id={inputId}
+          ref={ref}
+          required={required}
+          className={cn(
+            'flex h-11 w-full rounded-lg border bg-[var(--color-surface)] px-3 py-2 text-sm',
+            'border-[var(--color-border)] text-[var(--color-text-primary)]',
+            'placeholder:text-[var(--color-text-secondary)]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-[var(--color-destructive)] focus-visible:ring-[var(--color-destructive)]',
+            className
+          )}
+          {...props}
+        />
+        {helperText && !error && (
+          <p className="mt-1.5 text-xs text-[var(--color-text-secondary)]">{helperText}</p>
+        )}
+        {error && (
+          <p className="mt-1.5 text-xs text-[var(--color-destructive)]">{error}</p>
+        )}
+      </div>
+    );
+  }
+);
+Input.displayName = 'Input';
+
+export { Input };

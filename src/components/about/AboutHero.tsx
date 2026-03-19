@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Linkedin, Globe, MapPin, Phone, Download, X, CheckCircle } from 'lucide-react';
-import { fadeInUp, scaleIn } from '@/components/landing/animations';
+import { fadeInUp } from '@/components/landing/animations';
 import ContactForm from '@/components/forms/ContactForm';
 
 interface AboutHeroProps {
@@ -60,7 +60,7 @@ export default function AboutHero({ className = '' }: AboutHeroProps) {
           <motion.div 
             initial="initial" 
             animate="animate" 
-            variants={scaleIn}
+            variants={fadeInUp}
             className="text-center lg:text-left"
           >
             <div className="relative inline-block mb-8">

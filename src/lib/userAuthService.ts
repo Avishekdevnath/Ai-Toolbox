@@ -2,8 +2,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
+import type { ClientSession } from 'mongoose';
 import { AuthUserModel } from '@/models/AuthUserModel';
-import { getDatabase } from '@/lib/mongodb';
 
 export interface UserLoginCredentials {
   email?: string;
@@ -32,10 +32,19 @@ export interface UserRegistrationData {
   name: string;
   firstName?: string;
   lastName?: string;
+  phoneNumber?: string;
+  securityQuestions?: Array<{
+    questionId: string;
+    answerHash: string;
+  }>;
 }
 
 export class UserAuthService {
-  private static readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+  private static get JWT_SECRET(): string {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) throw new Error('JWT_SECRET is not set');
+    return secret;
+  }
   private static readonly SESSION_COOKIE_NAME = 'user_session';
   private static readonly SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -97,6 +106,9 @@ export class UserAuthService {
         id: user._id.toString(),
         email: user.email,
         username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber,
         name: `${user.firstName} ${user.lastName}`.trim(),
         role: user.role || 'user',
         isActive: true,
@@ -125,12 +137,29 @@ export class UserAuthService {
     success: boolean;
     user?: UserSession;
     error?: string;
+  }>;
+  static async registerUser(
+    userData: UserRegistrationData,
+    options: { session?: ClientSession }
+  ): Promise<{
+    success: boolean;
+    user?: UserSession;
+    error?: string;
+  }>;
+  static async registerUser(
+    userData: UserRegistrationData,
+    options?: { session?: ClientSession }
+  ): Promise<{
+    success: boolean;
+    user?: UserSession;
+    error?: string;
   }> {
     try {
       await this.ensureConnection();
-      
-      const { email, username, password, name, firstName, lastName } = userData;
-      
+
+      const session = options?.session;
+      const { email, username, password, name, firstName, lastName, phoneNumber, securityQuestions } = userData;
+
       if (!email || !password || !name) {
         return {
           success: false,
@@ -139,7 +168,7 @@ export class UserAuthService {
       }
 
       // Check if user already exists by email
-      const existingUserByEmail = await AuthUserModel.findByEmail(email.toLowerCase());
+      const existingUserByEmail = await AuthUserModel.findByEmail(email.toLowerCase(), session);
       if (existingUserByEmail) {
         return {
           success: false,
@@ -149,7 +178,7 @@ export class UserAuthService {
 
       // Check if username is provided and already exists
       if (username) {
-        const existingUserByUsername = await AuthUserModel.findByUsername(username.toLowerCase());
+        const existingUserByUsername = await AuthUserModel.findByUsername(username.toLowerCase(), session);
         if (existingUserByUsername) {
           return {
             success: false,
@@ -173,14 +202,18 @@ export class UserAuthService {
         password: password,
         firstName: firstName || name.split(' ')[0],
         lastName: lastName || name.split(' ').slice(1).join(' ') || '',
-        phoneNumber: undefined
-      });
+        phoneNumber,
+        securityQuestions
+      }, session);
 
       // Create user session
       const userSession: UserSession = {
         id: newUser._id.toString(),
         email: newUser.email,
         username: newUser.username,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        phoneNumber: newUser.phoneNumber,
         name: `${newUser.firstName} ${newUser.lastName}`.trim(),
         role: newUser.role || 'user',
         isActive: true,

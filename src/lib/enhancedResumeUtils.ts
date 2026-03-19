@@ -1,7 +1,7 @@
 import { createWorker } from 'tesseract.js';
-import { google } from 'googleapis';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from './mongodb';
+import { UploadedResumeBlob, uploadResumeToVercelBlob } from './vercelBlobStorage';
 
 // Enhanced interfaces for online storage
 export interface StoredResume {
@@ -13,7 +13,9 @@ export interface StoredResume {
   fileSize: number;
   uploadDate: Date;
   analysisId?: ObjectId;
-  googleDriveId?: string;
+  blobPathname?: string;
+  blobUrl?: string;
+  blobDownloadUrl?: string;
   userId?: string;
 }
 
@@ -26,21 +28,6 @@ export interface StoredAnalysis {
   experienceLevel: string;
   analysisDate: Date;
   userId?: string;
-}
-
-// Google Drive configuration
-const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
-const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || 'your-folder-id';
-
-// MongoDB configuration
-
-// Initialize Google Drive API
-function getGoogleDriveAuth() {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    scopes: SCOPES,
-  });
-  return auth;
 }
 
 // Enhanced text extraction with OCR
@@ -86,35 +73,6 @@ async function performOCR(file: File): Promise<string> {
   }
 }
 
-// Store file in Google Drive
-export async function uploadToGoogleDrive(file: File, fileName: string): Promise<string> {
-  try {
-    const auth = getGoogleDriveAuth();
-    const drive = google.drive({ version: 'v3', auth });
-    
-    const fileMetadata = {
-      name: fileName,
-      parents: [GOOGLE_DRIVE_FOLDER_ID],
-    };
-    
-    const media = {
-      mimeType: file.type,
-      body: file.stream(),
-    };
-    
-    const response = await drive.files.create({
-      requestBody: fileMetadata,
-      media: media,
-      fields: 'id',
-    });
-    
-    return response.data.id || '';
-  } catch (error) {
-    console.error('Google Drive upload failed:', error);
-    throw new Error('Failed to upload file to Google Drive');
-  }
-}
-
 // Store resume data in MongoDB
 export async function storeResumeInDB(
   fileName: string,
@@ -122,7 +80,7 @@ export async function storeResumeInDB(
   processedText: string,
   fileType: string,
   fileSize: number,
-  googleDriveId?: string,
+  uploadedBlob?: UploadedResumeBlob,
   userId?: string
 ): Promise<ObjectId> {
   try {
@@ -136,7 +94,9 @@ export async function storeResumeInDB(
       fileType,
       fileSize,
       uploadDate: new Date(),
-      googleDriveId,
+      blobPathname: uploadedBlob?.pathname,
+      blobUrl: uploadedBlob?.url,
+      blobDownloadUrl: uploadedBlob?.downloadUrl,
       userId,
     };
     
@@ -146,6 +106,32 @@ export async function storeResumeInDB(
     console.error('MongoDB storage failed:', error);
     throw new Error('Failed to store resume in database');
   }
+}
+
+export async function storeUploadedResumeFile(
+  file: File,
+  userId?: string
+): Promise<{
+  resumeId: ObjectId;
+  blobPathname?: string;
+  blobUrl?: string;
+}> {
+  const uploadedBlob = await uploadResumeToVercelBlob(file);
+  const resumeId = await storeResumeInDB(
+    file.name,
+    '',
+    '',
+    file.type,
+    file.size,
+    uploadedBlob,
+    userId
+  );
+
+  return {
+    resumeId,
+    blobPathname: uploadedBlob.pathname,
+    blobUrl: uploadedBlob.url,
+  };
 }
 
 // Store analysis results in MongoDB
@@ -199,19 +185,13 @@ export async function processResumeFile(
 ): Promise<{
   text: string;
   resumeId: ObjectId;
-  googleDriveId?: string;
+  blobPathname?: string;
+  blobUrl?: string;
 }> {
   try {
     // Extract text with OCR fallback
     const extractedText = await extractTextWithOCR(file);
-    
-    // Upload to Google Drive (optional)
-    let googleDriveId: string | undefined;
-    try {
-      googleDriveId = await uploadToGoogleDrive(file, file.name);
-    } catch (error) {
-      console.warn('Google Drive upload failed, continuing without cloud storage:', error);
-    }
+    const uploadedBlob = await uploadResumeToVercelBlob(file);
     
     // Store in MongoDB
     const resumeId = await storeResumeInDB(
@@ -220,14 +200,15 @@ export async function processResumeFile(
       extractedText,
       file.type,
       file.size,
-      googleDriveId,
+      uploadedBlob,
       userId
     );
     
     return {
       text: extractedText,
       resumeId,
-      googleDriveId,
+      blobPathname: uploadedBlob.pathname,
+      blobUrl: uploadedBlob.url,
     };
   } catch (error) {
     throw new Error(`Failed to process resume file: ${error instanceof Error ? error.message : 'Unknown error'}`);

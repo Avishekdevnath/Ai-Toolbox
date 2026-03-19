@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase, GraduationCap } from 'lucide-react';
-import { fadeInUp, staggerContainer } from '@/components/landing/animations';
+import { fadeInUp } from '@/components/landing/animations';
 
 interface AboutExperienceProps {
   className?: string;
@@ -66,7 +66,7 @@ export default function AboutExperience({ className = '' }: AboutExperienceProps
           initial="initial" 
           whileInView="animate" 
           viewport={{ once: true }}
-          variants={staggerContainer}
+          variants={fadeInUp}
           className="space-y-8"
         >
           {/* Work Experience */}

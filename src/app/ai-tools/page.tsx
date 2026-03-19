@@ -1,45 +1,64 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import NewFooter from '@/components/NewFooter';
-import AiToolsHero from '@/components/ai-tools/AiToolsHero';
-import AiToolsGrid from '@/components/ai-tools/AiToolsGrid';
-import AiToolsCta from '@/components/ai-tools/AiToolsCta';
-import { ToolCardSkeleton, HeroSkeleton } from '@/components/ui/skeleton';
+import React, { useState } from 'react';
+import PageLayout from '@/components/layout/PageLayout';
+import SectionContainer from '@/components/layout/SectionContainer';
+import SectionHeader from '@/components/layout/SectionHeader';
+import ToolCard from '@/components/tools/ToolCard';
+import { aiTools } from '@/data/tools';
+
+const allCategories = ['All', ...Array.from(new Set(aiTools.map((t) => t.category)))];
 
 export default function AIToolsPage() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState('All');
 
-  useEffect(() => {
-    // Simulate loading time for tools
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const filtered = activeCategory === 'All'
+    ? aiTools
+    : aiTools.filter((t) => t.category === activeCategory);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
-      <Navbar />
-      <main className="flex-1">
-        {isLoading ? <HeroSkeleton /> : <AiToolsHero />}
-        {isLoading ? (
-          <section className="py-4 px-4">
-            <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <ToolCardSkeleton key={index} />
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : (
-          <AiToolsGrid />
-        )}
-        {!isLoading && <AiToolsCta />}
-      </main>
-      <NewFooter />
-    </div>
+    <PageLayout>
+      <SectionContainer size="lg" padding="normal">
+        <SectionHeader
+          title="AI-Powered Tools"
+          highlight="AI-Powered"
+          subtitle="Explore our suite of intelligent tools designed to boost productivity, streamline decisions, and deliver real insights."
+        />
+
+        {/* Category filter chips */}
+        <div className="flex flex-wrap gap-2 justify-center mb-10">
+          {allCategories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={[
+                'px-4 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                activeCategory === cat
+                  ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+                  : 'bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]',
+              ].join(' ')}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Tools grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((tool) => (
+            <ToolCard
+              key={tool.id}
+              name={tool.name}
+              description={tool.description}
+              icon={tool.icon}
+              href={tool.href}
+              category={tool.category}
+              features={tool.features}
+              rating={tool.rating}
+              status={tool.status}
+            />
+          ))}
+        </div>
+      </SectionContainer>
+    </PageLayout>
   );
-} 
+}

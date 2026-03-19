@@ -1,28 +1,56 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Static tokens in @theme */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Light mode color tokens */
+:root {
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-accent: #EA580C;
+  --color-accent-hover: #C2410C;
+  --color-surface: #FFFFFF;
+  --color-background: #F8FAFC;
+  --color-text-primary: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-border: #E2E8F0;
+  --color-muted: #E9EFF8;
+  --color-muted-foreground: #64748B;
+  --color-destructive: #DC2626;
+  --color-ring: #2563EB;
+}
+
+/* Dark mode color tokens */
+.dark {
+  --color-primary: #3B82F6;
+  --color-primary-hover: #2563EB;
+  --color-accent: #F97316;
+  --color-accent-hover: #EA580C;
+  --color-surface: #0F172A;
+  --color-background: #020617;
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #94A3B8;
+  --color-border: #334155;
+  --color-muted: #1A1E2F;
+  --color-muted-foreground: #94A3B8;
+  --color-destructive: #EF4444;
+  --color-ring: #3B82F6;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
 }
 
-/* Black & white export for html2canvas */
+/* Preserve existing utility classes used by other features */
 .html2canvas-bw, .html2canvas-bw * {
   background: #fff !important;
   color: #000 !important;
@@ -31,25 +59,19 @@ body {
   border-color: #000 !important;
 }
 
-/* Hide scrollbars for line numbers */
 .line-numbers-no-scrollbar {
   -webkit-overflow-scrolling: touch;
 }
-
 .line-numbers-no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
+  display: none;
 }
 
-/* Mobile responsiveness fixes */
 @media (max-width: 767px) {
-  /* Disable zoom transforms on mobile */
   .zoom-container {
     transform: none !important;
     width: 100% !important;
     min-width: 100% !important;
   }
-  
-  /* Ensure tables are responsive on mobile */
   .responsive-table {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

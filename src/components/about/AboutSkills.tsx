@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Code2 } from 'lucide-react';
-import { fadeInUp, staggerContainer } from '@/components/landing/animations';
+import { fadeInUp } from '@/components/landing/animations';
 
 interface AboutSkillsProps {
   className?: string;
@@ -63,7 +63,7 @@ export default function AboutSkills({ className = '' }: AboutSkillsProps) {
           initial="initial" 
           whileInView="animate" 
           viewport={{ once: true }}
-          variants={staggerContainer}
+          variants={fadeInUp}
           className="flex flex-wrap gap-3"
         >
           {skills.map((skill, index) => (

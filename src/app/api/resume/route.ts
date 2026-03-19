@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateContent } from '@/lib/gemini';
+import { analyzeResumeTextWithOpenAI } from '@/lib/openaiResumeService';
 import { buildResumeAnalysisPrompt } from '@/lib/resumePromptBuilder';
-import { ResumeRequest, ResumeResponse, ResumeAnalysis } from '@/schemas/resumeSchema';
+import { ResumeRequest, ResumeResponse } from '@/schemas/resumeSchema';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,49 +26,7 @@ export async function POST(request: NextRequest) {
     // Build the AI prompt
     const prompt = buildResumeAnalysisPrompt(body);
 
-    // Generate analysis using Gemini
-    const response = await generateContent(prompt);
-
-    if (!response) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to generate analysis' },
-        { status: 500 }
-      );
-    }
-
-    // Parse the JSON response
-    let analysis: ResumeAnalysis;
-    try {
-      // Extract JSON from the response (handle potential markdown formatting)
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      
-      analysis = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      console.error('Raw response:', response);
-      
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Failed to parse AI analysis. Please try again.' 
-        },
-        { status: 500 }
-      );
-    }
-
-    // Validate the analysis structure
-    if (!analysis.overallScore || !analysis.strengths || !analysis.weaknesses) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid analysis structure received from AI' 
-        },
-        { status: 500 }
-      );
-    }
+    const analysis = await analyzeResumeTextWithOpenAI(prompt);
 
     const result: ResumeResponse = {
       success: true,

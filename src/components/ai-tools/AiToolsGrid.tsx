@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import ToolCard from '@/components/ToolCard';
 import { aiTools } from '@/data/tools';
-import { fadeInUp, staggerContainer } from '@/components/landing/animations';
+import { fadeInUp } from '@/components/landing/animations';
 
 interface AiToolsGridProps {
   className?: string;
@@ -17,7 +17,7 @@ export default function AiToolsGrid({ className = '' }: AiToolsGridProps) {
           initial="initial" 
           whileInView="animate" 
           viewport={{ once: true }}
-          variants={staggerContainer}
+          variants={fadeInUp}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
           {aiTools.map((tool, index) => (

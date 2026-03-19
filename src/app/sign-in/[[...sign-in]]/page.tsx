@@ -23,6 +23,10 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const redirectToDashboard = () => {
+    window.location.assign('/dashboard');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -36,8 +40,7 @@ export default function SignInPage() {
         setError(res.message || 'Failed to sign in.');
       } else {
         setSuccess('Successfully signed in!');
-        // Redirect to home page instead of dashboard
-        router.push('/');
+        redirectToDashboard();
       }
     } catch (err: any) {
       console.error('Sign in error:', err);
@@ -50,7 +53,7 @@ export default function SignInPage() {
   // Handle authentication redirect
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      router.push('/');
+      router.replace('/dashboard');
     }
   }, [loading, isAuthenticated, router]);
 

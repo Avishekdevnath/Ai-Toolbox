@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+/output/
+/tmp/
 
 # production
 /build
@@ -48,7 +50,14 @@ next-env.d.ts
 /.clerk/
 
 *storybook.log
-storybook-static
+.storybook/
+storybook-static/
+src/stories/
+**/*.stories.js
+**/*.stories.jsx
+**/*.stories.mjs
+**/*.stories.ts
+**/*.stories.tsx
 
 # Production environment
 .env.production
@@ -58,10 +67,13 @@ storybook-static
 /scripts/
 
 # Development and testing files
+.worktrees/
 *.log
 *.tmp
 *.temp
 .cache/
+.folders/
+caches/
 .vscode/
 .idea/
 *.swp

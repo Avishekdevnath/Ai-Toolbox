@@ -3,7 +3,15 @@
 import React, { createContext, useContext, useEffect, useState, startTransition } from 'react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { store } from '@/lib/store';
-import { fetchSession, loginThunk, logoutThunk, registerThunk, setUser, setLoading } from '@/lib/store/authSlice';
+import {
+  fetchSession,
+  loginThunk,
+  logoutThunk,
+  registerThunk,
+  setUser,
+  setLoading,
+  SecurityQuestionRegistrationInput,
+} from '@/lib/store/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 
 type Role = 'admin' | 'user';
@@ -25,7 +33,11 @@ interface AuthContextValue {
   refresh: () => Promise<void>;
   login: (identifier: string, password: string) => Promise<{ success: boolean; message?: string }>
   logout: () => Promise<void>;
-  register: (data: Omit<AuthUser, 'id' | 'role'> & { password: string; role?: Role }) => Promise<{ success: boolean; message?: string }>
+  register: (data: Omit<AuthUser, 'id' | 'role'> & {
+    password: string;
+    role?: Role;
+    securityQuestions: SecurityQuestionRegistrationInput[];
+  }) => Promise<{ success: boolean; message?: string }>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);

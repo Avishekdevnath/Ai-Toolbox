@@ -22,6 +22,7 @@ export async function GET() {
     email: user.email,
     phoneNumber: user.phoneNumber,
     role: user.role,
+    hasSecurityQuestions: Array.isArray(user.securityQuestions) && user.securityQuestions.length >= 3,
   }});
 }
 
@@ -61,6 +62,7 @@ export async function PUT(request: NextRequest) {
     email: result.email,
     phoneNumber: result.phoneNumber,
     role: result.role,
+    hasSecurityQuestions: Array.isArray(result.securityQuestions) && result.securityQuestions.length >= 3,
   }});
 }
 

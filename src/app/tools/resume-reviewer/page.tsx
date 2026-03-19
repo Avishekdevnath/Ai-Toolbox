@@ -1,21 +1,12 @@
 'use client';
 
-import ResumeReviewerTool from '@/components/tools/resume/ResumeReviewerTool';
-import Navbar from "@/components/Navbar";
-import NewFooter from "@/components/NewFooter";
-import useToolTracking from '@/hooks/useToolTracking';
+import ResumeReviewerTool from '@/components/resume/ResumeReviewerTool';
+import ToolPageLayout from '@/components/tools/ToolPageLayout';
 
 export default function ResumeReviewerPage() {
-  useToolTracking('resume-reviewer', 'Resume Reviewer', 'view');
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <Navbar />
-      <main className="flex-1 flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-4xl bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 md:p-10">
-          <ResumeReviewerTool />
-        </div>
-      </main>
-      <NewFooter />
-    </div>
+    <ToolPageLayout toolId="resume-reviewer" toolName="Resume Reviewer" maxWidth="2xl">
+      <ResumeReviewerTool />
+    </ToolPageLayout>
   );
-} 
+}

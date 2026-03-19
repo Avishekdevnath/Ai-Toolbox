@@ -1,108 +1,113 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken } from '@/lib/auth/jwt';
-import { getDatabase } from '../../../../../lib/mongodb';
-import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
-import { sendPasswordChangeConfirmation } from '../../../../../lib/emailService';
+import { NextRequest, NextResponse } from 'next/server';
+import { clearAuthCookie, getAuthCookie } from '@/lib/auth/cookies';
+import { verifyAccessToken } from '@/lib/auth/jwt';
+import { securityQuestionChallengeService } from '@/lib/auth/securityQuestionChallengeService';
+import { AuthUserModel } from '@/models/AuthUserModel';
 
 export async function POST(request: NextRequest) {
-  try {
-    const token = request.cookies.get('user_session')?.value;
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+  const token = await getAuthCookie();
+  const claims = token ? verifyAccessToken(token) : null;
 
-    const claims = verifyAccessToken(token);
-    if (!claims) {
-      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 });
-    }
+  if (!claims?.id) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
 
-    const { newPassword, otpCode } = await request.json();
-    if (!newPassword || !otpCode) {
-      return NextResponse.json({ success: false, error: 'New password and OTP code are required' }, { status: 400 });
-    }
+  const body = await request.json();
+  const newPassword = typeof body?.newPassword === 'string' ? body.newPassword : '';
+  const verification = body?.verification;
 
-    if (newPassword.length < 8) {
-      return NextResponse.json({ success: false, error: 'Password must be at least 8 characters long' }, { status: 400 });
-    }
-
-    const db = await getDatabase();
-    
-    // Verify OTP is still valid and not used
-    const otpRecord = await db.collection('password_reset_otps').findOne({
-      userId: new ObjectId(claims.id),
-      otpCode,
-      used: false,
-      expiresAt: { $gt: new Date() }
-    });
-
-    if (!otpRecord) {
-      return NextResponse.json({ success: false, error: 'Invalid or expired OTP code' }, { status: 400 });
-    }
-
-    // Hash new password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    console.log('🔐 Updating password for user:', claims.id);
-    console.log('🔐 New password hash generated');
-
-    // Update user password
-    const result = await db.collection('authusers').updateOne(
-      { _id: new ObjectId(claims.id) },
-      { 
-        $set: { 
-          passwordHash: hashedPassword,
-          updatedAt: new Date()
-        } 
-      }
+  if (!newPassword) {
+    return NextResponse.json(
+      { success: false, error: 'New password is required' },
+      { status: 400 }
     );
+  }
 
-    console.log('🔐 Password update result:', {
-      matchedCount: result.matchedCount,
-      modifiedCount: result.modifiedCount
-    });
+  if (newPassword.length < 8) {
+    return NextResponse.json(
+      { success: false, error: 'Password must be at least 8 characters long' },
+      { status: 400 }
+    );
+  }
 
-    if (result.matchedCount === 0) {
+  if (!verification || typeof verification !== 'object') {
+    return NextResponse.json(
+      { success: false, error: 'Password verification is required' },
+      { status: 400 }
+    );
+  }
+
+  if (verification.method === 'current_password') {
+    const currentPassword =
+      typeof verification.currentPassword === 'string' ? verification.currentPassword : '';
+
+    if (!currentPassword) {
+      return NextResponse.json(
+        { success: false, error: 'Current password is required' },
+        { status: 400 }
+      );
+    }
+
+    const user = await AuthUserModel.findById(claims.id);
+
+    if (!user) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    // Mark OTP as used
-    await db.collection('password_reset_otps').updateOne(
-      { _id: otpRecord._id },
-      { $set: { used: true, usedAt: new Date() } }
-    );
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
 
-    // Clean up expired OTPs for this user
-    await db.collection('password_reset_otps').deleteMany({
-      userId: new ObjectId(claims.id),
-      $or: [
-        { expiresAt: { $lt: new Date() } },
-        { used: true }
-      ]
-    });
+    if (!isCurrentPasswordValid) {
+      return NextResponse.json(
+        { success: false, error: 'Current password is incorrect' },
+        { status: 400 }
+      );
+    }
+  } else if (verification.method === 'security_questions') {
+    const challengeId = typeof verification.challengeId === 'string' ? verification.challengeId : '';
 
-    // Send password change confirmation email
-    try {
-      const user = await db.collection('authusers').findOne({ _id: new ObjectId(claims.id) });
-      if (user) {
-        await sendPasswordChangeConfirmation(user.email, user.firstName || user.username || 'User');
-      }
-    } catch (emailError) {
-      console.error('Failed to send password change confirmation email:', emailError);
-      // Don't fail the request if email fails, just log it
+    if (!challengeId) {
+      return NextResponse.json(
+        { success: false, error: 'Challenge ID is required' },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Password updated successfully' 
-    });
+    const challenge = await securityQuestionChallengeService.getVerifiedChallenge(
+      challengeId,
+      'change_password'
+    );
 
-  } catch (error) {
-    console.error('Password update error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error' 
-    }, { status: 500 });
+    if (!challenge || challenge.userId !== claims.id) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid or expired password change challenge' },
+        { status: 400 }
+      );
+    }
+
+    const consumed = await securityQuestionChallengeService.consumeVerifiedChallenge(challengeId, 'change_password');
+
+    if (!consumed) {
+      return NextResponse.json(
+        { success: false, error: 'Challenge has already been used or expired' },
+        { status: 400 }
+      );
+    }
+  } else {
+    return NextResponse.json(
+      { success: false, error: 'Unsupported verification method' },
+      { status: 400 }
+    );
   }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+  await AuthUserModel.updatePassword(claims.id, hashedPassword);
+  await securityQuestionChallengeService.invalidateChallengesForUser(claims.id, 'change_password');
+  await clearAuthCookie();
+
+  return NextResponse.json({
+    success: true,
+    message: 'Password updated successfully',
+  });
 }

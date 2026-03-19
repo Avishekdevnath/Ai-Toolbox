@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model, models } from 'mongoose';
+import mongoose, { Schema, Model, models, ClientSession } from 'mongoose';
 import { connectToDatabase } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 
@@ -11,6 +11,10 @@ export interface AuthUserDoc {
   phoneNumber?: string;
   passwordHash: string;
   role: 'admin' | 'user';
+  securityQuestions?: Array<{
+    questionId: string;
+    answerHash: string;
+  }>;
   profilePicture?: {
     url: string;
     cloudinaryPublicId: string;
@@ -28,6 +32,10 @@ const AuthUserSchema = new Schema<AuthUserDoc>({
   phoneNumber: { type: String },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['admin', 'user'], default: 'user', index: true },
+  securityQuestions: [{
+    questionId: { type: String, required: true },
+    answerHash: { type: String, required: true }
+  }],
   profilePicture: {
     url: { type: String },
     cloudinaryPublicId: { type: String },
@@ -67,7 +75,11 @@ export class AuthUserModel {
     password: string;
     phoneNumber?: string;
     role?: 'admin' | 'user';
-  }) {
+    securityQuestions?: Array<{
+      questionId: string;
+      answerHash: string;
+    }>;
+  }, session?: ClientSession) {
     const model = await this.getModel();
     
     // Hash password
@@ -80,35 +92,48 @@ export class AuthUserModel {
       lastName: userData.lastName,
       phoneNumber: userData.phoneNumber,
       passwordHash,
-      role: userData.role || 'user'
+      role: userData.role || 'user',
+      securityQuestions: userData.securityQuestions
     });
 
-    return await user.save();
+    return await user.save(session ? { session } : undefined);
   }
 
-  static async findById(id: string) {
+  static async findById(id: string, session?: ClientSession) {
     await this.ensureConnection();
     const model = await this.getModel();
-    return await model.findById(id);
+    const query = model.findById(id);
+    if (session) {
+      query.session(session);
+    }
+    return await query;
   }
 
-  static async findByEmail(email: string) {
+  static async findByEmail(email: string, session?: ClientSession) {
     await this.ensureConnection();
     const model = await this.getModel();
-    return await model.findOne({ email: email.toLowerCase() });
+    const query = model.findOne({ email: email.toLowerCase() });
+    if (session) {
+      query.session(session);
+    }
+    return await query;
   }
 
-  static async findByUsername(username: string) {
+  static async findByUsername(username: string, session?: ClientSession) {
     await this.ensureConnection();
     const model = await this.getModel();
-    return await model.findOne({ username: username.toLowerCase() });
+    const query = model.findOne({ username: username.toLowerCase() });
+    if (session) {
+      query.session(session);
+    }
+    return await query;
   }
 
-  static async findByEmailOrUsername(identifier: string) {
+  static async findByEmailOrUsername(identifier: string, session?: ClientSession) {
     if (identifier.includes('@')) {
-      return this.findByEmail(identifier);
+      return this.findByEmail(identifier, session);
     } else {
-      return this.findByUsername(identifier);
+      return this.findByUsername(identifier, session);
     }
   }
 
@@ -134,6 +159,23 @@ export class AuthUserModel {
           updatedAt: new Date()
         }
       }
+    );
+  }
+
+  static async replaceSecurityQuestions(
+    userId: string,
+    securityQuestions: Array<{ questionId: string; answerHash: string }>
+  ) {
+    const model = await this.getModel();
+    return await model.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          securityQuestions,
+          updatedAt: new Date()
+        }
+      },
+      { new: true }
     );
   }
 

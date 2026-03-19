@@ -93,6 +93,97 @@ Guidelines for analysis:
 Return only the JSON, no additional text.`;
 }
 
+export function buildResumeFileAnalysisPrompt(request: Omit<ResumeRequest, 'resumeText'>): string {
+  const { industry, jobTitle, experienceLevel, fileName } = request;
+  const industryKeywordsList = industryKeywords[industry.toLowerCase()] || [];
+  const experienceLevelInfo = experienceLevels[experienceLevel as keyof typeof experienceLevels];
+  
+  return `You are an expert resume reviewer and career coach with 15+ years of experience in HR and recruitment. Analyze the uploaded resume file and provide comprehensive feedback.
+
+FILE CONTEXT:
+- File Name: ${fileName || 'uploaded resume'}
+- Target Industry: ${industry}
+- Target Job Title: ${jobTitle}
+- Experience Level: ${experienceLevel}
+- Industry Keywords: ${industryKeywordsList.join(', ')}
+- Experience Level Focus: ${experienceLevelInfo?.focus || 'General'}
+
+Please provide a comprehensive analysis in JSON format:
+{
+  "overallScore": number (0-100),
+  "scoreBreakdown": {
+    "content": number (0-25),
+    "structure": number (0-25),
+    "keywords": number (0-25),
+    "atsOptimization": number (0-25)
+  },
+  "strengths": [
+    "Specific strength about the resume",
+    "Another notable strength"
+  ],
+  "weaknesses": [
+    "Specific area that needs improvement",
+    "Another weakness to address"
+  ],
+  "suggestions": [
+    {
+      "category": "content|structure|keywords|format",
+      "title": "Suggestion title",
+      "description": "Detailed explanation of the suggestion",
+      "priority": "high|medium|low",
+      "impact": "How this change will improve the resume"
+    }
+  ],
+  "sectionAnalysis": [
+    {
+      "section": "contact|summary|experience|education|skills|certifications|projects|languages",
+      "score": number (0-100),
+      "strengths": ["Strength 1", "Strength 2"],
+      "weaknesses": ["Weakness 1", "Weakness 2"],
+      "suggestions": ["Suggestion 1", "Suggestion 2"]
+    }
+  ],
+  "keywordAnalysis": {
+    "foundKeywords": ["keyword1", "keyword2"],
+    "missingKeywords": ["missing1", "missing2"],
+    "suggestedKeywords": ["suggested1", "suggested2"],
+    "keywordDensity": {
+      "keyword1": number (percentage),
+      "keyword2": number (percentage)
+    }
+  },
+  "atsOptimization": {
+    "score": number (0-100),
+    "issues": ["Issue 1", "Issue 2"],
+    "recommendations": ["Recommendation 1", "Recommendation 2"],
+    "formatCompliance": {
+      "isCompliant": boolean,
+      "issues": ["Format issue 1", "Format issue 2"]
+    }
+  },
+  "actionPlan": [
+    {
+      "priority": "high|medium|low",
+      "action": "Specific action to take",
+      "timeline": "When to complete this",
+      "impact": "Expected impact of this action"
+    }
+  ],
+  "summary": "Overall assessment and key recommendations in 2-3 sentences"
+}
+
+Guidelines for analysis:
+1. Read the uploaded file directly before scoring.
+2. Be specific and actionable in suggestions.
+3. Consider the target industry and job requirements.
+4. Focus on ATS optimization and keyword alignment.
+5. Consider experience level expectations.
+6. Evaluate both content and format.
+7. Prioritize suggestions by impact and effort.
+
+Return only the JSON, no additional text.`;
+}
+
 export function buildSectionSpecificPrompt(section: string, content: string, industry: string, jobTitle: string): string {
   return `You are an expert resume reviewer. Analyze this specific section of a resume:
 

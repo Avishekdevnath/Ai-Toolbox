@@ -1,418 +1,143 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { 
-  Menu, 
-  X, 
-  Shield,
-  LogOut,
-  Settings,
-  LayoutDashboard,
-  UserCheck,
-  Lock,
-  Loader2
-} from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { Menu, X, LogOut, Settings, LayoutDashboard, UserCheck, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { usePathname } from 'next/navigation';
 
+const NAV_LINKS = [
+  { href: '/ai-tools', label: 'AI Tools' },
+  { href: '/utilities', label: 'Utilities' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
+];
+
+const USER_MENU = [
+  { href: '', icon: LayoutDashboard, label: 'Dashboard' }, // href set dynamically
+  { href: '/profile', icon: UserCheck, label: 'Profile' },
+  { href: '/security', icon: Lock, label: 'Security' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
+];
+
 export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { user, isAuthenticated, loading, logout } = useAuth();
   const pathname = usePathname();
 
-  // Debug logging
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 Navbar Debug:', {
-        loading,
-        isAuthenticated,
-        user: user ? `${user.username} (${user.email})` : 'No user',
-        pathname
-      });
-    }
-  }, [loading, isAuthenticated, user, pathname]);
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
   const handleSignOut = async () => {
     if (isSigningOut) return;
-    
     setIsSigningOut(true);
-    try {
-      await logout();
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Sign out error:', error);
-      setIsSigningOut(false);
-    }
+    try { await logout(); window.location.href = '/'; }
+    catch (error) { console.error('Sign out error:', error); setIsSigningOut(false); }
   };
 
-  const getUserInitials = () => {
+  const initials = (() => {
     if (!user) return 'U';
-    const firstName = user.firstName || '';
-    const lastName = user.lastName || '';
-    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'U';
-  };
+    return ((user.firstName?.charAt(0) || '') + (user.lastName?.charAt(0) || '')).toUpperCase() || 'U';
+  })();
 
-  const getUserDisplayName = () => {
-    if (!user) return 'User';
-    return user.username || 'User';
-  };
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href);
+  const dashHref = user?.role === 'admin' ? '/admin' : '/dashboard';
+  const dashActive = isActive('/dashboard') || (user?.role === 'admin' && isActive('/admin'));
 
-  const isActiveLink = (href: string) => {
-    return pathname === href || pathname.startsWith(href);
-  };
-
-  // Always render navbar shell immediately; only gate user menu details
+  const lnk = (active: boolean) => `text-sm font-medium transition-colors ${active ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]'}`;
+  const ddItem = 'flex items-center gap-3 px-3 py-2 text-sm rounded-lg outline-none cursor-pointer transition-colors hover:bg-[var(--color-muted)] data-[highlighted]:bg-[var(--color-muted)]';
+  const menuItems = USER_MENU.map((m) => m.href ? m : { ...m, href: dashHref });
+  const close = () => setMobileOpen(false);
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">
+    <nav className="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          {/* Logo and main navigation */}
+        <div className="flex h-16 items-center justify-between md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm font-bold">AI</span>
               </div>
-              <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                AI Toolbox
-              </span>
+              <span className="text-lg font-bold text-[var(--color-text-primary)]">AI Toolbox</span>
             </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8 ml-6 lg:ml-8 xl:ml-10">
-              <Link 
-                href="/ai-tools" prefetch={false}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActiveLink('/ai-tools')
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                AI Tools
-              </Link>
-              <Link 
-                href="/utilities" prefetch={false}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActiveLink('/utilities')
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                Utilities
-              </Link>
-              {isAuthenticated && (
-                <Link 
-                  href={user?.role === 'admin' ? "/admin" : "/dashboard"} 
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActiveLink('/dashboard') || (user?.role === 'admin' && isActiveLink('/admin'))
-                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                  }`}
-                >
-                  Dashboard
-                </Link>
-              )}
-              <Link 
-                href="/about" prefetch={false}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActiveLink('/about')
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                About
-              </Link>
-              <Link 
-                href="/contact" prefetch={false}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActiveLink('/contact')
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                Contact
-              </Link>
-            </div>
-
-            {/* Tablet Navigation - Show on medium screens */}
-            <div className="hidden md:flex lg:hidden items-center space-x-4 ml-4">
-              <Link 
-                href="/ai-tools" 
-                className={`px-2 py-1 rounded-md text-sm font-medium transition-colors ${
-                  isActiveLink('/ai-tools')
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                AI Tools
-              </Link>
-              <Link 
-                href="/utilities" 
-                className={`px-2 py-1 rounded-md text-sm font-medium transition-colors ${
-                  isActiveLink('/utilities')
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-              >
-                Utilities
-              </Link>
-            {isAuthenticated && (
-                <Link 
-                  href={user?.role === 'admin' ? "/admin" : "/dashboard"} 
-                  className={`px-2 py-1 rounded-md text-sm font-medium transition-colors ${
-                    isActiveLink('/dashboard') || (user?.role === 'admin' && isActiveLink('/admin'))
-                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                  }`}
-                >
-                  Dashboard
-                </Link>
-              )}
-            </div>
           </div>
 
-          {/* User menu and authentication */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Tablet/Desktop User Menu */}
-            <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+          <div className="hidden md:flex items-center justify-center gap-6">
+            {NAV_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} prefetch={false} className={lnk(isActive(l.href))}>{l.label}</Link>
+            ))}
+            {isAuthenticated && <Link href={dashHref} className={lnk(dashActive)}>Dashboard</Link>}
+          </div>
+
+          <div className="flex items-center gap-2 md:justify-self-end">
+            <div className="hidden md:flex items-center gap-3">
               {isAuthenticated ? (
-                <div className="flex items-center space-x-3">
-           
-                  {/* User Menu Dropdown */}
-                  <div className="relative group">
-                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] font-semibold">
-                        {getUserInitials()}
-                      </span>
-                      <span className="hidden lg:block">{getUserDisplayName()}</span>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[var(--color-primary)] text-white text-xs font-semibold">{initials}</span>
+                      <span className="hidden lg:inline text-sm">{user?.username || 'User'}</span>
                     </Button>
-                    
-                    {/* Dropdown Menu */}
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform -translate-x-4">
-                      <div className="py-1">
-                        <Link
-                          href={user?.role === 'admin' ? "/admin" : "/dashboard"}
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <LayoutDashboard className="w-4 h-4" />
-                          <span>Dashboard</span>
-                        </Link>
-                        <Link
-                          href="/profile"
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <UserCheck className="w-4 h-4" />
-                          <span>Profile</span>
-                        </Link>
-                        <Link
-                          href="/security"
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <Lock className="w-4 h-4" />
-                          <span>Security</span>
-                        </Link>
-                        <Link
-                          href="/settings"
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <Settings className="w-4 h-4" />
-                          <span>Settings</span>
-                        </Link>
-                        <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                        <button
-                          onClick={handleSignOut}
-                          disabled={isSigningOut}
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          <span>{isSigningOut ? 'Signing out...' : 'Sign Out'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content align="end" sideOffset={8} className="w-52 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-lg z-50">
+                      {menuItems.map((m) => (
+                        <DropdownMenu.Item key={m.href + m.label} asChild className={`${ddItem} text-[var(--color-text-primary)]`}>
+                          <Link href={m.href}><m.icon className="w-4 h-4" /><span>{m.label}</span></Link>
+                        </DropdownMenu.Item>
+                      ))}
+                      <DropdownMenu.Separator className="my-1 h-px bg-[var(--color-border)]" />
+                      <DropdownMenu.Item className={`${ddItem} text-[var(--color-destructive)]`} disabled={isSigningOut} onSelect={handleSignOut}>
+                        {isSigningOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                        <span>{isSigningOut ? 'Signing out...' : 'Sign Out'}</span>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               ) : loading ? (
-                <div className="flex items-center space-x-3">
-                  <Button variant="ghost" size="sm" disabled>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Loading...
-                  </Button>
-                </div>
+                <Button variant="ghost" size="sm" disabled><Loader2 className="w-4 h-4 animate-spin mr-2" />Loading...</Button>
               ) : (
-                <div className="flex items-center space-x-3">
-                  <Link href="/sign-in">
-                    <Button variant="ghost" size="sm">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/sign-up">
-                    <Button size="sm">
-                      Sign Up
-                    </Button>
-                  </Link>
-                </div>
+                <>
+                  <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
+                  <Link href="/sign-up"><Button size="sm">Get Started</Button></Link>
+                </>
               )}
             </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleMobileMenu}
-                className="text-gray-700 dark:text-gray-300 p-2 min-w-[44px] min-h-[44px]"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </Button>
-            </div>
+            <Button variant="ghost" size="icon" onClick={() => setMobileOpen((v) => !v)} className="md:hidden">
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-4 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 max-h-[calc(100vh-4rem)] overflow-y-auto">
-            <Link 
-              href="/ai-tools" 
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActiveLink('/ai-tools')
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-              }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              AI Tools
-            </Link>
-            <Link 
-              href="/utilities" 
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActiveLink('/utilities')
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-              }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Utilities
-            </Link>
+      {mobileOpen && (
+        <div className="md:hidden border-t border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div className="px-4 py-3 space-y-1">
+            {NAV_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className={`block px-3 py-2 rounded-lg ${lnk(isActive(l.href))}`} onClick={close}>{l.label}</Link>
+            ))}
             {isAuthenticated && (
-              <Link 
-                href={user?.role === 'admin' ? "/admin" : "/dashboard"} 
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                  isActiveLink('/dashboard') || (user?.role === 'admin' && isActiveLink('/admin'))
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
+              <Link href={dashHref} className={`block px-3 py-2 rounded-lg ${lnk(dashActive)}`} onClick={close}>Dashboard</Link>
             )}
-            <Link 
-              href="/about" 
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActiveLink('/about')
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-              }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link 
-              href="/contact" 
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                isActiveLink('/contact')
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-              }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            
-            {/* Mobile Authentication */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="pt-3 mt-2 border-t border-[var(--color-border)] space-y-1">
               {isAuthenticated ? (
-                <div className="space-y-2">
-                  {/* User Menu Links */}
-                  <Link
-                    href={user?.role === 'admin' ? "/admin" : "/dashboard"}
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <UserCheck className="w-4 h-4" />
-                    <span>Profile</span>
-                  </Link>
-                  <Link
-                    href="/security"
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span>Security</span>
-                  </Link>
-                  <Link
-                    href="/settings"
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                  </Link>
-                  
-                  {/* Sign Out */}
-                  <button
-                    onClick={handleSignOut}
-                    disabled={isSigningOut}
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSigningOut ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <LogOut className="w-4 h-4" />
-                    )}
-                    <span>{isSigningOut ? 'Signing out...' : 'Sign Out'}</span>
+                <>
+                  {menuItems.map((m) => (
+                    <Link key={m.href + m.label} href={m.href} className="flex items-center gap-3 px-3 py-2 text-sm text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-muted)]" onClick={close}>
+                      <m.icon className="w-4 h-4" /> {m.label}
+                    </Link>
+                  ))}
+                  <button onClick={handleSignOut} disabled={isSigningOut} className="flex items-center gap-3 px-3 py-2 text-sm text-[var(--color-destructive)] rounded-lg hover:bg-[var(--color-muted)] w-full text-left disabled:opacity-50">
+                    {isSigningOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                    {isSigningOut ? 'Signing out...' : 'Sign Out'}
                   </button>
-                </div>
+                </>
               ) : loading ? (
-                <div className="flex flex-col space-y-2 px-3 py-2">
-                  <Button variant="ghost" size="sm" className="w-full justify-start" disabled>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Loading...
-                  </Button>
-                </div>
+                <Button variant="ghost" size="sm" className="w-full justify-start" disabled><Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading...</Button>
               ) : (
-                <div className="flex flex-col space-y-2 px-3 py-2">
-                  <Link href="/sign-in">
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/sign-up">
-                    <Button size="sm" className="w-full justify-start">
-                      Sign Up
-                    </Button>
-                  </Link>
+                <div className="flex flex-col gap-2 px-3 py-2">
+                  <Link href="/sign-in" onClick={close}><Button variant="ghost" size="sm" className="w-full">Sign In</Button></Link>
+                  <Link href="/sign-up" onClick={close}><Button size="sm" className="w-full">Get Started</Button></Link>
                 </div>
               )}
             </div>
@@ -421,4 +146,4 @@ export default function Navbar() {
       )}
     </nav>
   );
-} 
+}

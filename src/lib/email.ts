@@ -1,6 +1,5 @@
 let nodemailer: any;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   nodemailer = require('nodemailer');
 } catch {}
 

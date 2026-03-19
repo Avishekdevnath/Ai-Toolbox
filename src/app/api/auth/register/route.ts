@@ -1,92 +1,161 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserAuthService } from '@/lib/userAuthService';
 import { cookies } from 'next/headers';
+import { getDatabase } from '@/lib/mongodb';
+import { UserAuthService } from '@/lib/userAuthService';
+import { hashSecurityAnswer, normalizeSecurityAnswer } from '@/lib/auth/securityAnswers';
+import { isValidSecurityQuestionId } from '@/lib/auth/securityQuestions';
+
+interface RegistrationSecurityQuestionInput {
+  questionId: string;
+  answer: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔐 User registration attempt started');
-    
     const body = await request.json();
-    const { email, username, password, name, firstName, lastName } = body;
+    const {
+      email,
+      username,
+      password,
+      name,
+      firstName,
+      lastName,
+      phoneNumber,
+      securityQuestions,
+    } = body;
 
-    console.log('📧 Registration attempt for email:', email, 'username:', username);
-
-    // Validate input
     if (!email || !password || !name) {
-      console.log('❌ Missing required fields');
       return NextResponse.json(
         { success: false, error: 'Email, password, and name are required' },
         { status: 400 }
       );
     }
 
-    console.log('✅ Input validation passed, attempting registration...');
-
-    // Register user
-    const result = await UserAuthService.registerUser({
-      email,
-      username,
-      password,
-      name,
-      firstName,
-      lastName
-    });
-
-    console.log('🔍 Registration result:', {
-      success: result.success,
-      error: result.error,
-      hasUser: !!result.user
-    });
-
-    if (!result.success || !result.user) {
-      console.log('❌ Registration failed:', result.error);
+    if (!Array.isArray(securityQuestions) || securityQuestions.length < 3 || securityQuestions.length > 5) {
       return NextResponse.json(
-        { success: false, error: result.error || 'Registration failed' },
+        { success: false, error: 'Please select 3 to 5 security questions' },
         { status: 400 }
       );
     }
 
-    console.log('✅ Registration successful, creating JWT token...');
+    const uniqueQuestionIds = new Set<string>();
+    const normalizedAnswers = new Set<string>();
 
-    // Create JWT token
-    const token = UserAuthService.createUserToken(result.user);
+    for (const securityQuestion of securityQuestions as RegistrationSecurityQuestionInput[]) {
+      const questionId = securityQuestion?.questionId;
+      const normalizedAnswer = typeof securityQuestion?.answer === 'string'
+        ? normalizeSecurityAnswer(securityQuestion.answer)
+        : '';
 
-    console.log('✅ JWT token created, setting session cookie...');
+      if (!questionId || !isValidSecurityQuestionId(questionId)) {
+        return NextResponse.json(
+          { success: false, error: 'Each security question must use a valid question option' },
+          { status: 400 }
+        );
+      }
 
-    // Set session cookie
+      if (uniqueQuestionIds.has(questionId)) {
+        return NextResponse.json(
+          { success: false, error: 'Security question selections must be unique' },
+          { status: 400 }
+        );
+      }
+
+      if (!normalizedAnswer) {
+        return NextResponse.json(
+          { success: false, error: 'Each security question answer is required' },
+          { status: 400 }
+        );
+      }
+
+      if (normalizedAnswers.has(normalizedAnswer)) {
+        return NextResponse.json(
+          { success: false, error: 'Security question answers must be unique' },
+          { status: 400 }
+        );
+      }
+
+      uniqueQuestionIds.add(questionId);
+      normalizedAnswers.add(normalizedAnswer);
+    }
+
+    const hashedSecurityQuestions = await Promise.all(
+      (securityQuestions as RegistrationSecurityQuestionInput[]).map(async (securityQuestion) => ({
+        questionId: securityQuestion.questionId,
+        answerHash: await hashSecurityAnswer(securityQuestion.answer),
+      }))
+    );
+
     const cookieStore = await cookies();
-    cookieStore.set('user_session', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60, // 24 hours
-      path: '/',
-    });
+    const database = await getDatabase();
+    const session = await database.startSession();
 
-    console.log('✅ Session cookie set, returning success response');
+    try {
+      session.startTransaction();
 
-    return NextResponse.json({
-      success: true,
-      message: 'Registration successful',
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        username: result.user.username,
-        name: result.user.name,
-        role: result.user.role,
-      },
-      timestamp: new Date().toISOString()
-    });
+      const result = await UserAuthService.registerUser({
+        email,
+        username,
+        password,
+        name,
+        firstName,
+        lastName,
+        phoneNumber,
+        securityQuestions: hashedSecurityQuestions,
+      }, {
+        session,
+      });
 
+      if (!result.success || !result.user) {
+        await session.abortTransaction();
+        return NextResponse.json(
+          { success: false, error: result.error || 'Registration failed' },
+          { status: 400 }
+        );
+      }
+
+      // Only commit the user document after all in-request checks succeed.
+      const token = UserAuthService.createUserToken(result.user);
+      await session.commitTransaction();
+
+      cookieStore.set('user_session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60,
+        path: '/',
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Registration successful',
+        token,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          username: result.user.username,
+          firstName: result.user.firstName || '',
+          lastName: result.user.lastName || '',
+          phoneNumber: result.user.phoneNumber,
+          role: result.user.role,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      throw error;
+    } finally {
+      await session.endSession();
+    }
   } catch (error: any) {
-    console.error('❌ User registration error:', error);
-    
     return NextResponse.json(
       {
         success: false,
         error: 'Registration failed',
         message: error.message || 'Unknown error occurred',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
