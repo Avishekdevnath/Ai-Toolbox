@@ -31,7 +31,7 @@ jest.mock('@clerk/nextjs', () => ({
     isLoaded: true,
   }),
   auth: () => Promise.resolve({ userId: 'test-user-id' }),
-}))
+}), { virtual: true })
 
 // Mock fetch
 global.fetch = jest.fn()
