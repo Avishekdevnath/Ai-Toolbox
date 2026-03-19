@@ -1,26 +1,36 @@
-import React from 'react';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
-interface BadgeProps {
-  children: React.ReactNode;
-  variant?: 'default' | 'outline' | 'secondary' | 'destructive';
-  className?: string;
+const variantStyles = {
+  default: 'bg-[var(--color-muted)] text-[var(--color-text-primary)]',
+  primary: 'bg-[var(--color-primary)] text-white',
+  secondary: 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]',
+  outline: 'border border-[var(--color-border)] bg-transparent text-[var(--color-text-secondary)]',
+  destructive: 'bg-[var(--color-destructive)] text-white',
+};
+
+const sizeStyles = {
+  sm: 'px-2 py-0.5 text-xs',
+  md: 'px-2.5 py-0.5 text-xs',
+};
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: keyof typeof variantStyles;
+  size?: keyof typeof sizeStyles;
 }
 
-export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
-  const baseClasses = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium';
-  
-  const variantClasses = {
-    default: 'bg-blue-100 text-blue-800',
-    outline: 'border border-gray-300 bg-white text-gray-700',
-    secondary: 'bg-gray-100 text-gray-800',
-    destructive: 'bg-red-100 text-red-800'
-  };
-  
-  const classes = `${baseClasses} ${variantClasses[variant]} ${className}`;
-  
+function Badge({ className, variant = 'default', size = 'md', ...props }: BadgeProps) {
   return (
-    <span className={classes}>
-      {children}
-    </span>
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full font-medium',
+        variantStyles[variant],
+        sizeStyles[size],
+        className
+      )}
+      {...props}
+    />
   );
-} 
+}
+
+export { Badge };
