@@ -58,6 +58,7 @@ storybook-static
 /scripts/
 
 # Development and testing files
+.worktrees/
 *.log
 *.tmp
 *.temp
