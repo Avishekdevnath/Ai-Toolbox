@@ -40,7 +40,8 @@ This redesign must simplify the auth surface rather than layering another recove
 2. Adding social login providers.
 3. Changing admin login or admin session handling.
 4. Introducing MFA, passkeys, or email-based fallback recovery.
-5. Building a full account-security management suite beyond what this feature needs.
+5. Reworking the broader stateless JWT model to support full cross-device session revocation.
+6. Building a full account-security management suite beyond what this feature needs.
 
 ---
 
@@ -399,6 +400,11 @@ This avoids explicit "user not found" messaging, but the presence of a challenge
 
 ### Logged-In Password Change
 
+These current email-OTP routes are removed:
+
+- `POST /api/user/change-password/verify`
+- `POST /api/user/change-password/verify-otp`
+
 #### `POST /api/user/change-password/challenge`
 
 **Purpose:** Start question-based password change for an authenticated user.
@@ -460,6 +466,42 @@ Expose:
 - `PUT /api/user/security-questions`
 
 This is required for legacy-user remediation and for any user who wants to rotate their saved questions later.
+
+#### `GET /api/user/security-questions`
+
+**Purpose:** Return the fixed question catalog plus the user’s selected question IDs.
+
+**Rules:**
+
+- requires authenticated `user_session`
+- returns the full 10-question catalog for rendering selectors
+- returns only selected question IDs for the user
+- never returns stored answers or answer hashes
+
+#### `PUT /api/user/security-questions`
+
+**Purpose:** Create or replace the authenticated user’s configured questions.
+
+**Request:**
+
+```json
+{
+  "currentPassword": "CurrentPassword123",
+  "securityQuestions": [
+    { "questionId": "childhood_nickname", "answer": "sunny" },
+    { "questionId": "first_school", "answer": "green field school" },
+    { "questionId": "favorite_teacher", "answer": "mrs rahman" }
+  ]
+}
+```
+
+**Rules:**
+
+- requires authenticated `user_session`
+- requires correct `currentPassword`
+- applies the same 3-to-5 question validation rules as registration
+- replaces the prior saved question set atomically
+- invalidates any outstanding `forgot_password` or `change_password` challenges for that user
 
 ---
 
@@ -572,7 +614,7 @@ Forgot-password initiation must not reveal:
 
 Recommended generic message:
 
-`If the account is eligible for recovery, continue with the verification questions.`
+`If the account is eligible for recovery, verification questions will be shown.`
 
 ### Specific Responses For Authenticated Flows
 
@@ -607,10 +649,14 @@ For case 8, new password updates should invalidate or render obsolete any older 
 5. Challenge IDs must be unguessable database identifiers or opaque tokens.
 6. Password updates must require valid server-side proof, not just client state.
 7. Expired and used challenges must be cleaned up periodically or opportunistically on access.
+8. Updating security questions must require the current password.
+9. Password reset or password change should clear the current browser’s `user_session` cookie after success.
 
 ### Tradeoff Note
 
 Security questions are weaker than email verification if users choose predictable answers. This is an accepted product tradeoff for this feature. The implementation must still apply hashing, normalization, attempt limits, and expiry to avoid making the flow worse than necessary.
+
+The broader JWT model remains stateless. This spec does not introduce global revocation for already-issued tokens on other devices. Clearing the current browser cookie is required, but cross-device revocation remains out of scope unless the auth layer is expanded later.
 
 ---
 
@@ -670,6 +716,13 @@ After rollout verification:
 4. question challenge fails with incorrect answers
 5. both paths can update password through the shared update endpoint
 6. update fails without valid verification proof
+
+### Security Question Management
+
+1. authenticated user can fetch the fixed catalog and selected question IDs
+2. updating questions requires correct current password
+3. updating questions replaces the stored set atomically
+4. updating questions invalidates outstanding question challenges
 
 ### Regression Coverage
 
