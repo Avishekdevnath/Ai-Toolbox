@@ -2,33 +2,35 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  ArrowLeft, 
-  Mail, 
-  CheckCircle, 
-  AlertCircle, 
-  Loader2 
-} from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle, Loader2, Mail } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import NewFooter from '@/components/NewFooter';
+import SecurityQuestionChallengeForm, {
+  SecurityQuestionPrompt,
+} from '@/components/auth/SecurityQuestionChallengeForm';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+type ForgotPasswordStep = 'identify' | 'questions' | 'reset' | 'done';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  const [step, setStep] = useState<ForgotPasswordStep>('identify');
+  const [identifier, setIdentifier] = useState('');
+  const [challengeId, setChallengeId] = useState('');
+  const [questions, setQuestions] = useState<SecurityQuestionPrompt[]>([]);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email) {
-      setError('Please enter your email address');
+  async function handleStartRecovery(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!identifier.trim()) {
+      setError('Please enter your email or username');
       return;
     }
 
@@ -37,70 +39,126 @@ export default function ForgotPasswordPage() {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/auth/forgot-password/challenge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ identifier: identifier.trim() }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        setSuccess('Password reset instructions have been sent to your email address.');
-        setIsSubmitted(true);
-      } else {
-        setError(data.error || 'Failed to send reset email. Please try again.');
+      if (!response.ok || !data.success || !data.challengeId || !Array.isArray(data.questions)) {
+        setError('We could not start password recovery for that account.');
+        return;
       }
-    } catch (err) {
-      console.error('Forgot password error:', err);
-      setError('An error occurred. Please try again.');
+
+      setChallengeId(data.challengeId);
+      setQuestions(data.questions);
+      setStep('questions');
+    } catch (requestError) {
+      console.error('Failed to start password recovery:', requestError);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
-  const handleResendEmail = async () => {
-    if (!email) return;
-    
+  async function handleVerifyAnswers(answers: Array<{ questionId: string; answer: string }>) {
     setIsLoading(true);
     setError('');
-    
+    setSuccess('');
+
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/auth/forgot-password/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ challengeId, answers }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        setSuccess('Password reset instructions have been resent to your email address.');
-      } else {
-        setError(data.error || 'Failed to resend reset email. Please try again.');
+      if (!response.ok || !data.success) {
+        setError(data.error || 'Security question verification failed.');
+        return;
       }
-    } catch (err) {
-      console.error('Resend email error:', err);
-      setError('An error occurred. Please try again.');
+
+      setStep('reset');
+    } catch (requestError) {
+      console.error('Failed to verify security question answers:', requestError);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  async function handleResetPassword(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('/api/auth/forgot-password/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ challengeId, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.error || 'Failed to reset password.');
+        return;
+      }
+
+      setStep('done');
+      setSuccess('Your password was updated. Sign in again with your new password.');
+    } catch (requestError) {
+      console.error('Failed to reset password:', requestError);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function resetFlow() {
+    setStep('identify');
+    setIdentifier('');
+    setChallengeId('');
+    setQuestions([]);
+    setNewPassword('');
+    setConfirmPassword('');
+    setError('');
+    setSuccess('');
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
       <Navbar />
-      
+
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <div className="flex items-center space-x-2">
-              <Link 
-                href="/sign-in" 
+              <Link
+                href="/sign-in"
                 className="text-gray-500 hover:text-gray-700 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -108,102 +166,132 @@ export default function ForgotPasswordPage() {
               <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
             </div>
             <CardDescription>
-              {isSubmitted 
-                ? 'Check your email for reset instructions'
-                : 'Enter your email address and we\'ll send you a link to reset your password'
-              }
+              {step === 'identify' && 'Start password recovery with your email or username.'}
+              {step === 'questions' && 'Use your saved recovery answers to continue.'}
+              {step === 'reset' && 'Choose a fresh password to finish recovery.'}
+              {step === 'done' && 'Recovery complete.'}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4" />
+                <span>{error}</span>
+              </div>
             )}
 
             {success && (
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>{success}</AlertDescription>
-              </Alert>
+              <div className="flex items-start gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                <CheckCircle className="mt-0.5 h-4 w-4" />
+                <span>{success}</span>
+              </div>
             )}
 
-            {!isSubmitted ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
+            {step === 'identify' && (
+              <form onSubmit={handleStartRecovery} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="identifier">Email or Username</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="identifier"
+                      type="text"
+                      placeholder="Enter your email or username"
+                      value={identifier}
+                      onChange={(event) => setIdentifier(event.target.value)}
                       className="pl-10"
-                      required
                       disabled={isLoading}
                     />
                   </div>
                 </div>
-                
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending Reset Link...
-                    </>
-                  ) : (
-                    'Send Reset Link'
-                  )}
+
+                <Button type="submit" className="w-full" loading={isLoading}>
+                  Continue
                 </Button>
               </form>
-            ) : (
+            )}
+
+            {step === 'questions' && (
               <div className="space-y-4">
-                <div className="text-center space-y-2">
-                  <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Check Your Email
-                  </h3>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-gray-900">Answer your security questions</h3>
                   <p className="text-sm text-gray-600">
-                    We've sent password reset instructions to <strong>{email}</strong>
+                    We selected two of your saved questions for recovery.
                   </p>
                 </div>
-                
-                <div className="space-y-3">
-                  <Button 
-                    onClick={handleResendEmail}
-                    variant="outline" 
-                    className="w-full"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Resending...
-                      </>
-                    ) : (
-                      'Resend Email'
-                    )}
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => {
-                      setIsSubmitted(false);
-                      setEmail('');
-                      setError('');
-                      setSuccess('');
-                    }}
-                    variant="ghost" 
-                    className="w-full"
-                  >
-                    Try Different Email
-                  </Button>
+
+                <SecurityQuestionChallengeForm
+                  questions={questions}
+                  onSubmit={handleVerifyAnswers}
+                  submitLabel="Verify Answers"
+                  isLoading={isLoading}
+                />
+
+                <Button type="button" variant="ghost" className="w-full" onClick={resetFlow} disabled={isLoading}>
+                  Try a different account
+                </Button>
+              </div>
+            )}
+
+            {step === 'reset' && (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-gray-900">Create a new password</h3>
+                  <p className="text-sm text-gray-600">
+                    Set a new password for your account. You will need to sign in again afterward.
+                  </p>
                 </div>
+
+                <Input
+                  id="newPassword"
+                  label="New Password"
+                  type="password"
+                  placeholder="Enter your new password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  disabled={isLoading}
+                />
+
+                <Input
+                  id="confirmNewPassword"
+                  label="Confirm New Password"
+                  type="password"
+                  placeholder="Confirm your new password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  disabled={isLoading}
+                />
+
+                <Button type="submit" className="w-full" loading={isLoading}>
+                  Reset Password
+                </Button>
+              </form>
+            )}
+
+            {step === 'done' && (
+              <div className="space-y-4 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-gray-900">Password reset successfully</h3>
+                  <p className="text-sm text-gray-600">
+                    Your password has been updated. Sign in again to continue.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={() => {
+                    window.location.href = '/sign-in';
+                  }}
+                >
+                  Go to Sign In
+                </Button>
+                <Button type="button" variant="ghost" className="w-full" onClick={resetFlow}>
+                  Recover another account
+                </Button>
               </div>
             )}
 
@@ -218,7 +306,7 @@ export default function ForgotPasswordPage() {
                 </Link>
               </div>
               <div className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/sign-up"
                   className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
@@ -230,7 +318,7 @@ export default function ForgotPasswordPage() {
           </CardContent>
         </Card>
       </div>
-      
+
       <NewFooter />
     </div>
   );
