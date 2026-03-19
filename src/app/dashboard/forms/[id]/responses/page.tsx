@@ -318,26 +318,6 @@ export default function FormResponsesPage() {
     }
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => router.push('/dashboard/forms')}
-            className="w-full bg-black text-white py-2.5 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
-          >
-            Back to Forms
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Build available option values when field changes using a lightweight fetch to first page
   useEffect(() => {
     const loadValues = async () => {
@@ -360,6 +340,26 @@ export default function FormResponsesPage() {
     };
     loadValues();
   }, [filterFieldId, formId]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => router.push('/dashboard/forms')}
+            className="w-full bg-black text-white py-2.5 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+          >
+            Back to Forms
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

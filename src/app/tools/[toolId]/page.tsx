@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from 'react';
 import ToolSidebar from '@/components/ToolSidebar';
 import Navbar from '@/components/Navbar';
 import NewFooter from '@/components/NewFooter';
@@ -123,6 +122,9 @@ export default function ToolPage() {
   const params = useParams();
   const toolId = params.toolId as string;
   const tool = toolsData[toolId as keyof typeof toolsData];
+  const toolName = tool?.name ?? '';
+
+  useToolTracking(toolId, toolName, 'view');
 
   if (!tool) {
     return (
@@ -151,8 +153,6 @@ export default function ToolPage() {
   }
 
   const ToolComponent = tool.component;
-  // Track generic tool views for dynamic route
-  useToolTracking(toolId, tool.name, 'view');
 
   return (
     <div className="min-h-screen bg-gray-50">

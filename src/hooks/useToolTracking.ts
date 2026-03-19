@@ -5,6 +5,10 @@ export const useToolTracking = (toolSlug: string, toolName: string, usageType: '
   const { user } = useAuth();
 
   useEffect(() => {
+    if (!toolSlug) {
+      return;
+    }
+
     // Track tool view/usage
     const trackUsage = async () => {
       try {
