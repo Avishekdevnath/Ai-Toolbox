@@ -11,6 +11,10 @@ export interface AuthUserDoc {
   phoneNumber?: string;
   passwordHash: string;
   role: 'admin' | 'user';
+  securityQuestions?: Array<{
+    questionId: string;
+    answerHash: string;
+  }>;
   profilePicture?: {
     url: string;
     cloudinaryPublicId: string;
@@ -28,6 +32,10 @@ const AuthUserSchema = new Schema<AuthUserDoc>({
   phoneNumber: { type: String },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['admin', 'user'], default: 'user', index: true },
+  securityQuestions: [{
+    questionId: { type: String, required: true },
+    answerHash: { type: String, required: true }
+  }],
   profilePicture: {
     url: { type: String },
     cloudinaryPublicId: { type: String },
@@ -67,6 +75,10 @@ export class AuthUserModel {
     password: string;
     phoneNumber?: string;
     role?: 'admin' | 'user';
+    securityQuestions?: Array<{
+      questionId: string;
+      answerHash: string;
+    }>;
   }) {
     const model = await this.getModel();
     
@@ -80,7 +92,8 @@ export class AuthUserModel {
       lastName: userData.lastName,
       phoneNumber: userData.phoneNumber,
       passwordHash,
-      role: userData.role || 'user'
+      role: userData.role || 'user',
+      securityQuestions: userData.securityQuestions
     });
 
     return await user.save();
@@ -134,6 +147,23 @@ export class AuthUserModel {
           updatedAt: new Date()
         }
       }
+    );
+  }
+
+  static async replaceSecurityQuestions(
+    userId: string,
+    securityQuestions: Array<{ questionId: string; answerHash: string }>
+  ) {
+    const model = await this.getModel();
+    return await model.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          securityQuestions,
+          updatedAt: new Date()
+        }
+      },
+      { new: true }
     );
   }
 
