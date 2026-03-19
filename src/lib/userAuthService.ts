@@ -32,6 +32,10 @@ export interface UserRegistrationData {
   name: string;
   firstName?: string;
   lastName?: string;
+  securityQuestions?: Array<{
+    questionId: string;
+    answerHash: string;
+  }>;
 }
 
 export class UserAuthService {
@@ -129,7 +133,7 @@ export class UserAuthService {
     try {
       await this.ensureConnection();
       
-      const { email, username, password, name, firstName, lastName } = userData;
+      const { email, username, password, name, firstName, lastName, securityQuestions } = userData;
       
       if (!email || !password || !name) {
         return {
@@ -173,7 +177,8 @@ export class UserAuthService {
         password: password,
         firstName: firstName || name.split(' ')[0],
         lastName: lastName || name.split(' ').slice(1).join(' ') || '',
-        phoneNumber: undefined
+        phoneNumber: undefined,
+        securityQuestions
       });
 
       // Create user session

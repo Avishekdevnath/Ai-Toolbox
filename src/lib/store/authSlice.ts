@@ -14,6 +14,11 @@ export interface AuthUser {
   role: Role;
 }
 
+export interface SecurityQuestionRegistrationInput {
+  questionId: string;
+  answer: string;
+}
+
 interface AuthState {
   user: AuthUser | null;
   loading: boolean;
@@ -92,14 +97,19 @@ export const logoutThunk = createAsyncThunk('auth/logout', async () => {
   return null as AuthUser | null;
 });
 
-export const registerThunk = createAsyncThunk('auth/register', async (payload: Omit<AuthUser, 'id' | 'role'> & { password: string; role?: Role }) => {
+export const registerThunk = createAsyncThunk('auth/register', async (payload: Omit<AuthUser, 'id' | 'role'> & {
+  password: string;
+  role?: Role;
+  securityQuestions: SecurityQuestionRegistrationInput[];
+}) => {
   const registerData = {
     email: payload.email,
     username: payload.username,
     password: payload.password,
     name: `${payload.firstName} ${payload.lastName}`.trim(),
     firstName: payload.firstName,
-    lastName: payload.lastName
+    lastName: payload.lastName,
+    securityQuestions: payload.securityQuestions
   };
   
   const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registerData) });
