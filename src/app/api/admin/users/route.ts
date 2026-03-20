@@ -3,6 +3,10 @@ import { AdminAuthService } from '@/lib/adminAuthService';
 import mongoose from 'mongoose';
 import { getDatabase } from '@/lib/mongodb';
 import { ToolUsage } from '@/models/ToolUsageModel';
+import { AuthUserModel } from '@/models/AuthUserModel';
+import { hashSecurityAnswer, normalizeSecurityAnswer } from '@/lib/auth/securityAnswers';
+import { isValidSecurityQuestionId } from '@/lib/auth/securityQuestions';
+import crypto from 'crypto';
 
 export async function GET(request: NextRequest) {
   try {
@@ -137,10 +141,11 @@ export async function GET(request: NextRequest) {
       return {
         _id: user._id,
         email: user.email,
-        firstName: user.name?.split(' ')[0] || '',
-        lastName: user.name?.split(' ').slice(1).join(' ') || '',
+        username: user.username || '',
+        firstName: user.firstName || user.name?.split(' ')[0] || '',
+        lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
         role: user.role || 'user',
-        status: user.isActive ? 'active' : 'inactive',
+        status: user.isActive !== undefined ? (user.isActive ? 'active' : 'inactive') : 'active',
         clerkId: user.clerkId || user._id.toString(),
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -210,93 +215,103 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, firstName, lastName, role, status } = body;
+    const { email, username, firstName, lastName, role, status, securityQuestions } = body;
 
     // Validate required fields
     if (!email || !firstName || !lastName) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { success: false, error: 'Missing required fields: email, firstName, lastName' },
         { status: 400 }
       );
     }
 
-    // Get database instance
-    const db = await getDatabase();
-
-    // Check if user already exists
-    const existingUser = await db.collection('users').findOne({ email: email.toLowerCase() });
-    if (existingUser) {
+    // Validate security questions (3–5 required)
+    if (!Array.isArray(securityQuestions) || securityQuestions.length < 3 || securityQuestions.length > 5) {
       return NextResponse.json(
-        { success: false, error: 'User already exists' },
-        { status: 409 }
+        { success: false, error: 'Please select 3 to 5 security questions' },
+        { status: 400 }
       );
     }
 
-    // Create new user
-    const newUser = {
-      email: email.toLowerCase(),
-      name: `${firstName} ${lastName}`,
-      role: role || 'user',
-      isActive: status === 'active',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      emailVerified: false,
-      profile: {
-        firstName,
-        lastName,
-        avatar: null,
-        bio: '',
-        location: '',
-        website: ''
-      },
-      preferences: {
-        theme: 'light',
-        language: 'en',
-        notifications: {
-          email: true,
-          push: true,
-          marketing: false
-        }
-      },
-      security: {
-        emailVerified: false,
-        twoFactorEnabled: false,
-        lastPasswordChange: new Date()
-      },
-      activity: {
-        lastLoginAt: null,
-        lastActivityAt: null,
-        loginCount: 0,
-        toolUsageCount: 0
-      },
-      subscription: {
-        plan: 'free',
-        status: 'active',
-        startDate: new Date(),
-        endDate: null
-      },
-      permissions: ['basic_access']
-    };
+    const uniqueQuestionIds = new Set<string>();
+    const normalizedAnswers = new Set<string>();
 
-    const result = await db.collection('users').insertOne(newUser);
-    const createdUser = { ...newUser, _id: result.insertedId };
+    for (const sq of securityQuestions) {
+      const questionId = sq?.questionId;
+      const normalizedAnswer = typeof sq?.answer === 'string' ? normalizeSecurityAnswer(sq.answer) : '';
+
+      if (!questionId || !isValidSecurityQuestionId(questionId)) {
+        return NextResponse.json(
+          { success: false, error: 'Each security question must use a valid question option' },
+          { status: 400 }
+        );
+      }
+      if (uniqueQuestionIds.has(questionId)) {
+        return NextResponse.json(
+          { success: false, error: 'Security question selections must be unique' },
+          { status: 400 }
+        );
+      }
+      if (!normalizedAnswer) {
+        return NextResponse.json(
+          { success: false, error: 'Each security question answer is required' },
+          { status: 400 }
+        );
+      }
+      if (normalizedAnswers.has(normalizedAnswer)) {
+        return NextResponse.json(
+          { success: false, error: 'Security question answers must be unique' },
+          { status: 400 }
+        );
+      }
+
+      uniqueQuestionIds.add(questionId);
+      normalizedAnswers.add(normalizedAnswer);
+    }
+
+    const hashedSecurityQuestions = await Promise.all(
+      securityQuestions.map(async (sq: { questionId: string; answer: string }) => ({
+        questionId: sq.questionId,
+        answerHash: await hashSecurityAnswer(sq.answer),
+      }))
+    );
+
+    // Use a random temp password — user must reset via forgot-password
+    const tempPassword = crypto.randomBytes(24).toString('hex');
+
+    const newUser = await AuthUserModel.create({
+      email: email.toLowerCase(),
+      username: username?.toLowerCase() || undefined,
+      firstName,
+      lastName,
+      password: tempPassword,
+      role: role === 'admin' ? 'admin' : 'user',
+      securityQuestions: hashedSecurityQuestions,
+    });
 
     return NextResponse.json({
       success: true,
-      data: createdUser,
-      message: 'User created successfully'
+      data: {
+        _id: newUser._id,
+        email: newUser.email,
+        username: newUser.username,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role,
+      },
+      message: 'User created successfully. They must set their password via forgot-password.',
     });
 
   } catch (error: any) {
     console.error('Error creating user:', error);
-    
+
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to create user',
-        message: error.message || 'Unknown error occurred'
+        message: error.message || 'Unknown error occurred',
       },
       { status: 500 }
     );
   }
-} 
+}
