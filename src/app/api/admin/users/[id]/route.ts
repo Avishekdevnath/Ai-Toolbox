@@ -121,7 +121,7 @@ export async function PUT(
 
     const { id: userId } = await params;
     const body = await request.json();
-    const { firstName, lastName, role, status, email } = body;
+    const { firstName, lastName, username, role, status, email } = body;
     const db = await getDatabase();
 
     // Find user by ID or clerkId
@@ -142,7 +142,9 @@ export async function PUT(
 
     // Store original values for audit log
     const originalValues = {
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
       role: user.role,
       isActive: user.isActive,
       email: user.email
@@ -153,13 +155,9 @@ export async function PUT(
       updatedAt: new Date()
     };
 
-    if (firstName !== undefined || lastName !== undefined) {
-      const currentName = user.name || '';
-      const currentParts = currentName.split(' ');
-      const newFirstName = firstName !== undefined ? firstName : currentParts[0] || '';
-      const newLastName = lastName !== undefined ? lastName : currentParts.slice(1).join(' ') || '';
-      updateData.name = `${newFirstName} ${newLastName}`.trim();
-    }
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    updateData.username = username ?? user.username;
 
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.isActive = status === 'active';
@@ -185,7 +183,9 @@ export async function PUT(
       details: {
         before: originalValues,
         after: {
-          name: updatedUser.name,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          username: updatedUser.username,
           role: updatedUser.role,
           isActive: updatedUser.isActive,
           email: updatedUser.email
