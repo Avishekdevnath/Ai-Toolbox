@@ -157,7 +157,7 @@ export async function PUT(
 
     if (firstName !== undefined) updateData.firstName = firstName;
     if (lastName !== undefined) updateData.lastName = lastName;
-    updateData.username = username ?? user.username;
+    if (username !== undefined && username !== '') updateData.username = username;
 
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.isActive = status === 'active';
