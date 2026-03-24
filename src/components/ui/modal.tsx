@@ -7,9 +7,12 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title?: string;
+  description?: string;
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
@@ -28,24 +31,33 @@ const sizeClasses = {
 export default function Modal({
   isOpen,
   onClose,
+  open,
+  onOpenChange,
   title,
+  description,
   children,
   size = 'md',
   showCloseButton = true,
   closeOnOverlayClick = true,
   className
 }: ModalProps) {
+  const resolvedIsOpen = open ?? isOpen ?? false;
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
 
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (e.key === 'Escape' && resolvedIsOpen) {
+        handleClose();
       }
     };
 
-    if (isOpen) {
+    if (resolvedIsOpen) {
       document.addEventListener('keydown', handleEscape);
       // Prevent body scroll
       document.body.style.overflow = 'hidden';
@@ -55,18 +67,18 @@ export default function Modal({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [resolvedIsOpen, onClose, onOpenChange]);
 
   // Handle click outside
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (closeOnOverlayClick && e.target === e.currentTarget) {
-      onClose();
+      handleClose();
     }
   };
 
   // Focus management
   useEffect(() => {
-    if (isOpen && modalRef.current) {
+    if (resolvedIsOpen && modalRef.current) {
       const focusableElements = modalRef.current.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
@@ -75,13 +87,13 @@ export default function Modal({
         firstElement.focus();
       }
     }
-  }, [isOpen]);
+  }, [resolvedIsOpen]);
 
   if (typeof window === 'undefined') return null;
 
   return createPortal(
     <AnimatePresence>
-      {isOpen && (
+      {resolvedIsOpen && (
         <div className="fixed inset-0 z-50">
           {/* Backdrop with blur effect */}
           <motion.div
@@ -113,14 +125,21 @@ export default function Modal({
               {/* Header */}
               {(title || showCloseButton) && (
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                  {title && (
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {title}
-                    </h2>
-                  )}
+                  <div>
+                    {title && (
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {title}
+                      </h2>
+                    )}
+                    {description && (
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {description}
+                      </p>
+                    )}
+                  </div>
                   {showCloseButton && (
                     <button
-                      onClick={onClose}
+                      onClick={handleClose}
                       className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                       aria-label="Close modal"
                     >

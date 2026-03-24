@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         total: result.total,
         limit: filters.limit,
         offset: filters.offset,
-        hasMore: result.offset + result.qrCodes.length < result.total
+        hasMore: (filters.offset ?? 0) + result.qrCodes.length < result.total
       }
     });
   } catch (error) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const validationResult = CreateQRCodeRequest.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validationResult.error.errors },
+        { error: 'Invalid request data', details: validationResult.error.issues },
         { status: 400 }
       );
     }

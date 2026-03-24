@@ -1,60 +1,59 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  Users, 
-  TrendingUp, 
-  CheckCircle, 
-  AlertCircle, 
-  BarChart2, 
-  Activity, 
-  Server,
-  Shield,
-  Database,
-  Globe,
-  Cpu,
-  Clock,
-  Eye,
-  Settings,
-  RefreshCw,
-  Loader2
-} from 'lucide-react';
+import { Users, TrendingUp, Settings, Activity, RefreshCw, Loader2, AlertCircle, CheckCircle, BarChart2, Server, Eye, MessageSquare, Bug, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 
 interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
-  totalTools: number;
-  totalUsage: number;
-  systemHealth: {
-    apiStatus: string;
-    databaseStatus: string;
-    errorRate: number;
-    uptime: string;
-    responseTime: string;
-    lastDowntime: string;
-  };
-  toolUsage: Array<{
-    name: string;
-    count: number;
-    growth: number;
-  }>;
-  recentActivity: Array<{
-    user: string;
-    action: string;
-    time: string;
-    type: string;
-  }>;
-  alerts: Array<{
-    type: string;
-    message: string;
-    time: string;
-  }>;
-  unreadNotifications: number;
-  lastUpdated: string;
+  totalUsers: number; activeUsers: number; totalTools: number; totalUsage: number;
+  systemHealth: { apiStatus: string; databaseStatus: string; errorRate: number; uptime: string; responseTime: string; lastDowntime: string; };
+  toolUsage: Array<{ name: string; count: number; growth: number; }>;
+  recentActivity: Array<{ user: string; action: string; time: string; type: string; }>;
+  alerts: Array<{ type: string; message: string; time: string; }>;
+  unreadNotifications: number; lastUpdated: string;
+}
+
+const alertStyles: Record<string, string> = {
+  warning: 'bg-yellow-50 border-yellow-200', error: 'bg-red-50 border-red-200',
+  success: 'bg-green-50 border-green-200', info: 'bg-blue-50 border-blue-200',
+};
+const AlertIcon = ({ type }: { type: string }) => {
+  if (type === 'success') return <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />;
+  if (type === 'error') return <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />;
+  if (type === 'warning') return <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0" />;
+  return <Activity className="h-4 w-4 text-blue-500 shrink-0" />;
+};
+
+interface FeedbackStats { total: number; bugs: number; features: number; new: number; lastWeek: number; }
+
+function FeedbackStatsCard() {
+  const [stats, setStats] = useState<FeedbackStats | null>(null);
+  useEffect(() => {
+    fetch('/api/admin/feedback/stats').then((r) => r.json()).then(setStats).catch(() => {});
+  }, []);
+  if (!stats) return null;
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2"><MessageSquare className="h-4 w-4 text-slate-400" /><h2 className="text-[13px] font-semibold text-slate-800">User Feedback</h2></div>
+        <Link href="/admin/feedback" className="text-[12px] text-blue-600 hover:underline">View all</Link>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Total', value: stats.total, icon: MessageSquare, color: 'text-slate-700' },
+          { label: 'Bug Reports', value: stats.bugs, icon: Bug, color: 'text-red-600' },
+          { label: 'Feature Requests', value: stats.features, icon: Lightbulb, color: 'text-amber-600' },
+          { label: 'Unreviewed', value: stats.new, icon: AlertCircle, color: 'text-blue-600' },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="border border-slate-100 rounded-lg p-3">
+            <Icon className={`h-3.5 w-3.5 ${color} mb-1`} />
+            <p className={`text-xl font-bold tabular-nums ${color}`}>{value}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function AdminDashboard() {
@@ -68,403 +67,145 @@ export default function AdminDashboard() {
       setError(null);
       const response = await fetch('/api/admin/dashboard/stats');
       const result = await response.json();
-
-      if (result.success) {
-        setStats(result.data);
-      } else {
-        setError(result.error || 'Failed to fetch dashboard data');
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      setError('Network error. Please try again.');
-    }
+      if (result.success) setStats(result.data);
+      else setError(result.error || 'Failed to fetch dashboard data');
+    } catch { setError('Network error. Please try again.'); }
   };
 
-  useEffect(() => {
-    fetchDashboardStats().finally(() => setLoading(false));
-  }, []);
+  useEffect(() => { fetchDashboardStats().finally(() => setLoading(false)); }, []);
 
-  const refreshData = async () => {
-    setRefreshing(true);
-    await fetchDashboardStats();
-    setRefreshing(false);
-  };
+  const refreshData = async () => { setRefreshing(true); await fetchDashboardStats(); setRefreshing(false); };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'online':
-      case 'connected':
-        return 'text-green-600';
-      case 'offline':
-      case 'disconnected':
-        return 'text-red-600';
-      default:
-        return 'text-yellow-600';
-    }
-  };
-
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case 'warning':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      default:
-        return <Activity className="h-4 w-4 text-blue-500" />;
-    }
-  };
-
-  const getAlertColor = (type: string) => {
-    switch (type) {
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'error':
-        return 'bg-red-50 border-red-200';
-      case 'success':
-        return 'bg-green-50 border-green-200';
-      default:
-        return 'bg-blue-50 border-blue-200';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading dashboard data...</p>
-        </div>
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-center"><Loader2 className="h-7 w-7 animate-spin mx-auto mb-3 text-blue-600" /><p className="text-[13px] text-slate-500">Loading dashboard...</p></div>
+    </div>
+  );
+  if (error) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-center"><AlertCircle className="h-7 w-7 mx-auto mb-3 text-red-500" /><p className="text-[13px] text-red-600 mb-3">{error}</p>
+        <button onClick={refreshData} className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-200 rounded-lg text-[13px] text-slate-600 hover:bg-slate-50"><RefreshCw className="h-3.5 w-3.5" />Retry</button>
       </div>
-    );
-  }
+    </div>
+  );
+  if (!stats) return null;
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-600" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={refreshData} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-yellow-600" />
-          <p className="text-gray-600">No data available</p>
-        </div>
-      </div>
-    );
-  }
+  const statCards = [
+    { label: 'Total Users', value: stats.totalUsers.toLocaleString(), sub: 'Registered', icon: Users },
+    { label: 'Active Users', value: stats.activeUsers.toLocaleString(), sub: 'Last 7 days', icon: TrendingUp },
+    { label: 'Total Tools', value: stats.totalTools, sub: 'Available', icon: Settings },
+    { label: 'Total Usage', value: stats.totalUsage.toLocaleString(), sub: 'All-time interactions', icon: Activity },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header with refresh button */}
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">System Overview</h2>
-          <p className="text-sm text-gray-500">
-            Last updated: {new Date(stats.lastUpdated).toLocaleTimeString()}
-          </p>
-          <div className="mt-2 flex items-center space-x-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-              ✅ Live Data: Real-time statistics from database
-            </span>
-            {stats.unreadNotifications > 0 && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                🔔 {stats.unreadNotifications} unread notifications
-              </span>
-            )}
-          </div>
+          <h1 className="text-lg font-semibold text-slate-800">System Overview</h1>
+          <p className="text-[12px] text-slate-400 mt-0.5">Last updated: {new Date(stats.lastUpdated).toLocaleTimeString()}</p>
         </div>
-        <Button
-          onClick={refreshData}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-          className="flex items-center space-x-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </Button>
+        <button onClick={refreshData} disabled={refreshing} className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-[13px] text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />Refresh
+        </button>
       </div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Registered users
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Last 7 days
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tools</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTools}</div>
-            <p className="text-xs text-muted-foreground">
-              Available tools
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Usage</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsage.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              All-time tool interactions
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map(({ label, value, sub, icon: Icon }) => (
+          <div key={label} className="bg-white border border-slate-200 rounded-xl p-4 relative">
+            <span className="absolute top-4 right-4 p-1.5 bg-blue-50 rounded-lg"><Icon className="h-4 w-4 text-blue-600" /></span>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium">{label}</p>
+            <p className="text-2xl font-bold tabular-nums text-slate-800 mt-1">{value}</p>
+            <p className="text-[12px] text-slate-400 mt-0.5">{sub}</p>
+          </div>
+        ))}
       </div>
 
-      {/* System Health */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Server className="h-5 w-5" />
-              <span>System Health</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">API Status</span>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${stats.systemHealth.apiStatus === 'Online' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className={`text-sm font-medium ${getStatusColor(stats.systemHealth.apiStatus)}`}>
-                    {stats.systemHealth.apiStatus}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Database</span>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${stats.systemHealth.databaseStatus === 'Connected' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className={`text-sm font-medium ${getStatusColor(stats.systemHealth.databaseStatus)}`}>
-                    {stats.systemHealth.databaseStatus}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Uptime</span>
-                <span className="text-sm font-medium text-green-600">{stats.systemHealth.uptime}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Response Time</span>
-                <span className="text-sm font-medium text-blue-600">{stats.systemHealth.responseTime}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Error Rate</span>
-                <span className="text-sm font-medium text-red-600">{stats.systemHealth.errorRate}%</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Last Downtime</span>
-                <span className="text-sm text-gray-500">{stats.systemHealth.lastDowntime}</span>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t">
-              <Link href="/admin/system">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Settings className="h-4 w-4 mr-2" />
-                  System Settings
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5" />
-              <span>Recent Alerts</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.alerts.map((alert, index) => (
-                <div
-                  key={index}
-                  className={`p-3 rounded-lg border ${getAlertColor(alert.type)}`}
-                >
-                  <div className="flex items-start space-x-3">
-                    {getAlertIcon(alert.type)}
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{alert.message}</p>
-                      <p className="text-xs text-gray-500">{alert.time}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="pt-4 border-t">
-              <Link href="/admin/alerts">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Eye className="h-4 w-4 mr-2" />
-                  View All Alerts
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tool Usage Analytics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <BarChart2 className="h-5 w-5" />
-            <span>Tool Usage Analytics (Last 24 Hours)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats.toolUsage.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.toolUsage.map((tool) => (
-                  <div key={tool.name} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-sm">{tool.name}</h4>
-                      <Badge variant="secondary">{tool.count}</Badge>
-                    </div>
-                    <div className="flex items-center text-xs text-gray-500">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      <span>+{tool.growth}% from last week</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="pt-4 border-t mt-4">
-                <Link href="/admin/tools/analytics">
-                  <Button variant="outline" size="sm">
-                    <BarChart2 className="h-4 w-4 mr-2" />
-                    View Detailed Analytics
-                  </Button>
-                </Link>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <BarChart2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-500">No tool usage data available</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Activity className="h-5 w-5" />
-            <span>Recent Activity</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {stats.recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.type === 'admin_action' ? 'bg-purple-500' : 'bg-blue-500'
-                  }`}></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{activity.user}</p>
-                    <p className="text-xs text-gray-500">{activity.action}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-gray-400">{activity.time}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4"><Server className="h-4 w-4 text-slate-400" /><h2 className="text-[13px] font-semibold text-slate-800">System Health</h2></div>
+          <div className="grid grid-cols-2 gap-y-3 gap-x-6">
+            {[
+              { label: 'API Status', value: stats.systemHealth.apiStatus, color: stats.systemHealth.apiStatus === 'Online' ? 'text-green-600' : 'text-red-600' },
+              { label: 'Database', value: stats.systemHealth.databaseStatus, color: stats.systemHealth.databaseStatus === 'Connected' ? 'text-green-600' : 'text-red-600' },
+              { label: 'Uptime', value: stats.systemHealth.uptime, color: 'text-green-600' },
+              { label: 'Response Time', value: stats.systemHealth.responseTime, color: 'text-blue-600' },
+              { label: 'Error Rate', value: `${stats.systemHealth.errorRate}%`, color: 'text-red-500' },
+              { label: 'Last Downtime', value: stats.systemHealth.lastDowntime, color: 'text-slate-500' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="flex items-center justify-between">
+                <span className="text-[12px] text-slate-500">{label}</span>
+                <span className={`text-[12px] font-medium ${color}`}>{value}</span>
               </div>
             ))}
           </div>
-          
-          <div className="pt-4 border-t mt-4">
-            <Link href="/admin/activity">
-              <Button variant="outline" size="sm">
-                <Activity className="h-4 w-4 mr-2" />
-                View All Activity
-              </Button>
-            </Link>
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <Link href="/admin/system" className="flex items-center justify-center gap-2 w-full py-1.5 border border-slate-200 rounded-lg text-[13px] text-slate-600 hover:bg-slate-50"><Settings className="h-3.5 w-3.5" />System Settings</Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link href="/admin/users">
-              <Button variant="outline" className="w-full h-16 flex flex-col space-y-2">
-                <Users className="h-6 w-6" />
-                <span>Manage Users</span>
-              </Button>
-            </Link>
-            
-            <Link href="/admin/tools">
-              <Button variant="outline" className="w-full h-16 flex flex-col space-y-2">
-                <Settings className="h-6 w-6" />
-                <span>Manage Tools</span>
-              </Button>
-            </Link>
-            
-            <Link href="/admin/analytics">
-              <Button variant="outline" className="w-full h-16 flex flex-col space-y-2">
-                <BarChart2 className="h-6 w-6" />
-                <span>View Analytics</span>
-              </Button>
-            </Link>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4"><AlertCircle className="h-4 w-4 text-slate-400" /><h2 className="text-[13px] font-semibold text-slate-800">Recent Alerts</h2></div>
+          <div className="space-y-2">
+            {stats.alerts.map((alert, i) => (
+              <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-lg border ${alertStyles[alert.type] ?? alertStyles.info}`}>
+                <AlertIcon type={alert.type} />
+                <div className="flex-1 min-w-0"><p className="text-[13px] font-medium text-slate-800 truncate">{alert.message}</p><p className="text-[11px] text-slate-400">{alert.time}</p></div>
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <Link href="/admin/alerts" className="flex items-center justify-center gap-2 w-full py-1.5 border border-slate-200 rounded-lg text-[13px] text-slate-600 hover:bg-slate-50"><Eye className="h-3.5 w-3.5" />View All Alerts</Link>
+          </div>
+        </div>
+      </div>
+
+      <FeedbackStatsCard />
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4"><BarChart2 className="h-4 w-4 text-slate-400" /><h2 className="text-[13px] font-semibold text-slate-800">Tool Usage — Last 24 Hours</h2></div>
+        {stats.toolUsage.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {stats.toolUsage.map((tool) => (
+              <div key={tool.name} className="border border-slate-100 rounded-lg p-3 hover:bg-slate-50">
+                <p className="text-[13px] font-medium text-slate-700 truncate">{tool.name}</p>
+                <p className="text-xl font-bold tabular-nums text-slate-800 mt-1">{tool.count}</p>
+                <div className="flex items-center gap-1 mt-1"><TrendingUp className="h-3 w-3 text-green-500" /><span className="text-[11px] text-green-600">+{tool.growth}%</span></div>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-[13px] text-slate-400 text-center py-8">No tool usage data available</p>}
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2"><Activity className="h-4 w-4 text-slate-400" /><h2 className="text-[13px] font-semibold text-slate-800">Recent Activity</h2></div>
+        </div>
+        <div className="divide-y divide-slate-100">
+          {stats.recentActivity.map((item, i) => (
+            <div key={i} className="flex items-center justify-between py-2.5">
+              <div className="flex items-center gap-2.5">
+                <span className={`w-1.5 h-1.5 rounded-full ${item.type === 'admin_action' ? 'bg-purple-500' : 'bg-blue-500'}`} />
+                <div><p className="text-[13px] font-medium text-slate-700">{item.user}</p><p className="text-[12px] text-slate-400">{item.action}</p></div>
+              </div>
+              <span className="text-[11px] text-slate-400">{item.time}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <Link href="/admin/activity" className="flex items-center justify-center gap-2 w-full py-1.5 border border-slate-200 rounded-lg text-[13px] text-slate-600 hover:bg-slate-50"><Activity className="h-3.5 w-3.5" />View All Activity</Link>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h2 className="text-[13px] font-semibold text-slate-800 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-3 gap-3">
+          {[{ href: '/admin/users', icon: Users, label: 'Manage Users' }, { href: '/admin/tools', icon: Settings, label: 'Manage Tools' }, { href: '/admin/analytics', icon: BarChart2, label: 'View Analytics' }].map(({ href, icon: Icon, label }) => (
+            <Link key={href} href={href} className="flex flex-col items-center gap-2 py-4 border border-slate-200 rounded-lg hover:bg-slate-50 text-[13px] text-slate-600">
+              <Icon className="h-5 w-5 text-blue-600" />{label}
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
-} 
+}

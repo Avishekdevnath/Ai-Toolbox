@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { model } from '@/lib/gemini';
-import { clientPromise } from '@/lib/mongodb';
 import { getDatabase } from '@/lib/mongodb';
 import { parseAIResponse } from '@/lib/utils';
 

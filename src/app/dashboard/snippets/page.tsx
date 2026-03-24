@@ -1,11 +1,11 @@
 "use client";
+
 import SnippetTable from '@/components/snippets/SnippetTable';
-import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Code2 } from 'lucide-react';
 
 interface SnippetItem {
   slug: string;
@@ -24,21 +24,14 @@ export default function SnippetsDashboardPage() {
   useEffect(() => {
     const fetchList = async () => {
       try {
-        const res = await fetch(`/api/snippets?owner=me`, {
-          headers: {
-            'x-user-id': userId || '',
-          },
-        });
+        const res = await fetch(`/api/snippets?owner=me`, { headers: { 'x-user-id': userId || '' } });
         if (res.ok) {
           const { data } = await res.json();
-          // Ensure data is an array
           setItems(Array.isArray(data?.items) ? data.items : []);
         } else {
-          console.error('Failed to fetch snippets:', res.statusText);
           setItems([]);
         }
       } catch (error) {
-        console.error('Error fetching snippets:', error);
         setItems([]);
       } finally {
         setLoading(false);
@@ -55,20 +48,42 @@ export default function SnippetsDashboardPage() {
   };
 
   return (
-    <div className="px-3 sm:px-4 py-6 sm:py-8 max-w-5xl mx-auto space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl sm:text-2xl font-semibold">My Snippets</h1>
-        <Link href="/s/new" target="_blank" rel="noopener noreferrer">
-          <Button size="sm" className="flex items-center gap-2">
-            <Plus size={16} />
-            <span className="hidden sm:inline">Create Snippet</span>
-          </Button>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-slate-800">My Snippets</h1>
+          <p className="text-[12px] text-slate-400 mt-0.5">Manage and share your code snippets</p>
+        </div>
+        <Link href="/s/new" target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 h-9 px-4 bg-blue-600 text-white text-[13px] font-medium rounded-lg hover:bg-blue-700 transition-colors">
+          <Plus size={15} />
+          <span className="hidden sm:inline">Create Snippet</span>
         </Link>
       </div>
+
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="bg-white border border-slate-200 rounded-xl p-12 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
+            <p className="text-[13px] text-slate-500">Loading snippets...</p>
+          </div>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Code2 size={20} className="text-blue-600" />
+          </div>
+          <h3 className="text-[13px] font-semibold text-slate-800 mb-1">No snippets yet</h3>
+          <p className="text-[12px] text-slate-400 mb-5">Create your first code snippet to get started</p>
+          <Link href="/s/new" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 h-9 px-4 bg-blue-600 text-white text-[13px] font-medium rounded-lg hover:bg-blue-700 transition-colors">
+            <Plus size={15} /> Create Snippet
+          </Link>
+        </div>
       ) : (
-        <SnippetTable items={items} onDelete={handleDelete} />
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <SnippetTable items={items} onDelete={handleDelete} />
+        </div>
       )}
     </div>
   );

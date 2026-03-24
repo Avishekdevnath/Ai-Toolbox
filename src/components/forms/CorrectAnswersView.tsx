@@ -22,6 +22,8 @@ interface CorrectAnswersViewProps {
       id: string;
       label: string;
       type: string;
+      required?: boolean;
+      helpText?: string;
       options?: string[];
       quiz?: {
         points?: number;

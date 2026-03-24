@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserAuthService } from '@/lib/userAuthService';
 import { cookies } from 'next/headers';
+import { getVisitorIdFromCookieStore } from '@/lib/visitorId';
+import { getVisitorIdentityModel } from '@/models/VisitorIdentityModel';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,6 +57,23 @@ export async function POST(request: NextRequest) {
       maxAge: 24 * 60 * 60, // 24 hours
       path: '/',
     });
+
+    // Identity linking: associate visitorId cookie with this userId
+    try {
+      const visitorId = await getVisitorIdFromCookieStore();
+      if (visitorId && authResult.user.id) {
+        const VisitorIdentity = await getVisitorIdentityModel();
+        const now = new Date();
+        await VisitorIdentity.findOneAndUpdate(
+          { visitorId },
+          {
+            $set: { userId: authResult.user.id.toString(), lastSeenAt: now },
+            $setOnInsert: { firstSeenAt: now },
+          },
+          { upsert: true }
+        );
+      }
+    } catch { /* non-blocking */ }
 
     console.log('✅ Session cookie set, returning success response');
 

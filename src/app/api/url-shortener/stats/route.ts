@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { calculateUrlStats } from '@/lib/urlShortenerUtils';
-import { UrlShortenerSchema } from '@/schemas/urlShortenerSchema';
+import { ShortenedUrl } from '@/schemas/urlShortenerSchema';
 
 const COLLECTION_NAME = 'shortened_urls';
 
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const urls = await db.collection(COLLECTION_NAME)
       .find(query)
       .sort({ createdAt: -1 })
-      .toArray();
+      .toArray() as unknown as ShortenedUrl[];
 
     // Calculate comprehensive stats
     const stats = calculateUrlStats(urls);

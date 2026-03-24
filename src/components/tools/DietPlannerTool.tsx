@@ -139,35 +139,35 @@ export default function DietPlannerTool() {
     
     switch (dietPlanType) {
       case 'general':
-        specificFieldsValid = formData.goal.trim() && formData.activity_level;
+        specificFieldsValid = !!(formData.goal.trim() && formData.activity_level);
         console.log('General validation:', { goal: formData.goal.trim(), activity_level: formData.activity_level });
         break;
       case 'weight-loss':
-        specificFieldsValid = formData.target_weight && formData.timeline && formData.activity_level;
+        specificFieldsValid = !!(formData.target_weight && formData.timeline && formData.activity_level);
         console.log('Weight-loss validation:', { target_weight: formData.target_weight, timeline: formData.timeline, activity_level: formData.activity_level });
         break;
       case 'muscle-gain':
-        specificFieldsValid = formData.training_frequency && formData.muscle_goals.trim();
+        specificFieldsValid = !!(formData.training_frequency && formData.muscle_goals.trim());
         console.log('Muscle-gain validation:', { training_frequency: formData.training_frequency, muscle_goals: formData.muscle_goals.trim() });
         break;
       case 'keto':
-        specificFieldsValid = formData.keto_experience && formData.carb_preference;
+        specificFieldsValid = !!(formData.keto_experience && formData.carb_preference);
         console.log('Keto validation:', { keto_experience: formData.keto_experience, carb_preference: formData.carb_preference });
         break;
       case 'vegan':
-        specificFieldsValid = formData.vegan_duration && formData.protein_concerns;
+        specificFieldsValid = !!(formData.vegan_duration && formData.protein_concerns);
         console.log('Vegan validation:', { vegan_duration: formData.vegan_duration, protein_concerns: formData.protein_concerns });
         break;
       case 'diabetes':
-        specificFieldsValid = formData.diabetes_type && formData.medication;
+        specificFieldsValid = !!(formData.diabetes_type && formData.medication);
         console.log('Diabetes validation:', { diabetes_type: formData.diabetes_type, medication: formData.medication });
         break;
       case 'heart-healthy':
-        specificFieldsValid = formData.heart_condition && formData.activity_level;
+        specificFieldsValid = !!(formData.heart_condition && formData.activity_level);
         console.log('Heart-healthy validation:', { heart_condition: formData.heart_condition, activity_level: formData.activity_level });
         break;
       case 'athletic':
-        specificFieldsValid = formData.sport_type.trim() && formData.training_schedule;
+        specificFieldsValid = !!(formData.sport_type.trim() && formData.training_schedule);
         console.log('Athletic validation:', { sport_type: formData.sport_type.trim(), training_schedule: formData.training_schedule });
         break;
       default:

@@ -211,7 +211,7 @@ export class UrlShortenerSchema {
       {
         $inc: { clicks: 1 },
         $set: { updatedAt: new Date() },
-        $push: { clickHistory: clickEvent }
+        $push: { clickHistory: clickEvent } as any
       }
     );
 

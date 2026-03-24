@@ -117,7 +117,7 @@ export class UrlShortenerModel {
       {
         $inc: { clicks: 1 },
         $set: { updatedAt: new Date() },
-        $push: { clickHistory: clickEvent }
+        $push: { clickHistory: clickEvent } as any
       }
     );
 
@@ -236,7 +236,7 @@ export class UrlShortenerModel {
     try {
       const response = await fetch(url.originalUrl, {
         method: 'HEAD',
-        timeout: 5000
+        signal: AbortSignal.timeout(5000)
       });
       return response.ok ? 'ok' : 'broken';
     } catch {
@@ -258,7 +258,7 @@ export class UrlShortenerModel {
       { shortCode, isActive: true },
       { 
         $inc: { clicks: 1 },
-        $push: { clickHistory: clickEvent },
+        $push: { clickHistory: clickEvent } as any,
         $set: { updatedAt: new Date() }
       }
     );

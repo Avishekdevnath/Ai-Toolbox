@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { ToolUsage } from '@/models/ToolUsageModel';
 import { verifyAccessToken } from '@/lib/auth/jwt';
+import { getVisitorIdFromRequest } from '@/lib/visitorId';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -16,17 +17,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     const token = req.cookies.get('user_session')?.value;
     const claims = token ? verifyAccessToken(token) : null;
     const userId = claims?.id || 'anonymous';
-    
+    const visitorId = getVisitorIdFromRequest(req);
+
     // Get usage type from request body
     const body = await req.json().catch(() => ({}));
     const usageType = body.usageType || 'view';
     // Fallback to userId provided by client if JWT is not available
     const effectiveUserId = userId || body.userId || 'anonymous';
-    
+
     // Create ToolUsage record for analytics
     const toolName = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     const toolUsage = new ToolUsage({
       userId: effectiveUserId,
+      visitorId,
       toolSlug: slug,
       toolName,
       usageType: usageType as 'view' | 'generate' | 'download' | 'share',

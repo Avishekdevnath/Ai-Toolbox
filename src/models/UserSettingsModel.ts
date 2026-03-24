@@ -1,5 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 import { connectToDatabase } from '@/lib/mongodb';
+import type { UserSettings as UserSettingsUpdateInput } from '@/lib/validation/userSettingsValidation';
 
 export interface IUserSettings extends Document {
   userId: string;
@@ -74,6 +75,14 @@ export interface IUserSettings extends Document {
   
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IUserSettingsModel extends Model<IUserSettings> {
+  getUserSettings(userId: string): Promise<any>;
+  updateUserSettings(userId: string, updates: UserSettingsUpdateInput): Promise<any>;
+  updateSettingsSection(userId: string, section: string, updates: any): Promise<any>;
+  deleteUserSettings(userId: string): Promise<{ deletedCount: number }>;
+  getSettingsByClerkId(clerkId: string): Promise<any>;
 }
 
 const UserSettingsSchema = new Schema<IUserSettings>({
@@ -423,7 +432,7 @@ UserSettingsSchema.statics = {
   },
 
   // Update user settings
-  async updateUserSettings(userId: string, updates: Partial<IUserSettings>) {
+  async updateUserSettings(userId: string, updates: UserSettingsUpdateInput) {
     try {
       const result = await this.findOneAndUpdate(
         { userId },
@@ -524,4 +533,6 @@ UserSettingsSchema.methods = {
   }
 };
 
-export const UserSettings = mongoose.models.UserSettings || mongoose.model<IUserSettings>('UserSettings', UserSettingsSchema); 
+export const UserSettings =
+  (mongoose.models.UserSettings as IUserSettingsModel) ||
+  mongoose.model<IUserSettings, IUserSettingsModel>('UserSettings', UserSettingsSchema);

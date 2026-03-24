@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
     `;
 
     const aiResponse = await generateGeminiResponse(prompt);
-    const analysis = parseAIResponse(aiResponse);
+    if (!aiResponse.success || !aiResponse.text) {
+      throw new Error(aiResponse.error || 'Failed to generate emergency fund analysis');
+    }
+    const analysis = parseAIResponse(aiResponse.text);
 
     return NextResponse.json({
       success: true,

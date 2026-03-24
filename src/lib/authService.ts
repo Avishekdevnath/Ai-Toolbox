@@ -179,10 +179,7 @@ export class ClientAuthService {
   public createAdminSession(adminData: { token: string; user: Partial<AuthUser> }): void {
     this.currentSession = writeSession(ADMIN_SESSION_STORAGE_KEY, {
       token: adminData.token,
-      user: {
-        ...adminData.user,
-        role: 'admin',
-      },
+      user: normalizeUser({ ...adminData.user, role: 'admin' }, 'admin'),
       isAdmin: true,
     });
   }
@@ -190,10 +187,10 @@ export class ClientAuthService {
   public createUserSession(userData: { token: string; user: Partial<AuthUser> }): void {
     this.currentSession = writeSession(USER_SESSION_STORAGE_KEY, {
       token: userData.token,
-      user: {
-        ...userData.user,
-        role: userData.user.role || 'user',
-      },
+      user: normalizeUser(
+        { ...userData.user, role: userData.user.role || 'user' },
+        userData.user.role || 'user',
+      ),
       isAdmin: userData.user.role === 'admin',
     });
   }

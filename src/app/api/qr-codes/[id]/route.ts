@@ -70,7 +70,7 @@ export async function PUT(
     const validationResult = UpdateQRCodeRequest.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validationResult.error.errors },
+        { error: 'Invalid request data', details: validationResult.error.issues },
         { status: 400 }
       );
     }

@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/auth/jwt';
 import { redirect } from 'next/navigation';
-import UserManagement from '@/components/dashboard/UserManagement';
+import UserManagement from '@/components/admin/UserManagement';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 export default async function AdminUsersPage() {

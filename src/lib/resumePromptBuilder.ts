@@ -1,4 +1,5 @@
-import { ResumeRequest, industryKeywords, experienceLevels } from './resumeUtils';
+import { ResumeRequest } from '@/schemas/resumeSchema';
+import { industryKeywords, experienceLevels } from './resumeUtils';
 
 export function buildResumeAnalysisPrompt(request: ResumeRequest): string {
   const { resumeText, industry, jobTitle, experienceLevel } = request;

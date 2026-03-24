@@ -23,7 +23,7 @@ export function useSettingsSync(options: SettingsSyncOptions = {}): UseSettingsS
     enableCrossTabSync = true
   } = options;
 
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listenersRef = useRef<Set<(data: any) => void>>(new Set());
 
   // Debounced save function

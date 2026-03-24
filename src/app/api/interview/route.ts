@@ -4,13 +4,15 @@ import { sessionManager } from '@/lib/interviewUtils';
 import { validateInterviewSetup } from '@/lib/interviewUtils';
 import { 
   InterviewQuestion, 
+  InterviewSession,
   AnswerEvaluation,
   buildQuestionPrompt,
   buildEvaluationPrompt,
   parseEvaluationResponse,
   calculateOverallScore,
   generateInterviewSummary,
-  getFallbackQuestion
+  getFallbackQuestion,
+  fallbackQuestions
 } from '@/lib/interviewAI';
 
 export async function POST(request: NextRequest) {
@@ -137,7 +139,7 @@ Return only the JSON, no additional text.`;
 }
 
 // Helper to generate a personalized question
-function getPersonalizedQuestion(session) {
+function getPersonalizedQuestion(session: InterviewSession): InterviewQuestion {
   return {
     id: `personalized_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     questionCode: `PERS_${session.position.replace(/\s+/g, '-').toUpperCase()}_${session.industry.replace(/\s+/g, '-').toUpperCase()}`,
@@ -155,7 +157,7 @@ function getPersonalizedQuestion(session) {
 }
 
 // Helper to generate a salary negotiation question
-function getSalaryNegotiationQuestion(session) {
+function getSalaryNegotiationQuestion(session: InterviewSession): InterviewQuestion {
   return {
     id: `salary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     questionCode: `SALARY_${session.position.replace(/\s+/g, '-').toUpperCase()}_${session.industry.replace(/\s+/g, '-').toUpperCase()}`,
@@ -354,6 +356,7 @@ async function handleSubmitAnswer(data: {
     if (session.currentQuestionIndex >= session.totalQuestions) {
       session.status = 'completed';
       session.endTime = new Date();
+      session.isComplete = true;
     }
     
     return NextResponse.json({
@@ -528,7 +531,7 @@ function getFallbackQuestionWithVariety(session: any, category: string): Intervi
     ...selectedQuestion,
     id: `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     questionCode: selectedQuestion.id ? `FB_${String(selectedQuestion.id).toUpperCase()}` : undefined
-  };
+  } as InterviewQuestion;
 }
 
 // Enhanced AI-driven question generation with topic exploration

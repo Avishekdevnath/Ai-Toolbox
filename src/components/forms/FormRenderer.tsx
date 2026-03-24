@@ -9,12 +9,26 @@ interface FormRendererProps {
   formId: string;
 }
 
+type FormDataState = Record<string, any> & {
+  name?: string;
+  email?: string;
+  studentId?: string;
+};
+
+type ValidationErrors = Record<string, string>;
+
+type AuthData = {
+  name: string;
+  email: string;
+  studentId: string;
+};
+
 export default function FormRenderer({ formSchema, formId }: FormRendererProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<FormDataState>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [validationErrors, setValidationErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   
   // Normalize legacy field types (e.g., map 'single_select' to 'radio')
   const normalizedFields = (formSchema.fields || []).map((f: any) => (
@@ -23,14 +37,14 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
   
   // For quiz forms with authentication step
   const [showQuizQuestions, setShowQuizQuestions] = useState(formSchema.type !== 'quiz');
-  const [authData, setAuthData] = useState({
+  const [authData, setAuthData] = useState<AuthData>({
     name: '',
     email: '',
     studentId: ''
   });
 
   // Handle form field changes
-  const handleChange = (fieldId, value, fieldType) => {
+  const handleChange = (fieldId: string, value: any, fieldType?: string) => {
     if (fieldType === 'checkbox') {
       // For checkboxes, we manage an array of values
       setFormData(prev => {
@@ -56,7 +70,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
   };
 
   // Handle auth field changes for quiz forms
-  const handleAuthChange = (field, value) => {
+  const handleAuthChange = (field: keyof AuthData, value: string) => {
     setAuthData({
       ...authData,
       [field]: value
@@ -74,7 +88,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
 
   // Validate authentication data for quiz
   const validateAuthData = () => {
-    const errors = {};
+    const errors: ValidationErrors = {};
     const { identitySchema } = formSchema.settings || {};
     
     if (identitySchema?.requireName && !authData.name) {
@@ -114,9 +128,9 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
 
   // Validate form data before submission
   const validateForm = () => {
-    const errors = {};
+    const errors: ValidationErrors = {};
     
-    formSchema.fields.forEach(field => {
+    formSchema.fields.forEach((field: any) => {
       if (field.required) {
         const value = formData[field.id];
         let isInvalid = false;

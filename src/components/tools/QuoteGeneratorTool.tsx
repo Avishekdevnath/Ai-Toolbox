@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import html2canvas from 'html2canvas';
-import { Quote } from '@/lib/quoteUtils';
+import { Quote } from '@/schemas/quoteSchema';
 
 const AUTHOR_SUGGESTIONS = [
   'Rabindranath Tagore',

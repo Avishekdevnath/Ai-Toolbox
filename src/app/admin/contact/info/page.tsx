@@ -1,27 +1,27 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Settings, Save, RefreshCw, CheckCircle, Mail, Phone, MapPin, MessageSquare, Globe } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle, Mail, MapPin, MessageSquare } from 'lucide-react';
 
 interface ContactInfo {
-  email?: string;
-  phone?: string;
-  address?: string;
-  portfolioUrl?: string;
-  liveChatUrl?: string;
-  description?: string;
-  businessHours?: string;
-  socialMedia?: {
-    facebook?: string;
-    twitter?: string;
-    linkedin?: string;
-    instagram?: string;
-  };
+  email?: string; phone?: string; address?: string; portfolioUrl?: string;
+  liveChatUrl?: string; description?: string; businessHours?: string;
+  socialMedia?: { facebook?: string; twitter?: string; linkedin?: string; instagram?: string };
+}
+
+const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none';
+const labelCls = 'block text-[12px] font-medium text-slate-500 mb-1.5';
+
+function SectionCard({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+        <Icon className="w-4 h-4 text-slate-400" />
+        <h2 className="text-[13px] font-semibold text-slate-700">{title}</h2>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export default function ContactInfoPage() {
@@ -29,231 +29,76 @@ export default function ContactInfoPage() {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    loadContactInfo();
-  }, []);
+  useEffect(() => { loadContactInfo(); }, []);
 
   const loadContactInfo = async () => {
     try {
       const res = await fetch('/api/contact/settings', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        setInfo(data?.data || {});
-      }
-    } catch (e) {
-      console.error('Failed to load contact info:', e);
-    }
+      if (res.ok) { const data = await res.json(); setInfo(data?.data || {}); }
+    } catch (e) { console.error('Failed to load contact info:', e); }
   };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/contact/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(info),
-      });
+      const res = await fetch('/api/contact/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(info) });
       if (!res.ok) throw new Error('Failed to save');
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
-      console.error('Failed to save contact info:', e);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error('Failed to save contact info:', e); }
+    finally { setLoading(false); }
   };
 
-  const handleReset = () => {
-    loadContactInfo();
-  };
+  const set = (key: keyof ContactInfo, val: string) => setInfo(p => ({ ...p, [key]: val }));
+  const setSocial = (key: string, val: string) => setInfo(p => ({ ...p, socialMedia: { ...p.socialMedia, [key]: val } }));
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-          Contact Information
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Manage your business contact details displayed on the public contact page.
-        </p>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-lg font-semibold text-slate-800">Contact Information</h1>
+        <p className="text-[12px] text-slate-400 mt-0.5">Manage your business contact details displayed on the public contact page.</p>
       </div>
 
-      <div className="space-y-6">
-        {/* Basic Contact Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5" />
-              Basic Contact Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input 
-                  id="email" 
-                  value={info.email || ''} 
-                  onChange={(e) => setInfo(prev => ({ ...prev, email: e.target.value }))} 
-                  placeholder="contact@example.com" 
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input 
-                  id="phone" 
-                  value={info.phone || ''} 
-                  onChange={(e) => setInfo(prev => ({ ...prev, phone: e.target.value }))} 
-                  placeholder="+1 555 123 4567" 
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="address">Business Address</Label>
-                <Input 
-                  id="address" 
-                  value={info.address || ''} 
-                  onChange={(e) => setInfo(prev => ({ ...prev, address: e.target.value }))} 
-                  placeholder="123 Main St, City, State, Country" 
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="portfolioUrl">Portfolio URL</Label>
-                <Input 
-                  id="portfolioUrl" 
-                  value={info.portfolioUrl || ''} 
-                  onChange={(e) => setInfo(prev => ({ ...prev, portfolioUrl: e.target.value }))} 
-                  placeholder="https://your-portfolio-website.com" 
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="liveChatUrl">Live Chat URL</Label>
-                <Input 
-                  id="liveChatUrl" 
-                  value={info.liveChatUrl || ''} 
-                  onChange={(e) => setInfo(prev => ({ ...prev, liveChatUrl: e.target.value }))} 
-                  placeholder="https://your-chat-provider-link" 
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <SectionCard title="Basic Contact" icon={Mail}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label className={labelCls}>Email Address</label><input className={inputCls} value={info.email || ''} onChange={e => set('email', e.target.value)} placeholder="contact@example.com" /></div>
+          <div><label className={labelCls}>Phone Number</label><input className={inputCls} value={info.phone || ''} onChange={e => set('phone', e.target.value)} placeholder="+1 555 123 4567" /></div>
+          <div className="md:col-span-2"><label className={labelCls}>Business Address</label><input className={inputCls} value={info.address || ''} onChange={e => set('address', e.target.value)} placeholder="123 Main St, City, State" /></div>
+          <div className="md:col-span-2"><label className={labelCls}>Portfolio URL</label><input className={inputCls} value={info.portfolioUrl || ''} onChange={e => set('portfolioUrl', e.target.value)} placeholder="https://your-portfolio.com" /></div>
+          <div className="md:col-span-2"><label className={labelCls}>Live Chat URL</label><input className={inputCls} value={info.liveChatUrl || ''} onChange={e => set('liveChatUrl', e.target.value)} placeholder="https://your-chat-provider-link" /></div>
+        </div>
+      </SectionCard>
 
-        {/* Business Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Business Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="description">Business Description</Label>
-              <Textarea 
-                id="description" 
-                value={info.description || ''} 
-                onChange={(e) => setInfo(prev => ({ ...prev, description: e.target.value }))} 
-                placeholder="Brief description of your business..."
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label htmlFor="businessHours">Business Hours</Label>
-              <Input 
-                id="businessHours" 
-                value={info.businessHours || ''} 
-                onChange={(e) => setInfo(prev => ({ ...prev, businessHours: e.target.value }))} 
-                placeholder="Mon-Fri: 9AM-5PM, Sat: 10AM-2PM" 
-              />
-            </div>
-          </CardContent>
-        </Card>
+      <SectionCard title="Business Information" icon={MapPin}>
+        <div className="space-y-4">
+          <div><label className={labelCls}>Business Description</label><textarea className={`${inputCls} resize-none`} rows={3} value={info.description || ''} onChange={e => set('description', e.target.value)} placeholder="Brief description of your business..." /></div>
+          <div><label className={labelCls}>Business Hours</label><input className={inputCls} value={info.businessHours || ''} onChange={e => set('businessHours', e.target.value)} placeholder="Mon-Fri: 9AM-5PM, Sat: 10AM-2PM" /></div>
+        </div>
+      </SectionCard>
 
-        {/* Social Media */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" />
-              Social Media Links
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="facebook">Facebook</Label>
-                <Input 
-                  id="facebook" 
-                  value={info.socialMedia?.facebook || ''} 
-                  onChange={(e) => setInfo(prev => ({ 
-                    ...prev, 
-                    socialMedia: { ...prev.socialMedia, facebook: e.target.value }
-                  }))} 
-                  placeholder="https://facebook.com/yourpage" 
-                />
-              </div>
-              <div>
-                <Label htmlFor="twitter">Twitter</Label>
-                <Input 
-                  id="twitter" 
-                  value={info.socialMedia?.twitter || ''} 
-                  onChange={(e) => setInfo(prev => ({ 
-                    ...prev, 
-                    socialMedia: { ...prev.socialMedia, twitter: e.target.value }
-                  }))} 
-                  placeholder="https://twitter.com/yourhandle" 
-                />
-              </div>
-              <div>
-                <Label htmlFor="linkedin">LinkedIn</Label>
-                <Input 
-                  id="linkedin" 
-                  value={info.socialMedia?.linkedin || ''} 
-                  onChange={(e) => setInfo(prev => ({ 
-                    ...prev, 
-                    socialMedia: { ...prev.socialMedia, linkedin: e.target.value }
-                  }))} 
-                  placeholder="https://linkedin.com/company/yourcompany" 
-                />
-              </div>
-              <div>
-                <Label htmlFor="instagram">Instagram</Label>
-                <Input 
-                  id="instagram" 
-                  value={info.socialMedia?.instagram || ''} 
-                  onChange={(e) => setInfo(prev => ({ 
-                    ...prev, 
-                    socialMedia: { ...prev.socialMedia, instagram: e.target.value }
-                  }))} 
-                  placeholder="https://instagram.com/yourhandle" 
-                />
-              </div>
+      <SectionCard title="Social Media Links" icon={MessageSquare}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(['facebook', 'twitter', 'linkedin', 'instagram'] as const).map(key => (
+            <div key={key}>
+              <label className={labelCls}>{key.charAt(0).toUpperCase() + key.slice(1)}</label>
+              <input className={inputCls} value={info.socialMedia?.[key] || ''} onChange={e => setSocial(key, e.target.value)} placeholder={`https://${key}.com/yourpage`} />
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
+      </SectionCard>
 
-        {/* Actions */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {saved && (
-                  <span className="flex items-center gap-1 text-green-600">
-                    <CheckCircle className="w-4 h-4" /> Saved successfully!
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleReset} disabled={loading}>
-                  <RefreshCw className="w-4 h-4 mr-2" /> Reset
-                </Button>
-                <Button onClick={handleSave} disabled={loading}>
-                  <Save className="w-4 h-4 mr-2" /> {loading ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-5 py-4">
+        {saved ? (
+          <span className="flex items-center gap-1.5 text-[13px] text-green-600"><CheckCircle className="w-4 h-4" /> Saved successfully!</span>
+        ) : <span />}
+        <div className="flex gap-2">
+          <button onClick={loadContactInfo} disabled={loading} className="inline-flex items-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] px-3 py-2 rounded-lg transition-colors disabled:opacity-50">
+            <RefreshCw className="w-3.5 h-3.5" /> Reset
+          </button>
+          <button onClick={handleSave} disabled={loading} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] px-3 py-2 rounded-lg transition-colors disabled:opacity-50">
+            <Save className="w-3.5 h-3.5" /> {loading ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { toolUsageService } from '@/lib/toolUsageService';
 import { userService } from '@/lib/userService';
 import { verifyAccessToken } from '@/lib/auth/jwt';
 import { determineProviderFromClaims } from '@/lib/utils/providerUtils';
+import { getVisitorIdFromRequest } from '@/lib/visitorId';
 
 function getClaims(request: NextRequest) {
 	const token = request.cookies.get('user_session')?.value;
@@ -36,14 +37,16 @@ export async function POST(request: NextRequest) {
 
     // Get client information
     const userAgent = request.headers.get('user-agent') || '';
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
+    const ipAddress = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
                      request.headers.get('x-client-ip') ||
                      'unknown';
+    const visitorId = getVisitorIdFromRequest(request);
 
     // Track usage with enhanced data
     const usageData = {
       userId: claims?.id || undefined,
+      visitorId,
       toolSlug,
       toolName,
       action,

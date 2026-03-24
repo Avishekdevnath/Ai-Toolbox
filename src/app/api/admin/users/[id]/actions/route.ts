@@ -90,7 +90,7 @@ export async function POST(
     }
 
     // Update user status
-    const updateData = {
+    const updateData: any = {
       isActive,
       updatedAt: new Date()
     };

@@ -1,6 +1,9 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Currency } from '../context/FinanceContext';
+
+type CurrencyDisplay = {
+  symbol: string;
+};
 
 interface ReportData {
   title: string;
@@ -19,7 +22,7 @@ interface ReportData {
 
 export async function generatePDFReport(
   data: ReportData,
-  currency: Currency,
+  currency: CurrencyDisplay,
   setProgress: (progress: number) => void
 ): Promise<Blob> {
   const doc = new jsPDF();

@@ -55,14 +55,14 @@ export default async function ShortCodePage({ params }: PageProps) {
         { shortCode: shortCode, isActive: true },
         { 
           $inc: { clicks: 1 },
-          $push: { 
+          $push: ({ 
             clickHistory: {
               timestamp: new Date(),
-              ipAddress: 'unknown',
+              ip: 'unknown',
               userAgent: 'unknown',
               referer: undefined
             }
-          },
+          } as any),
           $set: { updatedAt: new Date() }
         }
       );

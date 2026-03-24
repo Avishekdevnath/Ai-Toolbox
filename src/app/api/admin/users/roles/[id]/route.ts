@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AdminAuthService } from '@/lib/adminAuthService';
 import mongoose from 'mongoose';
 import { getDatabase } from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,6 +25,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const roleId = id;
+    if (!ObjectId.isValid(roleId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid role ID' },
+        { status: 400 }
+      );
+    }
+
+    const roleObjectId = new ObjectId(roleId);
     const body = await request.json();
     const { name, description, permissions } = body;
 
@@ -42,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const db = await getDatabase();
 
     // Check if role exists
-    const existingRole = await db.collection('roles').findOne({ _id: roleId });
+    const existingRole = await db.collection('roles').findOne({ _id: roleObjectId });
     if (!existingRole) {
       return NextResponse.json(
         { success: false, error: 'Role not found' },
@@ -52,7 +61,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Update role
     const updatedRole = await db.collection('roles').findOneAndUpdate(
-      { _id: roleId },
+      { _id: roleObjectId },
       {
         $set: {
           name,
@@ -105,6 +114,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const roleId = id;
+    if (!ObjectId.isValid(roleId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid role ID' },
+        { status: 400 }
+      );
+    }
+
+    const roleObjectId = new ObjectId(roleId);
 
     // Ensure database connection
     if (mongoose.connection.readyState !== 1) {
@@ -114,7 +131,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const db = await getDatabase();
 
     // Check if role exists and is not a system role
-    const existingRole = await db.collection('roles').findOne({ _id: roleId });
+    const existingRole = await db.collection('roles').findOne({ _id: roleObjectId });
     if (!existingRole) {
       return NextResponse.json(
         { success: false, error: 'Role not found' },
@@ -130,7 +147,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     // Check if any users are using this role
-    const usersWithRole = await db.collection('users').countDocuments({ role: roleId });
+    const usersWithRole = await db.collection('users').countDocuments({ role: roleObjectId });
     if (usersWithRole > 0) {
       return NextResponse.json(
         { success: false, error: `Cannot delete role. ${usersWithRole} users are currently using this role.` },
@@ -139,7 +156,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     // Delete role
-    await db.collection('roles').deleteOne({ _id: roleId });
+    await db.collection('roles').deleteOne({ _id: roleObjectId });
 
     return NextResponse.json({
       success: true,

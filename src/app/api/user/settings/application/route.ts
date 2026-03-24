@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid application data', details: error.errors },
+        { success: false, error: 'Invalid application data', details: error.issues },
         { status: 400 }
       );
     }

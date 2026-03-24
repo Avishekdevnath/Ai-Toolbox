@@ -11,6 +11,7 @@ import {
   isValidUrl,
   normalizeUrl,
   generateUniqueShortCode,
+  generateAnonymousUserId,
   generateExpirationDate,
   isUrlExpired,
   sanitizeCreateUrlRequest,

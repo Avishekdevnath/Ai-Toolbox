@@ -187,7 +187,7 @@ const SwotAnalysisSchema = new Schema<ISwotAnalysis>({
     type: Schema.Types.ObjectId,
     ref: 'SwotAnalysis',
     index: true
-  },
+  } as any,
   regenerationCount: {
     type: Number,
     default: 0,

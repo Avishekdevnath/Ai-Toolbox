@@ -347,7 +347,7 @@ export class UserSchema {
     const result = await db.collection(this.collectionName).updateOne(
       { clerkId },
       {
-        $push: { oauthAccounts: oauthAccount as any },
+        $push: { oauthAccounts: oauthAccount } as any,
         $set: { 
           updatedAt: new Date(),
           primaryProvider: oauthAccount.provider
@@ -397,7 +397,7 @@ export class UserSchema {
           'activity.lastActive': new Date(),
           updatedAt: new Date()
         },
-        $push: {
+        $push: ({
           'activity.loginHistory': {
             timestamp: new Date(),
             ip: loginData.ip,
@@ -405,7 +405,7 @@ export class UserSchema {
             provider: loginData.provider,
             location: loginData.location
           } as any
-        },
+        } as any),
         $inc: {
           'stats.loginCount': 1
         }

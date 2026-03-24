@@ -1,25 +1,17 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Mail, Filter, Eye, Archive, CheckCircle2, RefreshCw, Trash2, Reply } from 'lucide-react';
+import { Mail, Eye, Archive, CheckCircle2, RefreshCw, Reply, X } from 'lucide-react';
 
 type Status = 'new' | 'read' | 'archived';
+interface ContactMessage { _id: string; name: string; email: string; phone?: string; subject: string; message: string; status: Status; createdAt: string; }
 
-interface ContactMessage {
-  _id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  subject: string;
-  message: string;
-  status: Status;
-  createdAt: string;
-}
+const statusBadge = (s: Status) => {
+  const map = { new: 'bg-blue-50 text-blue-700', read: 'bg-slate-100 text-slate-500', archived: 'bg-amber-50 text-amber-600' };
+  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ${map[s]}`}>{s}</span>;
+};
+
+const selectCls = 'border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-slate-700 bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none';
 
 export default function ContactMessagesPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -27,20 +19,15 @@ export default function ContactMessagesPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [selected, setSelected] = useState<ContactMessage | null>(null);
 
   const load = async () => {
     setLoading(true);
     try {
       const url = status ? `/api/contact/messages?status=${status}` : '/api/contact/messages';
       const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data?.data || []);
-      }
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) { const data = await res.json(); setMessages(data?.data || []); }
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [status]);
@@ -48,274 +35,121 @@ export default function ContactMessagesPage() {
   const filtered = useMemo(() => {
     if (!search.trim()) return messages;
     const q = search.toLowerCase();
-    return messages.filter(m =>
-      m.name.toLowerCase().includes(q) ||
-      m.email.toLowerCase().includes(q) ||
-      m.subject.toLowerCase().includes(q) ||
-      m.message.toLowerCase().includes(q)
-    );
+    return messages.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q) || m.subject.toLowerCase().includes(q) || m.message.toLowerCase().includes(q));
   }, [messages, search]);
 
-  const setStatusFor = async (id: string, newStatus: Status) => {
+  const setStatusFor = async (id: string, ns: Status) => {
     setUpdatingId(id);
     try {
-      const res = await fetch('/api/contact/messages', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: newStatus })
-      });
-      if (res.ok) {
-        setMessages(prev => prev.map(m => m._id === id ? { ...m, status: newStatus } : m));
-      }
-    } finally {
-      setUpdatingId(null);
-    }
+      const res = await fetch('/api/contact/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status: ns }) });
+      if (res.ok) setMessages(prev => prev.map(m => m._id === id ? { ...m, status: ns } : m));
+    } finally { setUpdatingId(null); }
   };
 
-  const statusBadge = (s: Status) => {
-    const colors = {
-      new: 'bg-blue-100 text-blue-800 border-blue-200',
-      read: 'bg-gray-100 text-gray-800 border-gray-200',
-      archived: 'bg-yellow-100 text-yellow-800 border-yellow-200'
-    };
-    return <Badge variant="outline" className={colors[s]}>{s}</Badge>;
-  };
-
-  const stats = useMemo(() => {
-    const newCount = messages.filter(m => m.status === 'new').length;
-    const readCount = messages.filter(m => m.status === 'read').length;
-    const archivedCount = messages.filter(m => m.status === 'archived').length;
-    return { newCount, readCount, archivedCount, total: messages.length };
-  }, [messages]);
+  const stats = useMemo(() => ({
+    total: messages.length,
+    newCount: messages.filter(m => m.status === 'new').length,
+    readCount: messages.filter(m => m.status === 'read').length,
+    archivedCount: messages.filter(m => m.status === 'archived').length,
+  }), [messages]);
 
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Mail className="w-6 h-6" />
-          <h1 className="text-2xl font-bold">Contact Messages</h1>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-slate-800">Contact Messages</h1>
+          <p className="text-[12px] text-slate-400 mt-0.5">View and manage incoming contact form submissions</p>
         </div>
-        <Button variant="outline" onClick={load} disabled={loading}>
-          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
-        </Button>
+        <button onClick={load} disabled={loading} className="inline-flex items-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] px-3 py-2 rounded-lg transition-colors disabled:opacity-50">
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
+        </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Messages</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-              <Mail className="h-8 w-8 text-gray-400" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total', value: stats.total, icon: Mail, color: 'text-slate-700' },
+          { label: 'New', value: stats.newCount, icon: Mail, color: 'text-blue-600' },
+          { label: 'Read', value: stats.readCount, icon: CheckCircle2, color: 'text-slate-500' },
+          { label: 'Archived', value: stats.archivedCount, icon: Archive, color: 'text-amber-500' },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-white border border-slate-200 rounded-xl p-4 flex items-start justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium">{label}</p>
+              <p className={`text-2xl font-bold tabular-nums mt-1 ${color}`}>{value}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">New</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.newCount}</p>
-              </div>
-              <CheckCircle2 className="h-8 w-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Read</p>
-                <p className="text-2xl font-bold text-gray-600">{stats.readCount}</p>
-              </div>
-              <Eye className="h-8 w-8 text-gray-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Archived</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.archivedCount}</p>
-              </div>
-              <Archive className="h-8 w-8 text-yellow-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Message Inbox</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Label>Status Filter</Label>
-              <select className="border rounded px-2 py-1" value={status} onChange={(e) => setStatus(e.target.value as Status | '')}>
-                <option value="">All Messages</option>
-                <option value="new">New Messages</option>
-                <option value="read">Read Messages</option>
-                <option value="archived">Archived Messages</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Input placeholder="Search messages..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
+            <div className="bg-orange-50 p-2 rounded-lg"><Icon className="w-4 h-4 text-orange-400" /></div>
           </div>
+        ))}
+      </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left border-b">
-                  <th className="py-2 pr-4">Date</th>
-                  <th className="py-2 pr-4">From</th>
-                  <th className="py-2 pr-4">Subject</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((m) => (
-                  <tr key={m._id} className="border-b align-top hover:bg-gray-50">
-                    <td className="py-2 pr-4 whitespace-nowrap">
-                      {new Date(m.createdAt).toLocaleDateString()}
-                      <br />
-                      <span className="text-xs text-gray-500">{new Date(m.createdAt).toLocaleTimeString()}</span>
-                    </td>
-                    <td className="py-2 pr-4">
-                      <div className="font-medium">{m.name}</div>
-                      <div className="text-gray-500 text-sm">{m.email}</div>
-                    </td>
-                    <td className="py-2 pr-4">
-                      <div className="font-medium">{m.subject}</div>
-                      <div className="text-gray-600 line-clamp-2 max-w-xl text-sm">
-                        {m.message.length > 100 ? m.message.substring(0, 100) + '...' : m.message}
-                      </div>
-                    </td>
-                    <td className="py-2 pr-4">{statusBadge(m.status)}</td>
-                    <td className="py-2 pr-4">
-                      <div className="flex gap-1 flex-wrap">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setSelectedMessage(m)}
-                          className="text-xs"
-                        >
-                          <Eye className="w-3 h-3 mr-1" /> View
-                        </Button>
-                        {m.status === 'new' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setStatusFor(m._id, 'read')} 
-                            disabled={updatingId === m._id}
-                            className="text-xs"
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" /> Read
-                          </Button>
-                        )}
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setStatusFor(m._id, 'archived')} 
-                          disabled={updatingId === m._id}
-                          className="text-xs"
-                        >
-                          <Archive className="w-3 h-3 mr-1" /> Archive
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <select value={status} onChange={e => setStatus(e.target.value as Status | '')} className={selectCls}>
+            <option value="">All Messages</option>
+            <option value="new">New</option>
+            <option value="read">Read</option>
+            <option value="archived">Archived</option>
+          </select>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search messages..." className="border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none w-full sm:w-56" />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px]">
+            <thead className="bg-slate-50 border-b border-slate-100">
+              <tr>
+                {['Date', 'From', 'Subject', 'Status', 'Actions'].map(h => (
+                  <th key={h} className="text-left py-2.5 px-4 text-[11px] uppercase tracking-wide text-slate-400 font-medium">{h}</th>
                 ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td className="py-6 text-center text-gray-500" colSpan={5}>No messages found</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(m => (
+                <tr key={m._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors align-top">
+                  <td className="py-3 px-4 whitespace-nowrap text-slate-500">
+                    {new Date(m.createdAt).toLocaleDateString()}
+                    <div className="text-[11px] text-slate-400">{new Date(m.createdAt).toLocaleTimeString()}</div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="font-medium text-slate-800">{m.name}</div>
+                    <div className="text-slate-400">{m.email}</div>
+                  </td>
+                  <td className="py-3 px-4 max-w-xs">
+                    <div className="font-medium text-slate-700">{m.subject}</div>
+                    <div className="text-slate-400 line-clamp-1">{m.message.length > 80 ? m.message.slice(0, 80) + '...' : m.message}</div>
+                  </td>
+                  <td className="py-3 px-4">{statusBadge(m.status)}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-1 flex-wrap">
+                      <button onClick={() => setSelected(m)} className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"><Eye className="w-3 h-3" /> View</button>
+                      {m.status === 'new' && <button onClick={() => setStatusFor(m._id, 'read')} disabled={updatingId === m._id} className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors disabled:opacity-50"><CheckCircle2 className="w-3 h-3" /> Read</button>}
+                      <button onClick={() => setStatusFor(m._id, 'archived')} disabled={updatingId === m._id} className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors disabled:opacity-50"><Archive className="w-3 h-3" /> Archive</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-[13px] text-slate-400">No messages found</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-      {/* Message Detail Modal */}
-      {selectedMessage && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Message Details</h2>
-                <Button variant="outline" onClick={() => setSelectedMessage(null)}>
-                  Close
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">From</Label>
-                  <p className="font-medium">{selectedMessage.name}</p>
-                  <p className="text-gray-500">{selectedMessage.email}</p>
-                  {selectedMessage.phone && (
-                    <p className="text-gray-500">{selectedMessage.phone}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Subject</Label>
-                  <p className="font-medium">{selectedMessage.subject}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Message</Label>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="whitespace-pre-wrap">{selectedMessage.message}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Received</Label>
-                  <p>{new Date(selectedMessage.createdAt).toLocaleString()}</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 mt-6">
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.open(`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`)}
-                >
-                  <Reply className="w-4 h-4 mr-2" /> Reply
-                </Button>
-                {selectedMessage.phone && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open(`tel:${selectedMessage.phone}`)}
-                  >
-                    <Mail className="w-4 h-4 mr-2" /> Call
-                  </Button>
-                )}
-                {selectedMessage.status === 'new' && (
-                  <Button onClick={() => {
-                    setStatusFor(selectedMessage._id, 'read');
-                    setSelectedMessage(null);
-                  }}>
-                    <CheckCircle2 className="w-4 h-4 mr-2" /> Mark as Read
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setStatusFor(selectedMessage._id, 'archived');
-                    setSelectedMessage(null);
-                  }}
-                >
-                  <Archive className="w-4 h-4 mr-2" /> Archive
-                </Button>
-              </div>
+      {selected && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h2 className="text-[15px] font-semibold text-slate-800">Message Details</h2>
+              <button onClick={() => setSelected(null)} className="p-1.5 rounded hover:bg-slate-100 text-slate-400 transition-colors"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div><p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium mb-1">From</p><p className="text-[13px] font-medium text-slate-800">{selected.name}</p><p className="text-[13px] text-slate-500">{selected.email}</p>{selected.phone && <p className="text-[13px] text-slate-500">{selected.phone}</p>}</div>
+              <div><p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium mb-1">Subject</p><p className="text-[13px] font-medium text-slate-800">{selected.subject}</p></div>
+              <div><p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium mb-1">Message</p><div className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-[13px] text-slate-700 whitespace-pre-wrap">{selected.message}</div></div>
+              <div><p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium mb-1">Received</p><p className="text-[13px] text-slate-600">{new Date(selected.createdAt).toLocaleString()}</p></div>
+            </div>
+            <div className="flex gap-2 px-5 py-4 border-t border-slate-100">
+              <button onClick={() => window.open(`mailto:${selected.email}?subject=Re: ${selected.subject}`)} className="inline-flex items-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] px-3 py-2 rounded-lg transition-colors"><Reply className="w-3.5 h-3.5" /> Reply</button>
+              {selected.status === 'new' && <button onClick={() => { setStatusFor(selected._id, 'read'); setSelected(null); }} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] px-3 py-2 rounded-lg transition-colors"><CheckCircle2 className="w-3.5 h-3.5" /> Mark Read</button>}
+              <button onClick={() => { setStatusFor(selected._id, 'archived'); setSelected(null); }} className="inline-flex items-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] px-3 py-2 rounded-lg transition-colors"><Archive className="w-3.5 h-3.5" /> Archive</button>
             </div>
           </div>
         </div>

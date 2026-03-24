@@ -12,17 +12,16 @@ export default async function AnalyticsPage() {
   if (!claims) redirect('/sign-in');
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-5">
       <div>
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-lg font-semibold text-slate-800">Analytics</h1>
+        <p className="text-[12px] text-slate-400 mt-0.5">
           Detailed insights into your tool usage and performance metrics.
         </p>
       </div>
-
       <Suspense fallback={<LoadingSpinner text="Loading analytics..." />}>
         <AnalyticsDashboard userId={claims.id} />
       </Suspense>
     </div>
   );
-} 
+}

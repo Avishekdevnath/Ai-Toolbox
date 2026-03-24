@@ -2,8 +2,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import ToolCard from '@/components/ToolCard';
-import { aiTools } from '@/data/tools';
+import { aiTools, utilityTools } from '@/data/tools';
 import { fadeInUp } from '@/components/landing/animations';
+
+const allTools = [...aiTools, ...utilityTools];
 
 interface AiToolsGridProps {
   className?: string;
@@ -20,7 +22,7 @@ export default function AiToolsGrid({ className = '' }: AiToolsGridProps) {
           variants={fadeInUp}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {aiTools.map((tool, index) => (
+          {allTools.map((tool, index) => (
             <motion.div
               key={tool.id}
               variants={fadeInUp}

@@ -65,6 +65,8 @@ export interface InterviewSession {
   roleCompetencies?: string[]; // For role-based interviews
   salaryRange?: string;
   experienceLevel?: string;
+  candidateName?: string;
+  isComplete?: boolean;
 }
 
 // Role competency data for different positions and experience levels

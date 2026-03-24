@@ -75,7 +75,6 @@ async function extractPdfText(file: File): Promise<string> {
   try {
     const loadingTask = pdfjsLib.getDocument({ 
       data: arrayBuffer,
-      disableWorker: true,
       disableRange: true,
       disableStream: true,
       disableAutoFetch: true
@@ -112,7 +111,6 @@ async function extractPdfTextAlternative(file: File): Promise<string> {
   try {
     const loadingTask = pdfjsLib.getDocument({ 
       data: arrayBuffer,
-      disableWorker: true,
       disableRange: true,
       disableStream: true
     });

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DisplayUrl } from './URLShortenerTool';
-import { copyToClipboard, shareUrl, generateQRCodeUrl } from '@/lib/urlShortenerService';
+import { copyToClipboard, shareUrl, generateQRCodeUrl, DisplayUrl } from '@/lib/urlShortenerService';
 
 interface URLSuccessModalProps {
   recentUrl: DisplayUrl | null;
@@ -45,7 +44,7 @@ export default function URLSuccessModal({
 
   const handleDelete = () => {
     if (confirm('Are you sure you want to delete this URL?')) {
-      onDelete(recentUrl._id!);
+      onDelete(recentUrl._id?.toString() || recentUrl.shortCode);
       onClose();
     }
   };

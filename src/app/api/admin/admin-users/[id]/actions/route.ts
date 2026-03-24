@@ -63,7 +63,7 @@ export async function POST(
     }
 
     // Update admin user status
-    const updateData = {
+    const updateData: any = {
       isActive,
       updatedAt: new Date()
     };

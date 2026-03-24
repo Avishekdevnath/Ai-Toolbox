@@ -2,8 +2,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
-import { aiTools } from '@/data/tools';
+import { aiTools, utilityTools } from '@/data/tools';
 import { fadeInUp } from '@/components/landing/animations';
+
+const allTools = [...aiTools, ...utilityTools];
 
 interface AiToolsHeroProps {
   className?: string;
@@ -37,7 +39,7 @@ export default function AiToolsHero({ className = '' }: AiToolsHeroProps) {
           className="max-w-4xl mx-auto"
         >
           <EnhancedSearchBar
-            tools={aiTools}
+            tools={allTools}
             onSearch={() => {}}
             onFilter={() => {}}
             onClear={() => {}}

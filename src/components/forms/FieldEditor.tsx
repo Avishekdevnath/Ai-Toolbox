@@ -25,6 +25,7 @@ interface Field {
     max?: number;
     pattern?: string;
   };
+  visibility?: 'public' | 'internal';
 }
 
 interface FieldEditorProps {
@@ -301,7 +302,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                   </div>
                   <Select
                     value="public"
-                    onValueChange={(value) => updateField({ visibility: value })}
+                    onValueChange={(value) => updateField({ visibility: value as 'public' | 'internal' })}
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue />

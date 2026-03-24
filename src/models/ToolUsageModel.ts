@@ -8,6 +8,7 @@ export interface IToolUsage extends Document {
   metadata?: Record<string, any>;
   userAgent?: string;
   ipAddress?: string;
+  visitorId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +48,11 @@ const ToolUsageSchema = new Schema<IToolUsage>({
   },
   ipAddress: {
     type: String
+  },
+  visitorId: {
+    type: String,
+    default: null,
+    index: true
   }
 }, {
   timestamps: true
@@ -56,6 +62,7 @@ const ToolUsageSchema = new Schema<IToolUsage>({
 ToolUsageSchema.index({ toolSlug: 1, createdAt: -1 });
 ToolUsageSchema.index({ userId: 1, createdAt: -1 });
 ToolUsageSchema.index({ usageType: 1, createdAt: -1 });
+ToolUsageSchema.index({ visitorId: 1, createdAt: -1 });
 
 // Static methods for analytics
 ToolUsageSchema.statics.getToolUsageStats = async function(days: number = 1) {

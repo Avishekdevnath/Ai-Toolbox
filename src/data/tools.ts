@@ -1,4 +1,18 @@
-export const aiTools = [
+interface ToolDefinition {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  href: string;
+  features: string[];
+  popularity: number;
+  rating: number;
+  recentUsage: number;
+  status?: string;
+}
+
+export const aiTools: ToolDefinition[] = [
   {
     id: 'swot-analysis',
     name: 'SWOT Analysis Tool',
@@ -111,7 +125,7 @@ export const aiTools = [
   }
 ];
 
-export const utilityTools = [
+export const utilityTools: ToolDefinition[] = [
   {
     id: 'url-shortener',
     name: 'URL Shortener',

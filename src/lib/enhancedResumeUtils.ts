@@ -171,7 +171,7 @@ export async function getStoredAnalysis(analysisId: ObjectId): Promise<StoredAna
     const db = await getDatabase();
     const collection = db.collection('analyses');
     
-    return await collection.findOne({ _id: analysisId });
+    return await collection.findOne({ _id: analysisId }) as unknown as StoredAnalysis | null;
   } catch (error) {
     console.error('Failed to retrieve analysis:', error);
     return null;
@@ -329,7 +329,6 @@ async function extractPdfText(file: File): Promise<string> {
     
     const loadingTask = pdfjsLib.getDocument({ 
       data: arrayBuffer,
-      disableWorker: true,
       disableRange: true,
       disableStream: true,
       disableAutoFetch: true

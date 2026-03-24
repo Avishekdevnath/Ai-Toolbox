@@ -38,7 +38,9 @@ export class InterviewSessionManager {
       maxPossibleScore: 0,
       jobRequirements,
       roleCompetencies,
-      experienceLevel
+      experienceLevel,
+      candidateName: '',
+      isComplete: false
     };
 
     this.sessions.set(sessionId, session);

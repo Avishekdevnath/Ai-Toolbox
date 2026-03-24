@@ -20,6 +20,13 @@ interface PriceHistoryProps {
   onTimeRangeChange?: (timeRange: TimeRange) => void;
 }
 
+interface PricePoint {
+  x: number;
+  y: number;
+  price: number;
+  date: Date;
+}
+
 export default function PriceHistory({ product, onTimeRangeChange }: PriceHistoryProps) {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>(7);
 
@@ -57,7 +64,7 @@ export default function PriceHistory({ product, onTimeRangeChange }: PriceHistor
   const chartHeight = height - 2 * padding;
 
   // Generate points for the curve
-  const points = prices.map((price, index) => {
+  const points: PricePoint[] = prices.map((price, index) => {
     const x = padding + (index / (prices.length - 1)) * chartWidth;
     const normalizedPrice = maxPrice === minPrice ? 0.5 : (price - minPrice) / (maxPrice - minPrice);
     const y = height - padding - normalizedPrice * chartHeight;
@@ -65,7 +72,7 @@ export default function PriceHistory({ product, onTimeRangeChange }: PriceHistor
   });
 
   // Create smooth curve path
-  const createCurvePath = (points: typeof points) => {
+  const createCurvePath = (points: PricePoint[]) => {
     if (points.length < 2) return '';
     
     let path = `M ${points[0].x} ${points[0].y}`;
@@ -92,7 +99,7 @@ export default function PriceHistory({ product, onTimeRangeChange }: PriceHistor
   };
 
   // Create area fill path
-  const createAreaPath = (points: typeof points) => {
+  const createAreaPath = (points: PricePoint[]) => {
     if (points.length < 2) return '';
     
     const curvePath = createCurvePath(points);

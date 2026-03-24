@@ -6,10 +6,8 @@ import {
   fallbackFamous
 } from '@/schemas/quoteSchema';
 import { 
-  filterAuthenticQuotes, 
   parseQuotesFromResponse, 
-  getFallbackQuotes, 
-  getMonthDay
+  getFallbackQuotes
 } from '@/lib/quoteUtils';
 import { buildQuotePrompt, buildFallbackPrompt, buildFamousPeoplePrompt } from '@/lib/quotePromptBuilder';
 

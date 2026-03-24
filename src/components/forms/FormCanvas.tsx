@@ -15,6 +15,7 @@ export interface CanvasField {
   multiple?: boolean;
   placeholder?: string;
   helpText?: string;
+  imageUrl?: string;
 }
 
 const FIELD_TYPES: Array<{ value: string; label: string }> = [

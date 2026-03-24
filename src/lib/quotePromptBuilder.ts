@@ -1,4 +1,4 @@
-import { QuoteRequest, famousBengaliAuthors } from './quoteUtils';
+import { QuoteRequest, famousBengaliAuthors } from '@/schemas/quoteSchema';
 
 export function buildQuotePrompt(request: QuoteRequest): string {
   const { topic, mood, author, count, language, birthDate } = request;

@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import GlobalNotificationProvider from '@/components/GlobalNotificationProvider';
+import AnalyticsProvider from '@/components/AnalyticsProvider';
+import FeedbackWidget from '@/components/feedback/FeedbackWidget';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
@@ -48,7 +50,10 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <AuthProvider>
           <GlobalNotificationProvider>
-            {children}
+            <AnalyticsProvider>
+              {children}
+              {/* <FeedbackWidget /> */}
+            </AnalyticsProvider>
           </GlobalNotificationProvider>
         </AuthProvider>
       </body>

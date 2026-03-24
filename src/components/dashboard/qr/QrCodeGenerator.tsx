@@ -506,7 +506,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 </label>
                 <input
                   type="datetime-local"
-                  value={formData.startDate || ''}
+                  value={formData.startDate instanceof Date ? formData.startDate.toISOString().slice(0, 16) : formData.startDate || ''}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
@@ -518,7 +518,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 </label>
                 <input
                   type="datetime-local"
-                  value={formData.endDate || ''}
+                  value={formData.endDate instanceof Date ? formData.endDate.toISOString().slice(0, 16) : formData.endDate || ''}
                   onChange={(e) => handleInputChange('endDate', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />

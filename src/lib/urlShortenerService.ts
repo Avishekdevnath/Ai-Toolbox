@@ -1,9 +1,11 @@
 import { 
-  ShortenedUrl, 
-  CreateUrlRequest, 
   getAnonymousUserSession,
   getAnonymousUserUrls
 } from './urlShortenerUtils';
+import {
+  ShortenedUrl,
+  CreateUrlRequest,
+} from '@/schemas/urlShortenerSchema';
 
 const API_BASE = '/api/url-shortener';
 
@@ -11,6 +13,11 @@ export interface ApiResponse<T> {
   success: boolean;
   data: T;
   error?: string;
+}
+
+export interface DisplayUrl extends ShortenedUrl {
+  shortenedUrl: string;
+  isExpired?: boolean;
 }
 
 export interface GetUrlsParams {
@@ -23,9 +30,9 @@ export interface GetUrlsParams {
 /**
  * Create a shortened URL
  * @param request - URL creation request
- * @returns Promise<ApiResponse<ShortenedUrl>>
+ * @returns Promise<ApiResponse<DisplayUrl>>
  */
-export async function createShortenedUrl(request: CreateUrlRequest): Promise<ApiResponse<ShortenedUrl>> {
+export async function createShortenedUrl(request: CreateUrlRequest): Promise<ApiResponse<DisplayUrl>> {
   try {
     // Get anonymous user session if no userId provided
     let anonymousUserData = {};
@@ -67,9 +74,9 @@ export async function createShortenedUrl(request: CreateUrlRequest): Promise<Api
 /**
  * Get shortened URLs
  * @param params - Query parameters
- * @returns Promise<ApiResponse<ShortenedUrl[]>>
+ * @returns Promise<ApiResponse<DisplayUrl[]>>
  */
-export async function getShortenedUrls(params: GetUrlsParams = {}): Promise<ApiResponse<ShortenedUrl[]>> {
+export async function getShortenedUrls(params: GetUrlsParams = {}): Promise<ApiResponse<DisplayUrl[]>> {
   try {
     // Get anonymous user session if no userId provided
     let anonymousUserId = params.anonymousUserId;
@@ -234,27 +241,7 @@ export async function getUrlStats(userId?: string, anonymousUserId?: string): Pr
  * @returns boolean
  */
 export function isAnonymousUser(): boolean {
-  // This would typically check for authentication state
-  // For now, we'll assume anonymous if no user session exists
   if (typeof window === 'undefined') return true;
   
-  // Check if user is authenticated (using Clerk)
-  const isAuthenticated = () => {
-    // For client-side, we'll check if there's a Clerk session
-    // This is a simplified check - in a real app, you'd use Clerk's useAuth hook
-    return typeof window !== 'undefined' && 
-           (localStorage.getItem('clerk-db') || 
-            document.cookie.includes('__session'));
-  };
-
-  // Get user identifier for anonymous tracking
-  const getUserIdentifier = () => {
-    if (isAuthenticated()) {
-      // TODO: Get actual user ID from Clerk
-      return 'authenticated-user';
-    }
-    
-    // For anonymous users, use device fingerprint
-    return getDeviceFingerprint();
-  };
-} 
+  return !localStorage.getItem('clerk-db') && !document.cookie.includes('__session');
+}

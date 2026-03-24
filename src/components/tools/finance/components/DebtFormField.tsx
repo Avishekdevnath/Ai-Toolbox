@@ -10,6 +10,7 @@ interface DebtFormFieldProps {
   required?: boolean;
   min?: number;
   max?: number;
+  step?: string;
   currency?: string;
   options?: Array<{ value: string; label: string }>;
 }
@@ -24,6 +25,7 @@ export function DebtFormField({
   required = false,
   min,
   max,
+  step,
   currency,
   options = []
 }: DebtFormFieldProps) {
@@ -64,6 +66,7 @@ export function DebtFormField({
             required={required}
             min={min}
             max={max}
+            step={step}
             className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white ${
               currency ? 'pl-12' : ''
             }`}

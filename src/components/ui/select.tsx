@@ -3,14 +3,17 @@ import { ChevronDown } from 'lucide-react';
 
 interface SelectProps {
   value?: string;
+  defaultValue?: string;
   onValueChange?: (value: string) => void;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }
 
 interface SelectTriggerProps {
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }
 
 interface SelectContentProps {
@@ -27,11 +30,12 @@ interface SelectItemProps {
 interface SelectValueProps {
   children?: React.ReactNode;
   className?: string;
+  placeholder?: string;
 }
 
-export function Select({ value, onValueChange, children, className = '' }: SelectProps) {
+export function Select({ value, defaultValue, onValueChange, children, className = '', disabled = false }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(value || '');
+  const [selectedValue, setSelectedValue] = useState(value || defaultValue || '');
   const triggerRef = useRef<HTMLDivElement>(null);
 
   // Update selectedValue when value prop changes
@@ -51,6 +55,7 @@ export function Select({ value, onValueChange, children, className = '' }: Selec
   }, []);
 
   const handleSelect = (newValue: string) => {
+    if (disabled) return;
     setSelectedValue(newValue);
     onValueChange?.(newValue);
     setIsOpen(false);
@@ -61,7 +66,10 @@ export function Select({ value, onValueChange, children, className = '' }: Selec
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
           if (child.type === SelectTrigger) {
-            return (React.cloneElement as any)(child, { onClick: () => setIsOpen(!isOpen) });
+            return (React.cloneElement as any)(child, {
+              onClick: () => !disabled && setIsOpen(!isOpen),
+              disabled
+            });
           }
           if (child.type === SelectContent && isOpen) {
             return (React.cloneElement as any)(child, { onSelect: handleSelect });
@@ -73,11 +81,15 @@ export function Select({ value, onValueChange, children, className = '' }: Selec
   );
 }
 
-export function SelectTrigger({ children, className = '', onClick }: SelectTriggerProps & { onClick?: () => void }) {
+export function SelectTrigger({ children, className = '', onClick, id, disabled }: SelectTriggerProps & { onClick?: () => void; disabled?: boolean }) {
   return (
     <div
+      id={id}
       onClick={onClick}
-      className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      aria-disabled={disabled}
+      className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        disabled ? 'cursor-not-allowed opacity-50' : ''
+      } ${className}`}
     >
       {children}
       <ChevronDown className="h-4 w-4 opacity-50" />
@@ -115,10 +127,10 @@ export function SelectItem({ value, children, className = '', ...props }: Select
   );
 }
 
-export function SelectValue({ children, className = '' }: SelectValueProps) {
+export function SelectValue({ children, className = '', placeholder }: SelectValueProps) {
   return (
     <span className={`${className}`}>
-      {children}
+      {children ?? placeholder}
     </span>
   );
-} 
+}

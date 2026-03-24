@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IUserFavorite extends Document {
   userId: string;
@@ -8,6 +8,28 @@ export interface IUserFavorite extends Document {
   addedAt: Date;
   notes?: string;
   tags?: string[];
+}
+
+export interface IUserFavoriteModel extends Model<IUserFavorite> {
+  getUserFavorites(userId: string): Promise<any[]>;
+  addFavorite(favoriteData: {
+    userId: string;
+    toolSlug: string;
+    toolName: string;
+    category: string;
+    notes?: string;
+    tags?: string[];
+  }): Promise<any>;
+  removeFavorite(userId: string, toolSlug: string): Promise<any>;
+  updateFavorite(
+    userId: string,
+    toolSlug: string,
+    updates: {
+      notes?: string;
+      tags?: string[];
+    },
+  ): Promise<any>;
+  getFavoriteStats(userId: string): Promise<Record<string, number>>;
 }
 
 const UserFavoriteSchema = new Schema<IUserFavorite>({
@@ -102,4 +124,6 @@ UserFavoriteSchema.statics.getFavoriteStats = async function(userId: string) {
   }, {} as Record<string, number>);
 };
 
-export const UserFavorite = mongoose.models.UserFavorite || mongoose.model<IUserFavorite>('UserFavorite', UserFavoriteSchema); 
+export const UserFavorite =
+  (mongoose.models.UserFavorite as IUserFavoriteModel) ||
+  mongoose.model<IUserFavorite, IUserFavoriteModel>('UserFavorite', UserFavoriteSchema);

@@ -71,12 +71,12 @@ export async function POST(request: NextRequest) {
     const nextBirthday = getNextBirthday(birthDateObj);
 
     const response: AgeAnalysisResponse = {
-      ageData,
-      lifeMilestones,
-      healthRecommendations,
-      retirementPlan,
-      lifeExpectancy,
-      ageBasedActivities,
+      ageData: ageData as any,
+      lifeMilestones: lifeMilestones as any,
+      healthRecommendations: healthRecommendations as any,
+      retirementPlan: retirementPlan as any,
+      lifeExpectancy: lifeExpectancy as any,
+      ageBasedActivities: ageBasedActivities as any,
       lifePercentage,
       nextBirthday
     };

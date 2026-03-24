@@ -66,8 +66,15 @@ const DialogTrigger: React.FC<DialogTriggerProps> = ({ children, asChild }) => {
   const { setOpen } = React.useContext(DialogContext);
 
   if (asChild) {
-    return React.cloneElement(children as React.ReactElement, {
-      onClick: () => setOpen(true),
+    const child = children as React.ReactElement<{
+      onClick?: React.MouseEventHandler;
+    }>;
+
+    return React.cloneElement(child, {
+      onClick: (event) => {
+        child.props.onClick?.(event);
+        setOpen(true);
+      },
     });
   }
 

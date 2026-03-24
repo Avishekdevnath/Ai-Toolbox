@@ -46,9 +46,9 @@ export default function SnippetTable({ items, onDelete }: SnippetTableProps) {
               <div className="flex items-center gap-1 ml-2">
                 <div className="flex items-center gap-1">
                   {s.isPublic ? (
-                    <Eye size={14} className="text-green-600" title="Public" />
+                    <Eye size={14} className="text-green-600" />
                   ) : (
-                    <EyeOff size={14} className="text-gray-400" title="Private" />
+                    <EyeOff size={14} className="text-gray-400" />
                   )}
                 </div>
                 <Link href={`/s/${s.slug}/edit`} target="_blank" rel="noopener noreferrer">

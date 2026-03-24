@@ -4,6 +4,8 @@ import { getDatabase } from '@/lib/mongodb';
 import { UserAuthService } from '@/lib/userAuthService';
 import { hashSecurityAnswer, normalizeSecurityAnswer } from '@/lib/auth/securityAnswers';
 import { isValidSecurityQuestionId } from '@/lib/auth/securityQuestions';
+import { getVisitorIdFromCookieStore } from '@/lib/visitorId';
+import { getVisitorIdentityModel } from '@/models/VisitorIdentityModel';
 
 interface RegistrationSecurityQuestionInput {
   questionId: string;
@@ -125,6 +127,23 @@ export async function POST(request: NextRequest) {
         maxAge: 24 * 60 * 60,
         path: '/',
       });
+
+      // Identity linking: associate visitorId cookie with this userId
+      try {
+        const visitorId = await getVisitorIdFromCookieStore();
+        if (visitorId && result.user.id) {
+          const VisitorIdentity = await getVisitorIdentityModel();
+          const now = new Date();
+          await VisitorIdentity.findOneAndUpdate(
+            { visitorId },
+            {
+              $set: { userId: result.user.id.toString(), lastSeenAt: now },
+              $setOnInsert: { firstSeenAt: now },
+            },
+            { upsert: true }
+          );
+        }
+      } catch { /* non-blocking */ }
 
       return NextResponse.json({
         success: true,

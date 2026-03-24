@@ -38,6 +38,7 @@ export interface ToolUsageStats {
 export interface CreateToolUsageData {
   userId?: string;
   anonymousUserId?: string;
+  visitorId?: string | null;
   toolSlug: string;
   toolName: string;
   action: string;
@@ -354,7 +355,12 @@ export class ToolUsageService {
           { $sort: { usageCount: -1 } },
           { $limit: limit },
         ])
-        .toArray();
+        .toArray() as unknown as {
+          toolSlug: string;
+          toolName: string;
+          usageCount: number;
+          uniqueUsers: number;
+        }[];
 
       return popularTools;
     } catch (error: any) {

@@ -2,6 +2,7 @@
  * Performance Monitoring Utilities
  * Senior SDE Level Implementation
  */
+declare function gtag(...args: any[]): void;
 
 export interface PerformanceMetrics {
   pageLoadTime: number;
@@ -52,7 +53,7 @@ export class PerformanceMonitor {
       const observer = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         entries.forEach((entry) => {
-          this.recordMetric('firstInputDelay', entry.processingStart - entry.startTime);
+          this.recordMetric('firstInputDelay', (entry as any).processingStart - entry.startTime);
         });
       });
       observer.observe({ entryTypes: ['first-input'] });

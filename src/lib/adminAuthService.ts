@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
 import { AuthUserModel, AuthUserDoc } from '@/models/AuthUserModel';
+import { AdminUser, IAdminUser } from '@/models/AdminUserModel';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-export type AdminRole = 'admin' | 'user';
+export type AdminRole = 'super_admin' | 'admin' | 'moderator';
 export type PermissionType =
   | 'manage_users' | 'manage_tools' | 'view_analytics' | 'manage_system'
   | 'manage_content' | 'view_audit_logs' | 'manage_admins' | 'view_dashboard' | 'manage_settings';

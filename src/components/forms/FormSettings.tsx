@@ -352,7 +352,7 @@ export default function FormSettings({
                             checked={settings.submissionPolicy?.dedupeBy?.includes('email') || false}
                             onChange={(e) => {
                               const current = settings.submissionPolicy?.dedupeBy || [];
-                              const newDedupeBy = e.target.checked
+                              const newDedupeBy: Array<'email' | 'studentId'> = e.target.checked
                                 ? [...current, 'email']
                                 : current.filter(x => x !== 'email');
                               updateNestedSettings('submissionPolicy', { dedupeBy: newDedupeBy });
@@ -367,7 +367,7 @@ export default function FormSettings({
                             checked={settings.submissionPolicy?.dedupeBy?.includes('studentId') || false}
                             onChange={(e) => {
                               const current = settings.submissionPolicy?.dedupeBy || [];
-                              const newDedupeBy = e.target.checked
+                              const newDedupeBy: Array<'email' | 'studentId'> = e.target.checked
                                 ? [...current, 'studentId']
                                 : current.filter(x => x !== 'studentId');
                               updateNestedSettings('submissionPolicy', { dedupeBy: newDedupeBy });

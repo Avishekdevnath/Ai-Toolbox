@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Verify all URLs belong to the user
     const userUrls = await collection.find({
       _id: { $in: objectIds },
-      userId: userSession.userId
+      userId: userSession.id
     }).toArray();
 
     if (userUrls.length !== urlIds.length) {
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's URLs for export
     const urls = await collection.find({
-      userId: userSession.userId,
+      userId: userSession.id,
       isActive: true
     }).sort({ createdAt: -1 }).toArray();
 

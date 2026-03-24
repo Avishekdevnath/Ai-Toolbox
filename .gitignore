@@ -65,6 +65,8 @@ src/stories/
 # Documentation and scripts (not needed in production)
 /docs/
 /scripts/
+/guide/
+/.claude/
 
 # Development and testing files
 .worktrees/
@@ -85,6 +87,9 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Local dev credentials
+LOCAL-ACCOUNTS.md
 
 # Backup files
 *.bak

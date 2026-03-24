@@ -47,6 +47,60 @@ const createDefaultField = (type = 'short_text') => ({
   }
 });
 
+type IdentitySchemaState = {
+  requireName: boolean;
+  requireEmail: boolean;
+  requireStudentId: boolean;
+};
+
+type FormSettingsState = {
+  isPublic: boolean;
+  allowMultipleSubmissions: boolean;
+  allowAnonymous: boolean;
+  identitySchema: IdentitySchemaState;
+  startAt: string | null;
+  endAt: string | null;
+  timer: {
+    enabled: boolean;
+    minutes: number;
+  };
+};
+
+const defaultFormSettings: FormSettingsState = {
+  isPublic: true,
+  allowMultipleSubmissions: true,
+  allowAnonymous: false,
+  identitySchema: {
+    requireName: true,
+    requireEmail: true,
+    requireStudentId: false,
+  },
+  startAt: null,
+  endAt: null,
+  timer: { enabled: false, minutes: 30 },
+};
+
+const withIdentitySchemaDefaults = (
+  identitySchema?: Partial<IdentitySchemaState>,
+): IdentitySchemaState => ({
+  ...defaultFormSettings.identitySchema,
+  ...identitySchema,
+});
+
+const withFormSettingsDefaults = (
+  settings?: Partial<FormSettingsState>,
+): FormSettingsState => ({
+  ...defaultFormSettings,
+  ...settings,
+  identitySchema: withIdentitySchemaDefaults(settings?.identitySchema),
+  startAt: settings?.startAt ?? null,
+  endAt: settings?.endAt ?? null,
+  timer: {
+    ...defaultFormSettings.timer,
+    ...(settings?.timer || {}),
+  },
+});
+
 export default function FormEditor() {
   const router = useRouter();
   const params = useParams();
@@ -59,17 +113,7 @@ export default function FormEditor() {
   const [activeField, setActiveField] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [formSettings, setFormSettings] = useState({
-    isPublic: true,
-    allowMultipleSubmissions: true,
-    allowAnonymous: false,
-    identitySchema: {
-      requireName: true,
-      requireEmail: true,
-      requireStudentId: false,
-    },
-    timer: { enabled: false, minutes: 30 },
-  });
+  const [formSettings, setFormSettings] = useState<FormSettingsState>(defaultFormSettings);
   const [formStatus, setFormStatus] = useState("draft");
   const [formSlug, setFormSlug] = useState<string>("");
   const [copyingLink, setCopyingLink] = useState(false);
@@ -132,7 +176,7 @@ export default function FormEditor() {
           });
           
           setFormFields(normalizedFields);
-          setFormSettings(formData.settings || {});
+          setFormSettings(withFormSettingsDefaults(formData.settings || {}));
           setFormStatus(formData.status || "draft");
           setFormSlug(formData.slug || "");
           
@@ -755,7 +799,10 @@ export default function FormEditor() {
                       checked={!!formSettings.identitySchema?.requireName}
                       onChange={(e) => setFormSettings(prev => ({
                         ...prev,
-                        identitySchema: { ...(prev.identitySchema || {}), requireName: e.target.checked }
+                        identitySchema: {
+                          ...withIdentitySchemaDefaults(prev.identitySchema),
+                          requireName: e.target.checked,
+                        }
                       }))}
                     />
                     Require Name
@@ -766,7 +813,10 @@ export default function FormEditor() {
                       checked={!!formSettings.identitySchema?.requireEmail}
                       onChange={(e) => setFormSettings(prev => ({
                         ...prev,
-                        identitySchema: { ...(prev.identitySchema || {}), requireEmail: e.target.checked }
+                        identitySchema: {
+                          ...withIdentitySchemaDefaults(prev.identitySchema),
+                          requireEmail: e.target.checked,
+                        }
                       }))}
                     />
                     Require Email
@@ -777,7 +827,10 @@ export default function FormEditor() {
                       checked={!!formSettings.identitySchema?.requireStudentId}
                       onChange={(e) => setFormSettings(prev => ({
                         ...prev,
-                        identitySchema: { ...(prev.identitySchema || {}), requireStudentId: e.target.checked }
+                        identitySchema: {
+                          ...withIdentitySchemaDefaults(prev.identitySchema),
+                          requireStudentId: e.target.checked,
+                        }
                       }))}
                     />
                     Require Student ID
@@ -945,7 +998,7 @@ export default function FormEditor() {
                       onChange={(e) => setFormSettings({
                         ...formSettings, 
                         identitySchema: {
-                          ...formSettings.identitySchema || {},
+                          ...withIdentitySchemaDefaults(formSettings.identitySchema),
                           requireName: e.target.checked
                         }
                       })}
@@ -962,7 +1015,7 @@ export default function FormEditor() {
                       onChange={(e) => setFormSettings({
                         ...formSettings, 
                         identitySchema: {
-                          ...formSettings.identitySchema || {},
+                          ...withIdentitySchemaDefaults(formSettings.identitySchema),
                           requireEmail: e.target.checked
                         }
                       })}
@@ -979,7 +1032,7 @@ export default function FormEditor() {
                       onChange={(e) => setFormSettings({
                         ...formSettings, 
                         identitySchema: {
-                          ...formSettings.identitySchema || {},
+                          ...withIdentitySchemaDefaults(formSettings.identitySchema),
                           requireStudentId: e.target.checked
                         }
                       })}

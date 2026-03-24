@@ -1,6 +1,7 @@
 // Utility functions and constants for Retirement Planning
 
 export interface RetirementData {
+  name?: string;
   current_age: string;
   retirement_age: string;
   life_expectancy: string;

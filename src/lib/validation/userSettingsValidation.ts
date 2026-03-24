@@ -9,7 +9,7 @@ export const profileSchema = z.object({
   bio: z.string()
     .max(500, 'Bio must not exceed 500 characters')
     .optional(),
-  avatarUrl: z.string()
+  avatar: z.string()
     .url('Invalid avatar URL')
     .optional(),
   timezone: z.string().optional(),

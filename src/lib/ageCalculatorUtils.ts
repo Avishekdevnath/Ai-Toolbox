@@ -38,6 +38,8 @@ export interface RetirementPlan {
   totalSavingsNeeded: number;
   currentSavings: number;
   investmentReturn: number;
+  monthlyIncome?: number;
+  desiredRetirementIncome?: number;
 }
 
 export interface LifeExpectancy {

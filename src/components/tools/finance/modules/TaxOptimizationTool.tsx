@@ -179,7 +179,7 @@ export default function TaxOptimizationTool({ onBack }: Props) {
     const taxSavingsIfMaxed = (additional401k + additionalIRA) * marginalRate;
     
     // Generate optimization strategies
-    const strategies: TaxStrategy[] = [
+    const strategies = ([
       {
         strategy: 'Maximize 401(k) Contributions',
         description: `Increase 401(k) contribution by $${additional401k.toLocaleString()}`,
@@ -212,7 +212,7 @@ export default function TaxOptimizationTool({ onBack }: Props) {
         deadline: 'December 31st',
         action_required: 'Transfer appreciated stocks to charity',
       },
-    ].filter(s => s.potential_savings > 0);
+    ] as TaxStrategy[]).filter(s => s.potential_savings > 0);
     
     const totalPotentialSavings = strategies.reduce((sum, s) => sum + s.potential_savings, 0);
     

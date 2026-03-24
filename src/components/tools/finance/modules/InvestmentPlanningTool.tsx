@@ -1,7 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import PersonalInfoForm from '../components/PersonalInfoForm';
-import { InvestmentProfile, InvestmentAnalysis } from '../types';
+import { PersonalInfoForm } from '../components/PersonalInfoForm';
+import {
+  InvestmentProfile as BaseInvestmentProfile,
+  InvestmentAnalysis,
+} from '../types';
 
 // Currency-specific default values (rough equivalents)
 const DEFAULT_VALUES = {
@@ -12,58 +15,12 @@ const DEFAULT_VALUES = {
   // Add more currencies as needed
 };
 
-/***********************
- *  Data Interfaces    *
- ***********************/
-interface InvestmentProfile {
-  // Personal Info
-  name: string;
-  age: string;
-  income: string;
-
-  // Investment Goals
-  investment_goal: string;
-  time_horizon: string; // years
-  target_amount: string;
-  current_investments: string; // current portfolio value
-  monthly_investment: string;
-
-  // Risk Assessment
-  risk_tolerance: string; // Low, Medium, High
-  market_crash_reaction: string; // Sell, Hold, Buy
-  investment_knowledge: string; // Beginner, Intermediate, Expert
-  loss_comfort: string; // % loss comfort
-
-  // Portfolio Preferences
-  preferred_assets: string[]; // e.g., ["Stocks", "Bonds", "Real Estate"]
-  esg_preference: string; // Yes / No / Indifferent
-  international_exposure: string; // None, Some, Significant
-  sector_preferences: string[]; // e.g., Technology, Healthcare
-}
-
-interface InvestmentAnalysis {
-  risk_score: number;
-  risk_profile: 'Conservative' | 'Moderate' | 'Aggressive';
-  asset_allocation: {
-    stocks: number;
-    bonds: number;
-    alternatives: number;
-    cash: number;
-  };
-  recommended_portfolio: {
-    domestic_stocks: number;
-    international_stocks: number;
-    bonds: number;
-    reits: number;
-    commodities: number;
-  };
-  projected_returns: {
-    conservative: number;
-    moderate: number;
-    optimistic: number;
-  };
-  action_plan: string[];
-}
+type InvestmentProfile = BaseInvestmentProfile & {
+  preferred_assets: string[];
+  esg_preference: string;
+  international_exposure: string;
+  sector_preferences: string[];
+};
 
 interface Props {
   onBack: () => void;
@@ -91,9 +48,10 @@ export default function InvestmentPlanningTool({ onBack }: Props) {
     risk_tolerance: '5', // Default to medium risk
     loss_comfort: '15', // Default to moderate loss comfort
     investment_knowledge: 'Intermediate',
-    preferred_assets: ['stocks', 'bonds'],
-    esg_preference: 'Moderate',
-    international_exposure: 'Medium'
+    preferred_assets: ['Stocks', 'Bonds'],
+    esg_preference: 'Indifferent',
+    international_exposure: 'Some',
+    sector_preferences: [],
   });
 
   const [analysis, setAnalysis] = useState<InvestmentAnalysis | null>(null);
@@ -124,7 +82,11 @@ export default function InvestmentPlanningTool({ onBack }: Props) {
   /***********************
    *    Helpers          *
    ***********************/
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+      | { target: { name: string; value: string | string[] } },
+  ) => {
     const { name, value } = e.target;
     console.log('Input changed:', name, value);
     setProfile(prev => ({

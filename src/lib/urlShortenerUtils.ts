@@ -1,12 +1,10 @@
 import { ObjectId } from 'mongodb';
-import { 
-  ShortenedUrl, 
-  CreateUrlRequest, 
-  ClickEvent, 
+import {
+  ShortenedUrl,
+  CreateUrlRequest,
+  ClickEvent,
   UrlStats,
   RESERVED_PATHS,
-  generateProfessionalCode,
-  extractDomain,
   isAnonymousUser,
   getUserIdentifier
 } from '@/schemas/urlShortenerSchema';
@@ -60,7 +58,7 @@ export async function generateDeviceFingerprint(): Promise<string> {
     screen.width + 'x' + screen.height,
     new Date().getTimezoneOffset(),
     navigator.hardwareConcurrency || 'unknown',
-    navigator.deviceMemory || 'unknown',
+    (navigator as any).deviceMemory || 'unknown',
     navigator.platform,
     navigator.cookieEnabled ? '1' : '0',
     navigator.doNotTrack || 'unknown'
@@ -411,7 +409,7 @@ export function calculateUrlStats(urls: ShortenedUrl[]): UrlStats {
     expiredUrls,
     averageClicks,
     topPerformingUrls,
-    recentActivity: allClickEvents,
+    recentActivity: allClickEvents as any,
     healthStatus
   };
 }
@@ -471,16 +469,16 @@ export function extractDomain(url: string): string {
  */
 export function generateClickEvent(
   userAgent?: string,
-  referrer?: string,
+  referer?: string,
   ip?: string
 ): ClickEvent {
-  const device = userAgent?.includes('Mobile') ? 'mobile' : 
+  const device = userAgent?.includes('Mobile') ? 'mobile' :
                  userAgent?.includes('Tablet') ? 'tablet' : 'desktop';
-  
+
   return {
     timestamp: new Date(),
     userAgent,
-    referrer,
+    referer,
     ip,
     device
   };

@@ -9,26 +9,22 @@ interface DashboardLayoutClientProps {
 }
 
 export default function DashboardLayoutClient({ children }: DashboardLayoutClientProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleMobileMenuClose = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-white">
-      <div className="h-full w-full flex flex-col lg:grid lg:grid-cols-[16rem_1fr] min-h-0">
-        <DashboardSidebar 
-          isMobileMenuOpen={isMobileMenuOpen} 
-          onMobileMenuClose={handleMobileMenuClose}
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
+      <DashboardSidebar
+        isMobileMenuOpen={mobileOpen}
+        onMobileMenuClose={() => setMobileOpen(false)}
+      />
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <DashboardHeader
+          isMobileMenuOpen={mobileOpen}
+          onMobileMenuToggle={() => setMobileOpen((v) => !v)}
         />
-        <div className="flex flex-col h-full min-w-0 min-h-0">
-          <DashboardHeader 
-            isMobileMenuOpen={isMobileMenuOpen}
-            onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          />
-          <main className="flex-1 overflow-y-auto p-3 bg-gray-50">{children}</main>
-        </div>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );

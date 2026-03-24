@@ -17,7 +17,8 @@ import {
   BarChart3,
   PieChart,
   Activity,
-  Lightbulb
+  Lightbulb,
+  CheckCircle
 } from 'lucide-react';
 
 export interface AIInsightsData {

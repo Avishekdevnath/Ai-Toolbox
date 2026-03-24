@@ -1,5 +1,4 @@
 import { useState, useCallback, memo } from 'react';
-import { MemoizedInput } from '../components/MemoizedInput';
 import { useFinance } from '../context/FinanceContext';
 
 interface Debt {
@@ -61,12 +60,14 @@ const MemoizedInput = memo(function MemoizedInput({
   type = 'text',
   placeholder,
   className,
+  step,
 }: {
   value: string | number;
   onChange: (value: string) => void;
   type?: string;
   placeholder?: string;
   className?: string;
+  step?: string;
 }) {
   const [localValue, setLocalValue] = useState(value);
 
@@ -92,6 +93,7 @@ const MemoizedInput = memo(function MemoizedInput({
       onChange={handleChange}
       placeholder={placeholder}
       className={className}
+      step={step}
     />
   );
 });

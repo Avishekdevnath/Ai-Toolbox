@@ -10,7 +10,10 @@
       "Bash(node -e \"const p = require\\(''./package.json''\\); console.log\\(p.dependencies[''@radix-ui/react-slot''] || ''NOT_DIRECT''\\)\")",
       "Bash(echo \"EXIT_CODE: $?\")",
       "Bash(node -e \"const pkg = require\\(''./node_modules/@radix-ui/react-slot/package.json''\\); console.log\\(pkg.version\\)\")",
-      "Bash(grep -rn \"import.*from\" src/app/tools/*/page.tsx)"
+      "Bash(grep -rn \"import.*from\" src/app/tools/*/page.tsx)",
+      "Bash(xargs grep:*)",
+      "Bash(git -C \"w:/My Work/Software Development Project/Ai Projects/ai-toolbox\" log --oneline -8)",
+      "Bash(grep -rn \"ToolUsage\\\\|trackUsage\\\\|track_usage\\\\|anonymous\\\\|session_id\\\\|sessionId\\\\|visitorId\" 'w:/My Work/Software Development Project/Ai Projects/ai-toolbox/src/app/api' --include=*.ts -l)"
     ]
   }
 }

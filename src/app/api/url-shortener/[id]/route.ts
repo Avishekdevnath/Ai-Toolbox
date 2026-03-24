@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { isValidUrl, normalizeUrl, generateExpirationDate, isUrlExpired } from '@/lib/urlShortenerUtils';
-import { UrlShortenerSchema } from '@/schemas/urlShortenerSchema';
+import { ShortenedUrl } from '@/schemas/urlShortenerSchema';
 
 const COLLECTION_NAME = 'shortened_urls';
 
@@ -28,7 +28,7 @@ export async function GET(
     const url = await db.collection(COLLECTION_NAME).findOne({ 
       _id: new ObjectId(id),
       isActive: true 
-    });
+    }) as unknown as ShortenedUrl | null;
 
     if (!url) {
       return NextResponse.json(
@@ -91,7 +91,7 @@ export async function PUT(
     const existingUrl = await db.collection(COLLECTION_NAME).findOne({ 
       _id: new ObjectId(id),
       isActive: true 
-    });
+    }) as unknown as ShortenedUrl | null;
 
     if (!existingUrl) {
       return NextResponse.json(
@@ -137,7 +137,14 @@ export async function PUT(
     // Get updated URL
     const updatedUrl = await db.collection(COLLECTION_NAME).findOne({ 
       _id: new ObjectId(id) 
-    });
+    }) as unknown as ShortenedUrl | null;
+
+    if (!updatedUrl) {
+      return NextResponse.json(
+        { error: 'URL not found' },
+        { status: 404 }
+      );
+    }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const urlWithShortened = {
@@ -185,7 +192,7 @@ export async function DELETE(
       { _id: new ObjectId(id) }
     );
 
-    if (result.matchedCount === 0) {
+    if (result.deletedCount === 0) {
       return NextResponse.json(
         { error: 'URL not found' },
         { status: 404 }

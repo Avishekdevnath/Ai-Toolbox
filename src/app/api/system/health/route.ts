@@ -179,7 +179,11 @@ export async function POST(request: NextRequest) {
 
       case 'stats':
         // Refresh statistics
-        const stats = await getFullStats();
+        const stats = {
+          performance: performanceTracker.getStats(),
+          rateLimiter: enhancedRateLimiter.getStats(),
+          queries: queryProfiler.getStats(),
+        };
         
         return NextResponse.json({
           success: true,

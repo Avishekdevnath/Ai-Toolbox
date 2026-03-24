@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       name: body?.responder?.name,
       email: body?.responder?.email?.toLowerCase(),
       studentId: body?.responder?.studentId,
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.ip || 'unknown',
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent') || '',
     };
 

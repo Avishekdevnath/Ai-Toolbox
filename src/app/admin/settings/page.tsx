@@ -1,226 +1,104 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { Settings, Save, RefreshCw, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Save, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface AdminSettings {
-  systemName: string;
-  maintenanceMode: boolean;
-  userRegistration: boolean;
-  emailNotifications: boolean;
-  analyticsEnabled: boolean;
-  maxFileSize: number;
-  sessionTimeout: number;
-  apiRateLimit: number;
+  systemName: string; maintenanceMode: boolean; userRegistration: boolean;
+  emailNotifications: boolean; analyticsEnabled: boolean;
+  maxFileSize: number; sessionTimeout: number; apiRateLimit: number;
+}
+
+const defaults: AdminSettings = {
+  systemName: 'AI Toolbox', maintenanceMode: false, userRegistration: true,
+  emailNotifications: true, analyticsEnabled: true,
+  maxFileSize: 10, sessionTimeout: 24, apiRateLimit: 100,
+};
+
+function SwitchRow({ id, label, desc, checked, onChange }: { id: string; label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+      <div><Label htmlFor={id} className="text-[13px] font-medium text-slate-700">{label}</Label><p className="text-[12px] text-slate-400 mt-0.5">{desc}</p></div>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
 }
 
 export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState<AdminSettings>({
-    systemName: 'AI Toolbox',
-    maintenanceMode: false,
-    userRegistration: true,
-    emailNotifications: true,
-    analyticsEnabled: true,
-    maxFileSize: 10,
-    sessionTimeout: 24,
-    apiRateLimit: 100
-  });
+  const [settings, setSettings] = useState<AdminSettings>(defaults);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-    } finally {
-      setLoading(false);
-    }
+    try { await new Promise(resolve => setTimeout(resolve, 1000)); setSaved(true); setTimeout(() => setSaved(false), 3000); }
+    catch (error) { console.error('Failed to save settings:', error); }
+    finally { setLoading(false); }
   };
 
-  const handleReset = () => {
-    setSettings({
-      systemName: 'AI Toolbox',
-      maintenanceMode: false,
-      userRegistration: true,
-      emailNotifications: true,
-      analyticsEnabled: true,
-      maxFileSize: 10,
-      sessionTimeout: 24,
-      apiRateLimit: 100
-    });
-  };
+  const set = (patch: Partial<AdminSettings>) => setSettings(prev => ({ ...prev, ...patch }));
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-          Admin Settings
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Configure system-wide settings and preferences.
-        </p>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-lg font-semibold text-slate-800">Admin Settings</h1>
+        <p className="text-[12px] text-slate-400 mt-0.5">Configure system-wide settings and preferences.</p>
       </div>
 
-      <div className="space-y-6">
-        {/* System Configuration */}
-        <Card>
-          <CardHeader>
-            <CardTitle>System Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="systemName">System Name</Label>
-                <Input
-                  id="systemName"
-                  value={settings.systemName}
-                  onChange={(e) => setSettings(prev => ({ ...prev, systemName: e.target.value }))}
-                  placeholder="AI Toolbox"
-                />
-              </div>
-              <div>
-                <Label htmlFor="maxFileSize">Max File Size (MB)</Label>
-                <Input
-                  id="maxFileSize"
-                  type="number"
-                  value={settings.maxFileSize}
-                  onChange={(e) => setSettings(prev => ({ ...prev, maxFileSize: parseInt(e.target.value) }))}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h2 className="text-[13px] font-semibold text-slate-800 mb-4">System Configuration</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="systemName" className="text-[12px] text-slate-600">System Name</Label>
+            <Input id="systemName" value={settings.systemName} onChange={e => set({ systemName: e.target.value })} placeholder="AI Toolbox" className="h-9 text-[13px] border-slate-200" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="maxFileSize" className="text-[12px] text-slate-600">Max File Size (MB)</Label>
+            <Input id="maxFileSize" type="number" value={settings.maxFileSize} onChange={e => set({ maxFileSize: parseInt(e.target.value) })} className="h-9 text-[13px] border-slate-200" />
+          </div>
+        </div>
+      </div>
 
-        {/* Security Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Security & Access</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="maintenanceMode">Maintenance Mode</Label>
-                <p className="text-sm text-gray-500">Temporarily disable user access</p>
-              </div>
-              <Switch
-                id="maintenanceMode"
-                checked={settings.maintenanceMode}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, maintenanceMode: checked }))}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="userRegistration">Allow User Registration</Label>
-                <p className="text-sm text-gray-500">Enable new user sign-ups</p>
-              </div>
-              <Switch
-                id="userRegistration"
-                checked={settings.userRegistration}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, userRegistration: checked }))}
-              />
-            </div>
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h2 className="text-[13px] font-semibold text-slate-800 mb-2">Security &amp; Access</h2>
+        <SwitchRow id="maintenanceMode" label="Maintenance Mode" desc="Temporarily disable user access" checked={settings.maintenanceMode} onChange={v => set({ maintenanceMode: v })} />
+        <SwitchRow id="userRegistration" label="Allow User Registration" desc="Enable new user sign-ups" checked={settings.userRegistration} onChange={v => set({ userRegistration: v })} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="sessionTimeout" className="text-[12px] text-slate-600">Session Timeout (hours)</Label>
+            <Input id="sessionTimeout" type="number" value={settings.sessionTimeout} onChange={e => set({ sessionTimeout: parseInt(e.target.value) })} className="h-9 text-[13px] border-slate-200" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="apiRateLimit" className="text-[12px] text-slate-600">API Rate Limit (req/min)</Label>
+            <Input id="apiRateLimit" type="number" value={settings.apiRateLimit} onChange={e => set({ apiRateLimit: parseInt(e.target.value) })} className="h-9 text-[13px] border-slate-200" />
+          </div>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="sessionTimeout">Session Timeout (hours)</Label>
-                <Input
-                  id="sessionTimeout"
-                  type="number"
-                  value={settings.sessionTimeout}
-                  onChange={(e) => setSettings(prev => ({ ...prev, sessionTimeout: parseInt(e.target.value) }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="apiRateLimit">API Rate Limit (requests/min)</Label>
-                <Input
-                  id="apiRateLimit"
-                  type="number"
-                  value={settings.apiRateLimit}
-                  onChange={(e) => setSettings(prev => ({ ...prev, apiRateLimit: parseInt(e.target.value) }))}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h2 className="text-[13px] font-semibold text-slate-800 mb-2">Notifications</h2>
+        <SwitchRow id="emailNotifications" label="Email Notifications" desc="Send system notifications via email" checked={settings.emailNotifications} onChange={v => set({ emailNotifications: v })} />
+        <SwitchRow id="analyticsEnabled" label="Analytics Collection" desc="Collect usage analytics data" checked={settings.analyticsEnabled} onChange={v => set({ analyticsEnabled: v })} />
+      </div>
 
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="emailNotifications">Email Notifications</Label>
-                <p className="text-sm text-gray-500">Send system notifications via email</p>
-              </div>
-              <Switch
-                id="emailNotifications"
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, emailNotifications: checked }))}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="analyticsEnabled">Analytics Collection</Label>
-                <p className="text-sm text-gray-500">Collect usage analytics data</p>
-              </div>
-              <Switch
-                id="analyticsEnabled"
-                checked={settings.analyticsEnabled}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, analyticsEnabled: checked }))}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Actions */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {saved && (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle className="w-4 h-4" />
-                    <span className="text-sm">Settings saved successfully!</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleReset}
-                  disabled={loading}
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Reset
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={loading}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Saving...' : 'Save Settings'}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            {saved && <div className="flex items-center gap-2 text-green-600"><CheckCircle className="h-4 w-4" /><span className="text-[13px]">Settings saved successfully!</span></div>}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setSettings(defaults)} disabled={loading} className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-[13px] text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+              <RefreshCw className="h-3.5 w-3.5" />Reset
+            </button>
+            <button onClick={handleSave} disabled={loading} className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded-lg text-[13px] font-medium hover:bg-blue-700 disabled:opacity-50">
+              <Save className="h-3.5 w-3.5" />{loading ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
-} 
+}

@@ -67,7 +67,6 @@ export class QRCodeModel {
       firstName: qrData.firstName,
       lastName: qrData.lastName,
       organization: qrData.organization,
-      title: qrData.title,
       phone: qrData.phone,
       email: qrData.email,
       website: qrData.website,
@@ -80,7 +79,7 @@ export class QRCodeModel {
       location: qrData.location
     };
 
-    const result = await db.collection(this.collectionName).insertOne(qrCode);
+    const result = await db.collection(this.collectionName).insertOne(qrCode as any);
     return { ...qrCode, _id: result.insertedId.toString() };
   }
 
@@ -88,9 +87,9 @@ export class QRCodeModel {
     const db = await getDatabase();
     const { ObjectId } = await import('mongodb');
     
-    return db.collection(this.collectionName).findOne({ 
-      _id: new ObjectId(id) 
-    }) as Promise<QRCode | null>;
+    return db.collection(this.collectionName).findOne({
+      _id: new ObjectId(id)
+    }) as unknown as Promise<QRCode | null>;
   }
 
   static async findByUser(userId: string, anonymousUserId?: string, filters?: QRCodeSearchFilters): Promise<{ qrCodes: QRCode[], total: number }> {
@@ -149,7 +148,7 @@ export class QRCodeModel {
       .sort(sortOptions)
       .skip(filters?.offset || 0)
       .limit(filters?.limit || 20)
-      .toArray() as QRCode[];
+      .toArray() as unknown as QRCode[];
 
     const total = await db.collection(this.collectionName).countDocuments(query);
 
@@ -208,7 +207,7 @@ export class QRCodeModel {
           'analytics.lastScannedAt': new Date(),
           updatedAt: new Date()
         },
-        $push: { 'analytics.scanHistory': scanEvent }
+        $push: { 'analytics.scanHistory': scanEvent } as any
       }
     );
 
@@ -236,7 +235,7 @@ export class QRCodeModel {
           'analytics.lastDownloadedAt': new Date(),
           updatedAt: new Date()
         },
-        $push: { 'analytics.downloadHistory': downloadEvent }
+        $push: { 'analytics.downloadHistory': downloadEvent } as any
       }
     );
 
@@ -263,7 +262,7 @@ export class QRCodeModel {
           'analytics.lastSharedAt': new Date(),
           updatedAt: new Date()
         },
-        $push: { 'analytics.shareHistory': shareEvent }
+        $push: { 'analytics.shareHistory': shareEvent } as any
       }
     );
 
@@ -296,7 +295,7 @@ export class QRCodeModel {
 
     const qrCodes = await db.collection(this.collectionName)
       .find(query)
-      .toArray() as QRCode[];
+      .toArray() as unknown as QRCode[];
 
     const now = new Date();
     const activeQRCodes = qrCodes.filter(qr => qr.status === 'active' && (!qr.expiresAt || qr.expiresAt > now));
@@ -490,7 +489,7 @@ export class QRCodeModel {
       .find(searchQuery)
       .limit(limit)
       .sort({ createdAt: -1 })
-      .toArray() as Promise<QRCode[]>;
+      .toArray() as unknown as Promise<QRCode[]>;
   }
 
   static async getPublicQRCodes(limit: number = 20): Promise<QRCode[]> {
@@ -508,6 +507,6 @@ export class QRCodeModel {
       })
       .limit(limit)
       .sort({ createdAt: -1 })
-      .toArray() as Promise<QRCode[]>;
+      .toArray() as unknown as Promise<QRCode[]>;
   }
 }

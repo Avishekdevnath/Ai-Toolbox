@@ -30,7 +30,7 @@ export const validationSchemas = {
   // Admin schemas
   admin: {
     clerkId: z.string().min(1, 'User ID is required'),
-    role: z.enum(['user', 'admin'], { errorMap: () => ({ message: 'Role must be either user or admin' }) }),
+    role: z.enum(['user', 'admin']),
     isActive: z.boolean(),
     page: z.number().min(1, 'Page must be at least 1').max(1000, 'Page too high'),
     limit: z.number().min(1, 'Limit must be at least 1').max(100, 'Limit too high'),
@@ -40,9 +40,7 @@ export const validationSchemas = {
   // API request schemas
   api: {
     endpoint: z.string().min(1, 'Endpoint is required').max(200, 'Endpoint too long'),
-    method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], { 
-      errorMap: () => ({ message: 'Invalid HTTP method' }) 
-    }),
+    method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
   },
 
   // Pagination schemas
@@ -50,9 +48,7 @@ export const validationSchemas = {
     page: z.number().min(1, 'Page must be at least 1').max(1000, 'Page too high'),
     limit: z.number().min(1, 'Limit must be at least 1').max(100, 'Limit too high'),
     sortBy: z.string().max(50, 'Sort field too long').optional(),
-    sortOrder: z.enum(['asc', 'desc'], { 
-      errorMap: () => ({ message: 'Sort order must be asc or desc' }) 
-    }).optional(),
+    sortOrder: z.enum(['asc', 'desc']).optional(),
   },
 
   // Date range schemas
@@ -112,7 +108,7 @@ export function validateRequestBody<T>(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors.map(err => err.message),
+        errors: error.issues.map(err => err.message),
       };
     }
     
@@ -163,7 +159,7 @@ export function validateQueryParams<T>(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors.map(err => err.message),
+        errors: error.issues.map(err => err.message),
       };
     }
     

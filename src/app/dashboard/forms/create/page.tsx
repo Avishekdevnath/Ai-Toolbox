@@ -63,6 +63,48 @@ const createDefaultField = (type = 'short_text') => ({
   }
 });
 
+type IdentitySchemaState = {
+  requireName: boolean;
+  requireEmail: boolean;
+  requireStudentId: boolean;
+};
+
+type FormSettingsState = {
+  isPublic: boolean;
+  allowMultipleSubmissions: boolean;
+  allowAnonymous: boolean;
+  identitySchema: IdentitySchemaState;
+  startAt: string | null;
+  endAt: string | null;
+  endless: boolean;
+  timer: {
+    enabled: boolean;
+    minutes: number;
+  };
+};
+
+const defaultFormSettings: FormSettingsState = {
+  isPublic: true,
+  allowMultipleSubmissions: true,
+  allowAnonymous: false,
+  identitySchema: {
+    requireName: false,
+    requireEmail: false,
+    requireStudentId: false,
+  },
+  startAt: null,
+  endAt: null,
+  endless: false,
+  timer: { enabled: false, minutes: 30 },
+};
+
+const withIdentitySchemaDefaults = (
+  identitySchema?: Partial<IdentitySchemaState>,
+): IdentitySchemaState => ({
+  ...defaultFormSettings.identitySchema,
+  ...identitySchema,
+});
+
 export default function FormBuilder() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -74,20 +116,7 @@ export default function FormBuilder() {
   const [activeField, setActiveField] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [formSettings, setFormSettings] = useState({
-    isPublic: true,
-    allowMultipleSubmissions: true,
-    allowAnonymous: false,
-    identitySchema: {
-      requireName: false,
-      requireEmail: false,
-      requireStudentId: false,
-    },
-    startAt: null,
-    endAt: null,
-    endless: false,
-    timer: { enabled: false, minutes: 30 },
-  });
+  const [formSettings, setFormSettings] = useState<FormSettingsState>(defaultFormSettings);
 
   // Use the quiz points service for real-time calculation and logging
   const { totalPoints, calculation, isQuizForm } = useQuizPoints(
@@ -420,7 +449,10 @@ export default function FormBuilder() {
                     checked={!!formSettings.identitySchema?.requireName}
                     onChange={(e) => setFormSettings(prev => ({
                       ...prev,
-                      identitySchema: { ...(prev.identitySchema || {}), requireName: e.target.checked }
+                      identitySchema: {
+                        ...withIdentitySchemaDefaults(prev.identitySchema),
+                        requireName: e.target.checked,
+                      }
                     }))}
                   />
                   Require Name
@@ -431,7 +463,10 @@ export default function FormBuilder() {
                     checked={!!formSettings.identitySchema?.requireEmail}
                     onChange={(e) => setFormSettings(prev => ({
                       ...prev,
-                      identitySchema: { ...(prev.identitySchema || {}), requireEmail: e.target.checked }
+                      identitySchema: {
+                        ...withIdentitySchemaDefaults(prev.identitySchema),
+                        requireEmail: e.target.checked,
+                      }
                     }))}
                   />
                   Require Email
@@ -442,7 +477,10 @@ export default function FormBuilder() {
                     checked={!!formSettings.identitySchema?.requireStudentId}
                     onChange={(e) => setFormSettings(prev => ({
                       ...prev,
-                      identitySchema: { ...(prev.identitySchema || {}), requireStudentId: e.target.checked }
+                      identitySchema: {
+                        ...withIdentitySchemaDefaults(prev.identitySchema),
+                        requireStudentId: e.target.checked,
+                      }
                     }))}
                   />
                   Require Student ID

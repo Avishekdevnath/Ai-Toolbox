@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 import { connectToDatabase } from '@/lib/mongodb';
 
 export interface IUserAnalysisHistory extends Document {
@@ -30,6 +30,25 @@ export interface IUserAnalysisHistory extends Document {
   lastAccessed: Date;
   accessCount: number;
   normalizedParameters: Record<string, any>;
+}
+
+export interface IUserAnalysisHistoryModel extends Model<IUserAnalysisHistory> {
+  findByParameterHash(userId: string, parameterHash: string): Promise<any>;
+  findDuplicates(userId: string, parameterHash: string): Promise<any[]>;
+  getUserHistory(userId: string, limit?: number, offset?: number): Promise<any[]>;
+  getUserStats(userId: string): Promise<any>;
+  getToolUsageStats(userId: string): Promise<any[]>;
+  getRecentActivity(userId: string, limit?: number): Promise<any[]>;
+  getAnalysisById(analysisId: string): Promise<any>;
+  deleteAnalysis(analysisId: string, userId: string): Promise<{ deletedCount: number }>;
+  exportUserData(userId: string, format?: 'json' | 'csv'): Promise<any[]>;
+  updateAccess(analysisId: string): Promise<any>;
+  markAsDuplicate(analysisId: string, originalAnalysisId: string): Promise<any>;
+  findSimilarAnalyses(
+    userId: string,
+    normalizedParameters: Record<string, any>,
+    toolSlug: string,
+  ): Promise<any[]>;
 }
 
 const UserAnalysisHistorySchema = new Schema<IUserAnalysisHistory>({
@@ -103,7 +122,7 @@ const UserAnalysisHistorySchema = new Schema<IUserAnalysisHistory>({
     type: Schema.Types.ObjectId,
     ref: 'UserAnalysisHistory',
     index: true
-  },
+  } as any,
   regenerationCount: {
     type: Number,
     default: 0,
@@ -399,5 +418,9 @@ UserAnalysisHistorySchema.statics = {
   }
 };
 
-export const UserAnalysisHistory = mongoose.models.UserAnalysisHistory || 
-  mongoose.model<IUserAnalysisHistory>('UserAnalysisHistory', UserAnalysisHistorySchema); 
+export const UserAnalysisHistory =
+  (mongoose.models.UserAnalysisHistory as IUserAnalysisHistoryModel) ||
+  mongoose.model<IUserAnalysisHistory, IUserAnalysisHistoryModel>(
+    'UserAnalysisHistory',
+    UserAnalysisHistorySchema,
+  );

@@ -44,9 +44,9 @@ export async function GET(
     try {
       await UrlShortenerModel.trackClick(shortCode, {
         timestamp: new Date(),
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                  request.headers.get('x-real-ip') || 
-                  'unknown',
+        ip: request.headers.get('x-forwarded-for')?.split(',')[0] || 
+            request.headers.get('x-real-ip') || 
+            'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
         referer: request.headers.get('referer') || undefined
       });

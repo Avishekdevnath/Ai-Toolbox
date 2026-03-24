@@ -71,4 +71,4 @@ UserRoleSchema.pre('save', function(next) {
 UserRoleSchema.index({ role: 1, isActive: 1 });
 UserRoleSchema.index({ email: 1, isActive: 1 });
 
-export const UserRole = mongoose.models.UserRole || mongoose.model<IUserRole>('UserRole', UserRoleSchema); 
+export const UserRole = (mongoose.models.UserRole || mongoose.model<IUserRole>('UserRole', UserRoleSchema)) as mongoose.Model<IUserRole>; 

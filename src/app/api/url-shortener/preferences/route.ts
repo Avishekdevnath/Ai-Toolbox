@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Get user preferences
     const preferences = await collection.findOne({
-      userId: userSession.userId
+      userId: userSession.id
     });
 
     const defaultPreferences: UserPreferences = {
@@ -94,10 +94,10 @@ export async function PUT(request: NextRequest) {
 
     // Upsert user preferences
     await collection.updateOne(
-      { userId: userSession.userId },
+      { userId: userSession.id },
       {
         $set: {
-          userId: userSession.userId,
+          userId: userSession.id,
           preferences,
           updatedAt: new Date()
         }

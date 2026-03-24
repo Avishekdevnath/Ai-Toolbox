@@ -65,7 +65,6 @@ export const CreateQRCodeRequest = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   organization: z.string().optional(),
-  title: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
   website: z.string().url().optional(),
@@ -77,8 +76,7 @@ export const CreateQRCodeRequest = z.object({
   eventTitle: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
-  location: z.string().optional(),
-  description: z.string().optional()
+  location: z.string().optional()
 });
 
 export const QRCode = z.object({
@@ -113,7 +111,6 @@ export const QRCode = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   organization: z.string().optional(),
-  title: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().optional(),
   website: z.string().optional(),

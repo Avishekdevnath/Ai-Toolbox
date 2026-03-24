@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { UserAuthService } from '@/lib/userAuthService';
 import { isUrlExpired } from '@/lib/urlShortenerUtils';
+import { ShortenedUrl } from '@/schemas/urlShortenerSchema';
 
 const COLLECTION_NAME = 'shortened_urls';
 
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .toArray();
+      .toArray() as unknown as ShortenedUrl[];
 
     // Get total count for pagination
     const totalCount = await db.collection(COLLECTION_NAME).countDocuments(query);

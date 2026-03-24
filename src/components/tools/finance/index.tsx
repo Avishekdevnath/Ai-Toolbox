@@ -24,10 +24,10 @@ const moduleComponents: { [key: string]: React.ComponentType<BaseModuleProps> } 
 };
 
 interface Props {
-  onBack: () => void;
+  onBack?: () => void;
 }
 
-export default function FinanceAdvisorTool({ onBack }: Props) {
+export default function FinanceAdvisorTool({ onBack = () => {} }: Props) {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   const handleModuleSelect = (moduleId: string) => {

@@ -194,4 +194,4 @@ AdminUserSchema.methods.resetLoginAttempts = async function(): Promise<void> {
 
 // Only essential indexes - email is already unique from schema
 
-export const AdminUser = mongoose.models.AdminUser || mongoose.model<IAdminUser>('AdminUser', AdminUserSchema); 
+export const AdminUser = (mongoose.models.AdminUser || mongoose.model<IAdminUser>('AdminUser', AdminUserSchema)) as mongoose.Model<IAdminUser>; 

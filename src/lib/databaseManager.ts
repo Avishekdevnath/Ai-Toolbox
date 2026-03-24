@@ -40,7 +40,7 @@ class DatabaseManager {
    */
   async getDatabase(): Promise<Db> {
     // If we have a valid connection, return it
-    if (this.state.db && this.state.client?.topology?.isConnected()) {
+    if (this.state.db && (this.state.client as any)?.topology?.isConnected()) {
       return this.state.db;
     }
 
@@ -156,7 +156,7 @@ class DatabaseManager {
       await this.delay(checkInterval);
     }
 
-    if (this.state.db && this.state.client?.topology?.isConnected()) {
+    if (this.state.db && (this.state.client as any)?.topology?.isConnected()) {
       return this.state.db;
     }
 
@@ -191,7 +191,7 @@ class DatabaseManager {
     lastConnectionAttempt: Date | null;
   } {
     return {
-      isConnected: !!(this.state.db && this.state.client?.topology?.isConnected()),
+      isConnected: !!(this.state.db && (this.state.client as any)?.topology?.isConnected()),
       isConnecting: this.state.isConnecting,
       lastError: this.state.lastError?.message || null,
       connectionAttempts: this.state.connectionAttempts,

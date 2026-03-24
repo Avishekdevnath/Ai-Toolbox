@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IToolRating extends Document {
   userId: string;
@@ -10,6 +10,20 @@ export interface IToolRating extends Document {
   reported: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IToolRatingModel extends Model<IToolRating> {
+  getToolRatings(toolSlug: string, limit?: number, skip?: number): Promise<any[]>;
+  getToolStats(toolSlug: string): Promise<any>;
+  addRating(ratingData: {
+    userId: string;
+    toolSlug: string;
+    toolName: string;
+    rating: number;
+    review?: string;
+  }): Promise<any>;
+  markHelpful(ratingId: string): Promise<any>;
+  reportRating(ratingId: string): Promise<any>;
 }
 
 const ToolRatingSchema = new Schema<IToolRating>({
@@ -135,4 +149,6 @@ ToolRatingSchema.statics.reportRating = async function(ratingId: string) {
   );
 };
 
-export const ToolRating = mongoose.models.ToolRating || mongoose.model<IToolRating>('ToolRating', ToolRatingSchema); 
+export const ToolRating =
+  (mongoose.models.ToolRating as IToolRatingModel) ||
+  mongoose.model<IToolRating, IToolRatingModel>('ToolRating', ToolRatingSchema);

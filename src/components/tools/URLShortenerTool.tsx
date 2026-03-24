@@ -7,17 +7,12 @@ import {
   deleteShortenedUrl, 
   copyToClipboard,
   shareUrl,
-  generateQRCodeUrl
+  generateQRCodeUrl,
+  DisplayUrl
 } from '@/lib/urlShortenerService';
-import { ShortenedUrl } from '@/schemas/urlShortenerSchema';
 import URLSuccessModal from './URLSuccessModal';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
-
-interface DisplayUrl extends ShortenedUrl {
-  shortenedUrl: string;
-  isExpired?: boolean;
-}
 
 interface Analytics {
   totalUrls: number;

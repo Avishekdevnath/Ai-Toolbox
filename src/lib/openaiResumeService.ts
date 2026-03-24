@@ -82,7 +82,7 @@ function parseResumeAnalysis(outputText: string | null | undefined): ResumeAnaly
 async function createResumeAnalysis(input: string | Array<Record<string, unknown>>): Promise<ResumeAnalysis> {
   const response = await getClient().responses.create({
     model: getResumeModel(),
-    input,
+    input: input as any,
     text: {
       format: {
         type: 'json_object',

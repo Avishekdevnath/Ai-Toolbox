@@ -3,6 +3,8 @@
  * Senior SDE Level Implementation
  */
 
+import React from 'react';
+
 export interface ErrorEvent {
   message: string;
   stack?: string;
