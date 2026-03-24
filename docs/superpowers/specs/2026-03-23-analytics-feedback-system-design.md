@@ -120,7 +120,18 @@ The existing matcher already covers page routes. The cookie-setting logic is a s
 
 ### 2.2 Page visit tracking: `<AnalyticsProvider>`
 
-A client component placed in the root layout (inside `<AuthProvider>` so it can access auth state). It:
+A client component placed in the root layout (`src/app/layout.tsx`) **inside `<AuthProvider>`** so it can access auth state. Required nesting order in `layout.tsx`:
+
+```tsx
+<AuthProvider>
+  <AnalyticsProvider>   {/* must be inside AuthProvider */}
+    {children}
+    <FeedbackWidget />  {/* also inside AuthProvider for auth state access */}
+  </AnalyticsProvider>
+</AuthProvider>
+```
+
+It:
 
 1. Reads `pathname` via `usePathname()`
 2. On mount and on every pathname change, sends `POST /api/analytics/visit` with `{ path, referrer, userAgent }`
@@ -194,7 +205,9 @@ The `POST /api/feedback` route reads from the request:
 
 ### 3.5 Placement
 
-Rendered in the dashboard layout (`src/app/dashboard/layout.tsx`), the main public layout, and the admin layout (`src/app/admin/layout.tsx`) — admin users may also want to submit feedback. **Excluded** from auth pages (login, register, forgot-password) — the widget component checks the pathname and returns null for `/sign-in`, `/sign-up`, `/forgot-password` routes.
+The dashboard layout (`src/app/dashboard/layout.tsx`), admin layout (`src/app/admin/layout.tsx`), and root layout (`src/app/layout.tsx`) are **not nested** — each is an independent layout tree. The `FeedbackWidget` must be added to all three layout files individually.
+
+**Excluded from auth pages.** The widget checks the pathname and returns `null` for these confirmed auth routes: `/sign-in`, `/sign-up`, `/forgot-password`. (These match the actual page directories at `src/app/sign-in`, `src/app/sign-up`, `src/app/forgot-password`.)
 
 ### 3.6 API
 
@@ -388,7 +401,7 @@ Opened via a "View Activity" button added to the existing `UserDetailModal`. Thi
 | `middleware.ts` (project root) | Modify (add `visitorId` cookie) | 2.1 |
 | `src/components/AnalyticsProvider.tsx` | Create (matches `AuthProvider.tsx` location) | 2.2 |
 | `src/app/api/analytics/visit/route.ts` | Create | 2.2 |
-| `src/app/api/auth/login/route.ts` (or equivalent) | Modify (identity linking) | 2.3 |
+| `src/app/api/auth/login/route.ts` | Modify (identity linking) | 2.3 |
 | `src/app/api/auth/register/route.ts` | Modify (identity linking) | 2.3 |
 | `src/app/api/analytics/track/route.ts` | Modify (add `visitorId`) | 2.4 |
 | `src/app/api/tools/usage/track/route.ts` | Modify (add `visitorId`) | 2.4 |
@@ -396,7 +409,9 @@ Opened via a "View Activity" button added to the existing `UserDetailModal`. Thi
 | `src/app/api/tools/swot-analysis/track-usage/route.ts` | Modify (add `visitorId`) | 2.4 |
 | `src/components/feedback/FeedbackWidget.tsx` | Create | 3.1 |
 | `src/components/feedback/FeedbackForm.tsx` | Create | 3.1 |
-| `src/app/layout.tsx` | Modify (add `AnalyticsProvider` + `FeedbackWidget`) | 2.2, 3.5 |
+| `src/app/layout.tsx` | Modify (add `AnalyticsProvider` + `FeedbackWidget`, nesting order: `AuthProvider > AnalyticsProvider > children + FeedbackWidget`) | 2.2, 3.5 |
+| `src/app/dashboard/layout.tsx` | Modify (add `FeedbackWidget`) | 3.5 |
+| `src/app/admin/layout.tsx` | Modify (add `FeedbackWidget`) | 3.5 |
 | `src/app/api/feedback/route.ts` | Create | 3.6 |
 | `src/app/admin/feedback/page.tsx` | Create | 4.1 |
 | `src/components/admin/feedback/FeedbackInbox.tsx` | Create | 4.1 |
@@ -420,4 +435,4 @@ Opened via a "View Activity" button added to the existing `UserDetailModal`. Thi
 | `src/app/api/admin/users/[id]/activity/route.ts` | Create | 6.3 |
 | `src/components/admin/AdminDashboard.tsx` | Modify (add FeedbackStatsCard) | 4.2 |
 
-**Total:** 22 new files, 13 modified files
+**Total:** 22 new files, 15 modified files
