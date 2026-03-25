@@ -10,9 +10,20 @@
 
 **Option B — Clean Light + Dark Adaptive**
 
-- Dashboard pages (`/dashboard/forms/**`) — dark-mode-first workspace (slate-900 base)
-- Public responder page (`/f/[id]`) — light-mode-first, white, high readability
-- Shared design tokens: Plus Jakarta Sans, blue primary (#2563EB), orange accent (#EA580C)
+**Dashboard shell (verified from source):**
+- Sidebar: `bg-slate-900` (dark) — already exists, not touched
+- Content area wrapper: `bg-slate-50` — this wraps ALL dashboard pages including forms
+
+**Forms dashboard pages (`/dashboard/forms/**`):**
+- Match the existing content area: `bg-slate-50` base, white (`bg-white`) cards with `border-slate-200` borders
+- Visual quality comes from design polish — blue accents, better typography, stats bar, three-panel builder — NOT a dark background
+- Making forms pages dark (slate-900) would create a dark island inside a light shell — wrong
+
+**Public responder page (`/f/[id]`):**
+- Pure white (`bg-white`) background, centered card, no dashboard chrome, maximum readability
+
+**Shared:**
+- Design tokens: Plus Jakarta Sans, blue primary (#2563EB), orange accent (#EA580C)
 - Shadcn/ui components throughout, Lucide icons
 - All interactive transitions use Framer Motion with 200ms ease-out unless stated otherwise (slide-overs from right, bottom sheets from bottom, panel appearances)
 - Layout: shared dashboard sidebar always visible (no focused workspace mode)
@@ -486,4 +497,5 @@ A new `displayMode` field is added to the form settings schema. This is a **sche
 - [ ] All pages responsive at 375px (mobile) and 1440px (desktop)
 - [ ] No existing API endpoints broken
 - [ ] `displayMode` field backfill default (`'all'`) works on existing form records
-- [ ] Dark mode dashboard + light mode public form both render correctly
+- [ ] Dashboard forms pages use bg-slate-50 base consistent with dashboard shell
+- [ ] Public form page uses pure white bg with no dashboard chrome
