@@ -27,7 +27,7 @@ export interface UserSession {
 
 export interface UserRegistrationData {
   email: string;
-  username?: string;
+  username: string;
   password: string;
   name: string;
   firstName?: string;
@@ -176,15 +176,17 @@ export class UserAuthService {
         };
       }
 
-      // Check if username is provided and already exists
-      if (username) {
-        const existingUserByUsername = await AuthUserModel.findByUsername(username.toLowerCase(), session);
-        if (existingUserByUsername) {
-          return {
-            success: false,
-            error: 'Username is already taken'
-          };
-        }
+      // Username is required
+      if (!username) {
+        return { success: false, error: 'Username is required' };
+      }
+
+      const existingUserByUsername = await AuthUserModel.findByUsername(username.toLowerCase(), session);
+      if (existingUserByUsername) {
+        return {
+          success: false,
+          error: 'Username is already taken'
+        };
       }
 
       // Validate password strength
@@ -198,7 +200,7 @@ export class UserAuthService {
       // Create user
       const newUser = await AuthUserModel.create({
         email: email.toLowerCase(),
-        username: username?.toLowerCase(),
+        username: username.toLowerCase(),
         password: password,
         firstName: firstName || name.split(' ')[0],
         lastName: lastName || name.split(' ').slice(1).join(' ') || '',

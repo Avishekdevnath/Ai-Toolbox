@@ -33,6 +33,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedUsername = username?.toLowerCase().trim();
+    if (!normalizedUsername || !/^[a-z0-9_]{3,20}$/.test(normalizedUsername)) {
+      return NextResponse.json(
+        { success: false, error: 'Username is required (3–20 chars: letters, numbers, underscores only)' },
+        { status: 400 }
+      );
+    }
+
     if (!Array.isArray(securityQuestions) || securityQuestions.length < 3 || securityQuestions.length > 5) {
       return NextResponse.json(
         { success: false, error: 'Please select 3 to 5 security questions' },

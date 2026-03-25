@@ -69,7 +69,7 @@ export class AuthUserModel {
 
   static async create(userData: {
     email: string;
-    username?: string;
+    username: string;
     firstName: string;
     lastName: string;
     password: string;
@@ -81,13 +81,13 @@ export class AuthUserModel {
     }>;
   }, session?: ClientSession) {
     const model = await this.getModel();
-    
+
     // Hash password
     const passwordHash = await bcrypt.hash(userData.password, 12);
-    
+
     const user = new model({
       email: userData.email.toLowerCase(),
-      username: userData.username?.toLowerCase(),
+      username: userData.username.toLowerCase(),
       firstName: userData.firstName,
       lastName: userData.lastName,
       phoneNumber: userData.phoneNumber,

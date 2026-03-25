@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, CheckCircle, Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, EyeOff, Loader2, Lock, Mail, User, XCircle } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import SecurityQuestionFieldset, {
   createSecurityQuestionDrafts,
@@ -35,6 +35,9 @@ export default function SignUpPage() {
   const [securityQuestions, setSecurityQuestions] = useState<SecurityQuestionDraft[]>(
     createSecurityQuestionDrafts()
   );
+  type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
+  const [usernameError, setUsernameError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,6 +54,38 @@ export default function SignUpPage() {
     }
   }, [isAuthenticated, loading, router]);
 
+  useEffect(() => {
+    if (!username.trim()) {
+      setUsernameStatus('idle');
+      setUsernameError('');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    setUsernameError('');
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/auth/check-username?username=${encodeURIComponent(username.trim())}`
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          setUsernameStatus('invalid');
+          setUsernameError(data.error || 'Invalid username');
+        } else {
+          setUsernameStatus(data.available ? 'available' : 'taken');
+          setUsernameError(data.available ? '' : 'Username is already taken');
+        }
+      } catch {
+        setUsernameStatus('idle');
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username]);
+
   function validateForm() {
     if (!firstName.trim()) {
       return 'First name is required';
@@ -62,6 +97,18 @@ export default function SignUpPage() {
 
     if (!username.trim()) {
       return 'Username is required';
+    }
+
+    if (usernameStatus === 'checking') {
+      return 'Please wait while we check username availability';
+    }
+
+    if (usernameStatus === 'taken' || usernameStatus === 'invalid') {
+      return usernameError || 'Please choose a different username';
+    }
+
+    if (usernameStatus !== 'available') {
+      return 'Please enter a valid username';
     }
 
     if (!email.trim()) {
@@ -150,6 +197,19 @@ export default function SignUpPage() {
     redirectToDashboard();
   }
 
+  function renderUsernameStatus() {
+    if (usernameStatus === 'checking') {
+      return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+    }
+    if (usernameStatus === 'available') {
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    }
+    if (usernameStatus === 'taken' || usernameStatus === 'invalid') {
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    }
+    return null;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -220,15 +280,29 @@ export default function SignUpPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Input
-                  id="username"
-                  label="Username"
-                  type="text"
-                  placeholder="Choose a username"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  disabled={isSubmitting}
-                />
+                <div className="relative">
+                  <Input
+                    id="username"
+                    label="Username"
+                    type="text"
+                    placeholder="Choose a username"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    disabled={isSubmitting}
+                    className="pr-10"
+                    helperText={!usernameError ? 'Letters, numbers, underscores (3–20 chars)' : undefined}
+                    error={usernameError || undefined}
+                  />
+                  <div className="absolute right-3 top-[2.85rem]">
+                    {renderUsernameStatus()}
+                  </div>
+                </div>
+                <span className="sr-only" aria-live="polite">
+                  {usernameStatus === 'checking' && 'Checking username availability'}
+                  {usernameStatus === 'available' && 'Username is available'}
+                  {usernameStatus === 'taken' && 'Username is already taken'}
+                  {usernameStatus === 'invalid' && usernameError}
+                </span>
                 <Input
                   id="phoneNumber"
                   label="Phone Number"
