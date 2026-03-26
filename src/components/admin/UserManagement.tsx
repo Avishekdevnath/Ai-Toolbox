@@ -15,6 +15,7 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
+  userType?: string;
   status: string;
   clerkId?: string;
   createdAt: string;
@@ -27,6 +28,11 @@ interface User {
 
 export interface UserManagementProps {
   userId?: string;
+  pageTitle?: string;
+  pageSubtitle?: string;
+  fixedRole?: string;
+  fixedUserType?: string;
+  hideCreateButton?: boolean;
 }
 
 interface Pagination {
@@ -38,7 +44,13 @@ interface Pagination {
   limit: number;
 }
 
-export default function UserManagement(_props: UserManagementProps) {
+export default function UserManagement({
+  pageTitle = 'User Management',
+  pageSubtitle = 'Manage all registered users, roles, and permissions',
+  fixedRole,
+  fixedUserType,
+  hideCreateButton = false,
+}: UserManagementProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +71,10 @@ export default function UserManagement(_props: UserManagementProps) {
     try {
       setLoading(true);
       setError('');
-      const params = new URLSearchParams({ page: page.toString(), limit: '10', search: searchTerm, status: statusFilter, role: roleFilter, sortBy, sortOrder });
+      const params = new URLSearchParams({ page: page.toString(), limit: '10', search: searchTerm, status: statusFilter, role: fixedRole || roleFilter, sortBy, sortOrder });
+      if (fixedUserType) {
+        params.set('userType', fixedUserType);
+      }
       const response = await fetch(`/api/admin/users?${params}`);
       const data = await response.json();
       if (data.success) {
@@ -68,6 +83,7 @@ export default function UserManagement(_props: UserManagementProps) {
         const transformedAdminUsers = adminUsers.map((adminUser: any) => ({
           _id: adminUser._id, email: adminUser.email, username: adminUser.username || '', firstName: adminUser.firstName || '', lastName: adminUser.lastName || '',
           role: adminUser.role, status: adminUser.isActive ? 'active' : 'inactive', clerkId: adminUser._id.toString(),
+          userType: adminUser.userType || 'admin',
           createdAt: adminUser.createdAt, updatedAt: adminUser.updatedAt, isAdmin: true,
           permissions: adminUser.permissions || [], lastLoginAt: adminUser.lastLoginAt,
           activity: { toolUsageCount: 0, lastActivity: adminUser.lastLoginAt, toolsUsed: 0, isActive: adminUser.isActive }
@@ -81,7 +97,12 @@ export default function UserManagement(_props: UserManagementProps) {
             userMap.set(au._id, { ...ex, ...au, role: ex.role === 'admin' || ex.role === 'super_admin' ? ex.role : au.role });
           }
         });
-        const allUsers = Array.from(userMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const filteredUsers = Array.from(userMap.values()).filter((user: any) => {
+          if (fixedUserType && user.userType !== fixedUserType) return false;
+          if (fixedRole && user.role !== fixedRole) return false;
+          return true;
+        });
+        const allUsers = filteredUsers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setUsers(allUsers);
         setPagination(data.data.pagination);
       } else { setError(data.error || 'Failed to fetch users'); }
@@ -137,12 +158,14 @@ export default function UserManagement(_props: UserManagementProps) {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-800">User Management</h1>
-          <p className="text-[12px] text-slate-400 mt-0.5">Manage all registered users, roles, and permissions</p>
+          <h1 className="text-lg font-semibold text-slate-800">{pageTitle}</h1>
+          <p className="text-[12px] text-slate-400 mt-0.5">{pageSubtitle}</p>
         </div>
-        <button onClick={() => setShowCreateModal(true)} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-medium px-3 py-2 rounded-lg transition-colors">
-          <Plus className="w-3.5 h-3.5" /> Add User
-        </button>
+        {!hideCreateButton && (
+          <button onClick={() => setShowCreateModal(true)} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-medium px-3 py-2 rounded-lg transition-colors">
+            <Plus className="w-3.5 h-3.5" /> Add User
+          </button>
+        )}
       </div>
 
       {successMessage && (

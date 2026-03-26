@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only super_admin can create roles
-    if (adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }

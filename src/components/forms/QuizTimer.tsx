@@ -133,7 +133,7 @@ export default function QuizTimer({
   const isCritical = remainingSeconds <= 60; // Last minute
 
   return (
-    <Card className={`border-l-4 ${isWarning ? 'border-l-red-500' : 'border-l-blue-500'} ${className}`}>
+    <Card className={`form-luxe border-l-4 ${isWarning ? 'border-l-red-500' : 'border-l-blue-500'} ${className}`}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Clock className={`w-5 h-5 ${getTimeColor()}`} />

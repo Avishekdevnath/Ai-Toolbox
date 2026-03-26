@@ -18,11 +18,11 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     const adminSession = await AdminAuthService.getAdminSession();
     
     if (!adminSession) {
-      redirect('/admin-login');
+      redirect('/');
     }
   } catch (error) {
     // If there's an error (like no session), redirect to login
-    redirect('/admin-login');
+    redirect('/');
   }
 
   return (

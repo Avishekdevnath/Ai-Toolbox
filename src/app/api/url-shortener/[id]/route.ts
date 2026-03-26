@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
+import { getShareBaseUrl } from '@/utils/url';
 import { ObjectId } from 'mongodb';
 import { isValidUrl, normalizeUrl, generateExpirationDate, isUrlExpired } from '@/lib/urlShortenerUtils';
 import { ShortenedUrl } from '@/schemas/urlShortenerSchema';
@@ -45,7 +46,7 @@ export async function GET(
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getShareBaseUrl();
     const urlWithShortened = {
       ...url,
       shortenedUrl: `${baseUrl}/r/${url.shortCode}`,
@@ -146,7 +147,7 @@ export async function PUT(
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getShareBaseUrl();
     const urlWithShortened = {
       ...updatedUrl,
       shortenedUrl: `${baseUrl}/r/${updatedUrl.shortCode}`,

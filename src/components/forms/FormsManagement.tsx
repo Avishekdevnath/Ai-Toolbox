@@ -41,7 +41,7 @@ export default function FormsManagement() {
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="form-luxe">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="list">Forms List</TabsTrigger>
         <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>

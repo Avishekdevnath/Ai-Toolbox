@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
     const role = searchParams.get('role') || '';
+    const userType = searchParams.get('userType') || '';
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
@@ -60,6 +61,10 @@ export async function GET(request: NextRequest) {
 
     if (role) {
       query.role = role;
+    }
+
+    if (userType) {
+      query.userType = userType;
     }
 
     // Calculate skip value for pagination
@@ -145,6 +150,7 @@ export async function GET(request: NextRequest) {
         firstName: user.firstName || user.name?.split(' ')[0] || '',
         lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
         role: user.role || 'user',
+        userType: user.userType || 'free',
         status: user.isActive !== undefined ? (user.isActive ? 'active' : 'inactive') : 'active',
         clerkId: user.clerkId || user._id.toString(),
         createdAt: user.createdAt,
@@ -225,6 +231,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedUsername = username?.toLowerCase().trim();
+    if (!normalizedUsername || !/^[a-z0-9_]{3,20}$/.test(normalizedUsername)) {
+      return NextResponse.json(
+        { success: false, error: 'Username is required (3–20 chars: letters, numbers, underscores only)' },
+        { status: 400 }
+      );
+    }
+
     // Validate security questions (3–5 required)
     if (!Array.isArray(securityQuestions) || securityQuestions.length < 3 || securityQuestions.length > 5) {
       return NextResponse.json(
@@ -281,7 +295,7 @@ export async function POST(request: NextRequest) {
 
     const newUser = await AuthUserModel.create({
       email: email.toLowerCase(),
-      username: username?.toLowerCase() || undefined,
+      username: normalizedUsername,
       firstName,
       lastName,
       password: tempPassword,

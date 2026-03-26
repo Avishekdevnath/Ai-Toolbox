@@ -30,7 +30,6 @@ const FORM_TYPES = [
 const FORM_STATUSES = [
   { value: 'draft', label: 'Draft' },
   { value: 'published', label: 'Published' },
-  { value: 'unpublished', label: 'Unpublished' },
   { value: 'archived', label: 'Archived' }
 ];
 
@@ -104,6 +103,14 @@ const withIdentitySchemaDefaults = (
   ...defaultFormSettings.identitySchema,
   ...identitySchema,
 });
+
+const UI = {
+  panel: 'rounded-lg border border-slate-300 bg-white',
+  input: 'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-100',
+  subtleInput: 'w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-100',
+  primaryBtn: 'inline-flex items-center justify-center rounded-md bg-blue-700 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800',
+  ghostBtn: 'inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100',
+};
 
 export default function FormBuilder() {
   const router = useRouter();
@@ -312,33 +319,33 @@ export default function FormBuilder() {
   // Render step 1: Form type selection
   const renderFormTypeSelection = () => {
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-5">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Select Form Type</h2>
-          <p className="text-sm text-gray-600">Choose the type of form you want to create</p>
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-7">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Select Form Type</h2>
+          <p className="mt-2 text-sm text-slate-600">Choose the type of form you want to create</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {FORM_TYPES.map((type) => (
             <div 
               key={type.value}
               onClick={() => setFormType(type.value)}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+              className={`cursor-pointer rounded-md border p-5 transition-colors ${
                 formType === type.value 
-                  ? 'border-gray-600 bg-gray-50' 
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-600 bg-blue-50' 
+                  : 'border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50'
               }`}
             >
-              <h3 className="text-base font-medium mb-1">{type.label}</h3>
-              <p className="text-xs text-gray-600">{type.description}</p>
+              <h3 className="text-base font-semibold text-slate-900">{type.label}</h3>
+              <p className="mt-1 text-sm text-slate-600">{type.description}</p>
             </div>
           ))}
         </div>
         
-        <div className="mt-6 flex justify-end">
+        <div className="mt-8 flex justify-end">
           <button
             onClick={goToNextStep}
-            className="px-5 py-1.5 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700"
+            className={UI.primaryBtn}
             type="button"
           >
             Next
@@ -351,26 +358,26 @@ export default function FormBuilder() {
   // Render step 2: Form details
   const renderFormDetails = () => {
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-5">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Form Details</h2>
-          <p className="text-sm text-gray-600">Set up your form information and availability</p>
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-7">
+          <h2 className="mb-1 text-2xl font-bold tracking-tight text-slate-900">Form Details</h2>
+          <p className="text-sm text-slate-600">Set up your form information and availability</p>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm mb-5 p-5">
+        <div className={`${UI.panel} mb-5 p-6`}>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Form Name</label>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">Form Name</label>
             <input
               type="text"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
               placeholder="Form Name"
-              className="w-full p-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500"
+              className={UI.input}
             />
           </div>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">Description (optional)</label>
             <textarea
               value={formDescription}
               onChange={(e) => {
@@ -380,18 +387,18 @@ export default function FormBuilder() {
                 e.target.style.height = e.target.scrollHeight + 'px';
               }}
               placeholder="Form Description"
-              className="w-full p-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 resize-none overflow-hidden"
+              className={`${UI.input} resize-none overflow-hidden`}
               rows={2}
               style={{ minHeight: '2.5rem' }}
             />
           </div>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">Status</label>
             <select
               value={formStatus}
               onChange={(e) => setFormStatus(e.target.value)}
-              className="w-full p-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500"
+              className={UI.input}
             >
               {FORM_STATUSES.map((status) => (
                 <option key={status.value} value={status.value}>{status.label}</option>
@@ -400,10 +407,10 @@ export default function FormBuilder() {
           </div>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">Availability</label>
             <div className="flex flex-wrap gap-4">
               <div className="flex-1">
-                <label className="block text-xs text-gray-600 mb-1">Start Date (optional)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Start Date (optional)</label>
                 <div className="relative">
                   <input
                     type="datetime-local"
@@ -412,14 +419,14 @@ export default function FormBuilder() {
                       ...formSettings,
                       startAt: e.target.value || null
                     })}
-                    className="w-full p-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 pl-8"
+                    className={`${UI.input} pl-9`}
                   />
-                  <Calendar className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 </div>
               </div>
               
               <div className="flex-1">
-                <label className="block text-xs text-gray-600 mb-1">End Date (optional)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600">End Date (optional)</label>
                 <div className="relative">
                   <input
                     type="datetime-local"
@@ -430,9 +437,9 @@ export default function FormBuilder() {
                       endless: e.target.value ? false : formSettings.endless
                     })}
                     disabled={formSettings.endless}
-                    className={`w-full p-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 pl-8 ${formSettings.endless ? 'bg-gray-100' : ''}`}
+                    className={`${UI.input} pl-9 ${formSettings.endless ? 'bg-slate-100 text-slate-400' : ''}`}
                   />
-                  <Calendar className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 </div>
               </div>
             </div>
@@ -440,10 +447,10 @@ export default function FormBuilder() {
 
           {/* Quiz identity requirements */}
           {formType === 'quiz' && (
-            <div className="mt-4 border-t pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Identity Requirements (Quiz)</label>
+            <div className="mt-5 rounded-md border border-slate-300 bg-slate-50 p-4">
+              <label className="mb-3 block text-sm font-semibold text-slate-700">Identity Requirements (Quiz)</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <label className="inline-flex items-center gap-2 text-sm">
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
                     checked={!!formSettings.identitySchema?.requireName}
@@ -457,7 +464,7 @@ export default function FormBuilder() {
                   />
                   Require Name
                 </label>
-                <label className="inline-flex items-center gap-2 text-sm">
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
                     checked={!!formSettings.identitySchema?.requireEmail}
@@ -471,7 +478,7 @@ export default function FormBuilder() {
                   />
                   Require Email
                 </label>
-                <label className="inline-flex items-center gap-2 text-sm">
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
                     checked={!!formSettings.identitySchema?.requireStudentId}
@@ -491,10 +498,10 @@ export default function FormBuilder() {
           
           <div className="flex flex-wrap gap-2 mt-4">
             {formType === 'quiz' && (
-              <div className="w-full mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                <h4 className="text-sm font-medium mb-2">Quiz Timer</h4>
+              <div className="mt-2 w-full rounded-md border border-slate-300 bg-slate-50 p-4">
+                <h4 className="mb-2 text-sm font-semibold text-slate-800">Quiz Timer</h4>
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="flex items-center gap-2 text-sm text-slate-700">
                     <input
                       type="checkbox"
                       checked={!!formSettings?.timer?.enabled}
@@ -507,7 +514,7 @@ export default function FormBuilder() {
                   </label>
                   {formSettings?.timer?.enabled && (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">Duration</span>
+                      <span className="text-sm text-slate-700">Duration</span>
                       <input
                         type="number"
                         min={1}
@@ -517,9 +524,9 @@ export default function FormBuilder() {
                           ...formSettings,
                           timer: { enabled: true, minutes: Math.max(1, Math.min(480, parseInt(e.target.value || '30'))) }
                         })}
-                        className="w-20 p-1.5 text-sm border border-gray-300 rounded-md"
+                        className="w-20 rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
                       />
-                      <span className="text-xs text-gray-600">minutes</span>
+                      <span className="text-xs text-slate-600">minutes</span>
                     </div>
                   )}
                 </div>
@@ -528,10 +535,10 @@ export default function FormBuilder() {
             {/* Publish toggle button */}
             <button
               onClick={handlePublishToggle}
-              className={`px-3 py-1.5 text-xs border rounded-md focus:ring-2 focus:ring-gray-500 cursor-pointer z-10 relative ${
+              className={`cursor-pointer rounded-md border px-3 py-2 text-xs font-semibold transition-colors ${
                 formStatus === 'published' 
-                  ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' 
-                  : 'border-gray-300 hover:bg-gray-50'
+                  ? 'border-emerald-700 bg-emerald-700 text-white hover:bg-emerald-800' 
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
               }`}
               type="button"
               style={{ pointerEvents: 'auto' }}
@@ -540,10 +547,10 @@ export default function FormBuilder() {
             </button>
             <button
               onClick={toggleEndless}
-              className={`px-3 py-1.5 text-xs border rounded-md ${
+              className={`rounded-md border px-3 py-2 text-xs font-semibold transition-colors ${
                 formSettings.endless 
-                  ? 'bg-gray-800 text-white border-gray-800' 
-                  : 'border-gray-300 hover:bg-gray-50'
+                  ? 'border-blue-700 bg-blue-700 text-white' 
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
               }`}
               type="button"
             >
@@ -552,17 +559,17 @@ export default function FormBuilder() {
           </div>
         </div>
         
-        <div className="mt-6 flex justify-between">
+        <div className="mt-8 flex justify-between">
           <button
             onClick={goToPreviousStep}
-            className="px-5 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            className={UI.ghostBtn}
             type="button"
           >
             Back
           </button>
           <button
             onClick={goToNextStep}
-            className="px-5 py-1.5 text-sm bg-gray-800 text-white rounded-md hover:bg-gray-700"
+            className={UI.primaryBtn}
             type="button"
           >
             Next
@@ -575,10 +582,10 @@ export default function FormBuilder() {
   // Render step 3: Form questions
   const renderFormQuestions = () => {
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-5">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Form Questions</h2>
-          <p className="text-sm text-gray-600">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6">
+          <h2 className="mb-1 text-2xl font-bold tracking-tight text-slate-900">Form Questions</h2>
+          <p className="text-sm text-slate-600">
             {formType === 'quiz' ? 
               'Create quiz questions for your assessment' : 
               'Add questions to your form'}
@@ -587,9 +594,9 @@ export default function FormBuilder() {
 
         {/* Quiz total points summary */}
         {formType === 'quiz' && (
-          <div className="bg-white rounded-lg shadow-sm mb-4 p-4 flex items-center justify-between border-l-4 border-blue-500">
-            <div className="text-sm text-gray-700">Total Points</div>
-            <div className="text-lg font-semibold text-blue-600 transition-colors duration-200">
+          <div className="mb-4 flex items-center justify-between rounded-md border border-slate-300 bg-slate-50 p-4">
+            <div className="text-sm font-semibold text-slate-700">Total Points</div>
+            <div className="text-2xl font-bold text-blue-700 transition-colors duration-200">
               {totalPoints}
             </div>
           </div>
@@ -599,14 +606,14 @@ export default function FormBuilder() {
         {formFields.map((field, index) => (
           <div 
             key={field.id} 
-            className={`bg-white rounded-lg shadow-sm mb-3 transition-all ${
+            className={`mb-4 rounded-md border bg-white transition-colors ${
               activeField === field.id 
-                ? 'ring-2 ring-gray-400' 
-                : 'hover:shadow-md'
+                ? 'border-blue-600 ring-1 ring-blue-200' 
+                : 'border-slate-300 hover:border-slate-400'
             }`}
             onClick={() => setActiveField(field.id)}
           >
-            <div className="p-4">
+            <div className="p-5">
               <div className="flex items-start">
                 <div className="flex-1">
                   <div className="flex items-center mb-2">
@@ -615,7 +622,7 @@ export default function FormBuilder() {
                       value={field.label}
                       onChange={(e) => updateField(field.id, { label: e.target.value })}
                       placeholder={`Question ${index + 1}`}
-                      className="text-base font-medium w-full border-none focus:outline-none focus:ring-0"
+                      className="w-full border-none bg-transparent text-base font-semibold text-slate-900 focus:outline-none focus:ring-0"
                     />
                     {activeField === field.id && (
                       <div className="ml-2 flex items-center">
@@ -626,7 +633,7 @@ export default function FormBuilder() {
                           onChange={(e) => updateField(field.id, { required: e.target.checked })}
                           className="mr-1"
                         />
-                        <label htmlFor={`required-${field.id}`} className="text-xs text-gray-600">Required</label>
+                        <label htmlFor={`required-${field.id}`} className="text-xs font-medium text-slate-600">Required</label>
                       </div>
                     )}
                   </div>
@@ -637,7 +644,7 @@ export default function FormBuilder() {
                       value={field.helpText || ''}
                       onChange={(e) => updateField(field.id, { helpText: e.target.value })}
                       placeholder="Help text (optional)"
-                      className="text-xs text-gray-500 w-full mb-3 border-none focus:outline-none focus:ring-0"
+                      className="mb-3 w-full border-none bg-transparent text-xs text-slate-500 focus:outline-none focus:ring-0"
                     />
                   )}
 
@@ -646,7 +653,7 @@ export default function FormBuilder() {
                     <input
                       type="text"
                       placeholder={field.placeholder || "Short text answer"}
-                      className="mt-1 w-full p-1.5 text-sm border border-gray-300 rounded-md bg-gray-50"
+                      className={`${UI.subtleInput} mt-1`}
                       disabled
                     />
                   )}
@@ -654,7 +661,7 @@ export default function FormBuilder() {
                   {field.type === 'long_text' && (
                     <textarea
                       placeholder={field.placeholder || "Long text answer"}
-                      className="mt-1 w-full p-1.5 text-sm border border-gray-300 rounded-md bg-gray-50 resize-none overflow-hidden"
+                      className={`${UI.subtleInput} mt-1 resize-none overflow-hidden`}
                       rows={2}
                       disabled
                       style={{ minHeight: '2.5rem' }}
@@ -665,7 +672,7 @@ export default function FormBuilder() {
                     <input
                       type="email"
                       placeholder={field.placeholder || "example@email.com"}
-                      className="mt-1 w-full p-1.5 text-sm border border-gray-300 rounded-md bg-gray-50"
+                      className={`${UI.subtleInput} mt-1`}
                       disabled
                     />
                   )}
@@ -674,7 +681,7 @@ export default function FormBuilder() {
                     <input
                       type="number"
                       placeholder={field.placeholder || "0"}
-                      className="mt-1 w-full p-1.5 text-sm border border-gray-300 rounded-md bg-gray-50"
+                      className={`${UI.subtleInput} mt-1`}
                       disabled
                     />
                   )}
@@ -682,14 +689,14 @@ export default function FormBuilder() {
                   {field.type === 'date' && (
                     <input
                       type="date"
-                      className="mt-1 w-full p-1.5 text-sm border border-gray-300 rounded-md bg-gray-50"
+                      className={`${UI.subtleInput} mt-1`}
                       disabled
                     />
                   )}
 
                   {field.type === 'dropdown' && (
                     <div className="mt-1">
-                      <select className="w-full p-1.5 text-sm border border-gray-300 rounded-md bg-gray-50" disabled>
+                      <select className={UI.subtleInput} disabled>
                         <option value="">Select an option</option>
                         {field.options?.map((option, i) => (
                           <option key={i} value={option}>{option}</option>
@@ -704,7 +711,7 @@ export default function FormBuilder() {
                                 type="text"
                                 value={option}
                                 onChange={(e) => updateOption(field.id, i, e.target.value)}
-                                className="flex-1 p-1 text-sm border border-gray-300 rounded-md"
+                                className="flex-1 rounded-lg border border-slate-300 px-2 py-1 text-sm"
                               />
                               <button 
                                 onClick={(e) => { 
@@ -746,7 +753,7 @@ export default function FormBuilder() {
                                 type="text"
                                 value={option}
                                 onChange={(e) => updateOption(field.id, i, e.target.value)}
-                                className="flex-1 p-1 text-sm border border-gray-300 rounded-md"
+                                className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm"
                               />
                               <button 
                                 onClick={(e) => {
@@ -795,7 +802,7 @@ export default function FormBuilder() {
                                 type="text"
                                 value={option}
                                 onChange={(e) => updateOption(field.id, i, e.target.value)}
-                                className="flex-1 p-1 text-sm border border-gray-300 rounded-md"
+                                className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm"
                               />
                               <button 
                                 onClick={(e) => {
@@ -899,7 +906,7 @@ export default function FormBuilder() {
                           max={1000}
                           value={field.quiz?.points ?? 1}
                           onChange={(e) => updateField(field.id, { quiz: { ...(field.quiz || {}), points: Math.max(0, parseInt(e.target.value || '0')) } })}
-                          className="w-20 p-1.5 text-sm border border-gray-300 rounded-md"
+                          className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                         />
                       </div>
                     </div>
@@ -916,7 +923,7 @@ export default function FormBuilder() {
                         moveField(field.id, 'up');
                       }}
                       disabled={index === 0}
-                      className={`p-0.5 rounded-full ${index === 0 ? 'text-gray-300' : 'hover:bg-gray-100'}`}
+                      className={`rounded-full p-1 ${index === 0 ? 'text-slate-300' : 'text-slate-500 hover:bg-slate-100'}`}
                       type="button"
                     >
                       <ChevronUp size={16} />
@@ -928,7 +935,7 @@ export default function FormBuilder() {
                         moveField(field.id, 'down');
                       }}
                       disabled={index === formFields.length - 1}
-                      className={`p-0.5 rounded-full ${index === formFields.length - 1 ? 'text-gray-300' : 'hover:bg-gray-100'}`}
+                      className={`rounded-full p-1 ${index === formFields.length - 1 ? 'text-slate-300' : 'text-slate-500 hover:bg-slate-100'}`}
                       type="button"
                     >
                       <ChevronDown size={16} />
@@ -939,7 +946,7 @@ export default function FormBuilder() {
                         e.stopPropagation();
                         duplicateField(field.id);
                       }}
-                      className="p-0.5 rounded-full hover:bg-gray-100"
+                      className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
                       type="button"
                     >
                       <CopyPlus size={16} />
@@ -951,7 +958,7 @@ export default function FormBuilder() {
                         deleteField(field.id);
                       }}
                       disabled={formFields.length === 1}
-                      className={`p-0.5 rounded-full ${formFields.length === 1 ? 'text-gray-300' : 'text-red-500 hover:bg-gray-100'}`}
+                      className={`rounded-full p-1 ${formFields.length === 1 ? 'text-slate-300' : 'text-red-500 hover:bg-red-50'}`}
                       type="button"
                     >
                       <Trash2 size={16} />
@@ -962,7 +969,7 @@ export default function FormBuilder() {
             </div>
 
             {activeField === field.id && (
-              <div className="bg-gray-50 border-t border-gray-200 p-2">
+              <div className="border-t border-slate-200 bg-slate-50/70 p-3">
                 <div className="flex flex-wrap gap-1">
                       {(formType === 'quiz'
                         ? FIELD_TYPES.filter(t => ['radio', 'checkbox'].includes(t.value))
@@ -996,10 +1003,10 @@ export default function FormBuilder() {
                           });
                         }
                       }}
-                      className={`py-0.5 px-2 text-xs rounded-md ${
+                      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                         field.type === type.value 
-                          ? 'bg-gray-800 text-white' 
-                          : 'bg-white border border-gray-300 hover:bg-gray-50'
+                          ? 'border border-blue-700 bg-blue-700 text-white' 
+                          : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                       }`}
                       type="button"
                     >
@@ -1019,7 +1026,7 @@ export default function FormBuilder() {
               e.preventDefault();
               addField('short_text');
             }}
-            className="flex items-center bg-gray-800 text-white px-3 py-1.5 text-sm rounded-md hover:bg-gray-700 transition-colors"
+            className={UI.primaryBtn}
             type="button"
           >
             <Plus size={16} className="mr-1" />
@@ -1027,10 +1034,10 @@ export default function FormBuilder() {
           </button>
         </div>
 
-        <div className="mt-6 flex justify-between">
+        <div className="mt-8 flex justify-between">
           <button
             onClick={goToPreviousStep}
-            className="px-5 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            className={UI.ghostBtn}
             type="button"
           >
             Back
@@ -1038,7 +1045,7 @@ export default function FormBuilder() {
           <button
             onClick={saveForm}
             disabled={saving}
-            className="px-5 py-1.5 text-sm bg-gray-800 text-white rounded-md hover:bg-gray-700 flex items-center"
+            className={`${UI.primaryBtn} disabled:cursor-not-allowed disabled:opacity-60`}
             type="button"
           >
             {saving ? "Saving..." : "Save Form"}
@@ -1049,57 +1056,102 @@ export default function FormBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white text-gray-900 shadow-sm py-2 px-3 mb-4 border-b border-gray-200">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button 
+    <div className="form-luxe min-h-screen bg-slate-100">
+      <div className="container mx-auto mb-8 mt-6 max-w-6xl px-4">
+        <div className="mx-auto max-w-4xl rounded-lg border-2 border-slate-300 bg-white">
+          <div className="flex flex-col gap-4 border-b border-slate-300 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5">
+            <div className="min-w-0">
+              <button
                 onClick={() => router.push("/dashboard/forms")}
-                className="p-1.5 hover:bg-gray-100 rounded-full mr-2"
+                className="mb-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-slate-700"
                 type="button"
               >
-                <ArrowLeft size={18} />
+                <ArrowLeft size={14} /> Back to Forms
               </button>
-              <h1 className="text-lg font-medium">Create New Form</h1>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-white">
+                  <Menu size={14} />
+                </span>
+                <div className="min-w-0">
+                  <h1 className="truncate text-xl font-bold tracking-tight text-slate-900">{formTitle || 'Create New Form'}</h1>
+                  <p className="text-xs font-medium text-slate-500">Structured Builder • Step {currentStep} of 3</p>
+                </div>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
+
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              <span className="rounded-md border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                {formStatus}
+              </span>
               <button
                 onClick={handlePreview}
-                className="p-1.5 hover:bg-gray-100 rounded-full"
+                className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 type="button"
               >
-                <Eye size={18} />
+                <Eye size={16} /> Preview
               </button>
             </div>
           </div>
-        </div>
-      </header>
 
-      {/* Progress indicator */}
-      <div className="container mx-auto mb-5">
-        <div className="flex items-center justify-between max-w-3xl mx-auto">
-          <div className="flex-1">
-            <div className={`h-1.5 rounded-full ${currentStep >= 1 ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
-            <p className={`text-xs mt-1 ${currentStep === 1 ? 'font-medium' : ''}`}>Form Type</p>
-          </div>
-          <div className="w-6"></div>
-          <div className="flex-1">
-            <div className={`h-1.5 rounded-full ${currentStep >= 2 ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
-            <p className={`text-xs mt-1 ${currentStep === 2 ? 'font-medium' : ''}`}>Details</p>
-          </div>
-          <div className="w-6"></div>
-          <div className="flex-1">
-            <div className={`h-1.5 rounded-full ${currentStep >= 3 ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
-            <p className={`text-xs mt-1 ${currentStep === 3 ? 'font-medium' : ''}`}>Questions</p>
+          <div className="px-4 py-4 md:px-5">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Builder Timeline</p>
+              <p className="text-xs font-semibold text-slate-700">Complete all steps to publish</p>
+            </div>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-3 md:gap-3">
+              {[
+                { id: 1, label: 'Form Type', hint: 'Choose structure' },
+                { id: 2, label: 'Details', hint: 'Set behavior' },
+                { id: 3, label: 'Questions', hint: 'Build content' },
+              ].map((step) => {
+                const completed = currentStep > step.id;
+                const active = currentStep === step.id;
+                const locked = step.id > currentStep + 1;
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => !locked && setCurrentStep(step.id)}
+                    disabled={locked}
+                    className={`w-full rounded-md border px-3 py-2 text-left transition-colors ${
+                      active
+                        ? 'border-blue-700 bg-blue-50'
+                        : completed
+                          ? 'border-emerald-600 bg-emerald-50'
+                          : 'border-slate-300 bg-white'
+                    } ${locked ? 'cursor-not-allowed opacity-60' : 'hover:bg-slate-50'}`}
+                    type="button"
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <span
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold ${
+                          active
+                            ? 'bg-blue-700 text-white'
+                            : completed
+                              ? 'bg-emerald-700 text-white'
+                              : 'bg-slate-200 text-slate-600'
+                        }`}
+                      >
+                        {step.id}
+                      </span>
+                      <p
+                        className={`text-xs font-semibold uppercase tracking-wide ${
+                          active ? 'text-blue-800' : completed ? 'text-emerald-800' : 'text-slate-700'
+                        }`}
+                      >
+                        {step.label}
+                      </p>
+                    </div>
+                    <p className="text-xs text-slate-500">{step.hint}</p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="container mx-auto pb-12">
+      <div className="container mx-auto max-w-6xl px-4 pb-14">
         {currentStep === 1 && renderFormTypeSelection()}
         {currentStep === 2 && renderFormDetails()}
         {currentStep === 3 && renderFormQuestions()}

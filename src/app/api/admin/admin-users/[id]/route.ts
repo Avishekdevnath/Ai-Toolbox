@@ -18,7 +18,7 @@ export async function DELETE(
     }
 
     // Only super_admin can delete admin users
-    if (adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -29,7 +29,7 @@ export async function DELETE(
     const db = await getDatabase();
 
     // Find admin user
-    const user = await db.collection('adminusers').findOne({
+    const user = await db.collection('authusers').findOne({
       $or: [
         { _id: new ObjectId(userId) },
         { email: userId }
@@ -52,15 +52,8 @@ export async function DELETE(
     }
 
     // Prevent deletion of super_admin users
-    if (user.role === 'super_admin') {
-      return NextResponse.json(
-        { success: false, error: 'Cannot delete super admin users' },
-        { status: 403 }
-      );
-    }
-
     // Delete admin user
-    await db.collection('adminusers').deleteOne({ _id: user._id });
+    await db.collection('authusers').deleteOne({ _id: user._id });
 
     return NextResponse.json({
       success: true,

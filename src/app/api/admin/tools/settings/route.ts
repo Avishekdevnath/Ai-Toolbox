@@ -9,7 +9,7 @@ import { verifyAccessToken } from '@/lib/auth/jwt';
 export async function GET(req: NextRequest) {
   const token = req.cookies.get('user_session')?.value;
   const claims = token ? verifyAccessToken(token) : null;
-  if (!claims || (claims.role !== 'admin' && claims.role !== 'super_admin')) {
+  if (!claims || (claims.role !== 'admin' )) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

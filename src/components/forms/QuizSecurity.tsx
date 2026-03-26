@@ -206,7 +206,7 @@ export default function QuizSecurity({
   const showSecurityWarnings = warningCount > 0 || !windowFocused;
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`form-luxe space-y-4 ${className}`}>
       {/* Security Status Bar */}
       <Card className={`border-l-4 ${showSecurityWarnings ? 'border-l-red-500' : 'border-l-green-500'}`}>
         <CardContent className="p-4">

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { getShareBaseUrl } from '@/utils/url';
 import { 
   Share2, 
   Copy, 
@@ -38,7 +39,9 @@ export default function ToolSharing({
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  const shareUrl = `${window.location.origin}/tools/${toolSlug}`;
+  const getShareBase = () => getShareBaseUrl();
+
+  const shareUrl = `${getShareBase()}/tools/${toolSlug}`;
   const shareText = `Check out this amazing ${toolName} tool! ${toolDescription}`;
 
   const copyToClipboard = async () => {

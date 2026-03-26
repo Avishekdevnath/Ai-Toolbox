@@ -14,7 +14,6 @@ import {
   Trash2, 
   Mail, 
   Calendar, 
-  Crown, 
   Shield, 
   User,
   ChevronLeft,
@@ -22,7 +21,6 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  Lock,
   Unlock
 } from 'lucide-react';
 import Modal, { ModalHeader, ModalContent, ModalFooter } from '@/components/ui/modal';
@@ -32,7 +30,8 @@ interface AdminUser {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'super_admin' | 'admin' | 'moderator';
+  role: 'admin' | 'user';
+  userType?: string;
   permissions: string[];
   isActive: boolean;
   createdAt: string;
@@ -56,7 +55,7 @@ export default function AdminUserManagement() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('admin');
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -111,7 +110,7 @@ export default function AdminUserManagement() {
   const handleClearFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
-    setRoleFilter('');
+    setRoleFilter('admin');
     setSortBy('createdAt');
     setSortOrder('desc');
     setCurrentPage(1);
@@ -175,12 +174,8 @@ export default function AdminUserManagement() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'super_admin':
-        return <Crown className="w-4 h-4 text-yellow-500" />;
       case 'admin':
         return <Shield className="w-4 h-4 text-blue-500" />;
-      case 'moderator':
-        return <User className="w-4 h-4 text-green-500" />;
       default:
         return <User className="w-4 h-4 text-gray-500" />;
     }
@@ -283,10 +278,7 @@ export default function AdminUserManagement() {
               onChange={(e) => setRoleFilter(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Roles</option>
-              <option value="super_admin">Super Admin</option>
               <option value="admin">Admin</option>
-              <option value="moderator">Moderator</option>
             </select>
 
             <div className="flex gap-2">
@@ -454,8 +446,8 @@ export default function AdminUserManagement() {
                                 <Unlock className="w-3 h-3" />
                               </Button>
                             )}
-                            {/* Delete button - only for non-super_admin */}
-                            {user.role !== 'super_admin' && (
+                            {/* Delete button */}
+                            {(
                               <Button
                                 variant="outline"
                                 size="sm"

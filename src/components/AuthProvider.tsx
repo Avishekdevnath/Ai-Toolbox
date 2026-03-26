@@ -82,7 +82,13 @@ function AuthStateBridge({ children, initialUser }: { children: React.ReactNode;
       try { await dispatch(loginThunk({ identifier, password })).unwrap(); return { success: true }; }
       catch (e: any) { return { success: false, message: e.message }; }
     },
-    logout: async () => { try { await dispatch(logoutThunk()).unwrap(); } catch {} },
+    logout: async () => {
+      // Clear auth state in UI immediately (navbar/header updates before redirect)
+      dispatch(setUser(null));
+      dispatch(setLoading(false));
+
+      try { await dispatch(logoutThunk()).unwrap(); } catch {}
+    },
     register: async (payload) => {
       try { await dispatch(registerThunk(payload as any)).unwrap(); return { success: true }; }
       catch (e: any) { return { success: false, message: e.message }; }

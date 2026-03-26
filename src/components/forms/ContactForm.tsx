@@ -127,7 +127,7 @@ export default function ContactForm({
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`form-luxe space-y-6 ${className}`}>
       {showTitle && (
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>

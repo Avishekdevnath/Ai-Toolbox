@@ -39,7 +39,7 @@ export default function FormPreview() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="form-luxe flex items-center justify-center min-h-screen bg-gray-50 p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
           <p className="text-gray-600">Loading form preview...</p>
@@ -50,7 +50,7 @@ export default function FormPreview() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="form-luxe flex items-center justify-center min-h-screen bg-gray-50 p-4">
         <div className="text-center max-w-md">
           <div className="bg-red-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,7 +71,7 @@ export default function FormPreview() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="form-luxe min-h-screen bg-gray-50">
       {/* Preview header */}
       <header className="bg-black text-white shadow-sm py-3 px-4 mb-6">
         <div className="container mx-auto">

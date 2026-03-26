@@ -18,7 +18,7 @@ export async function POST(
     }
 
     // Only super_admin can perform actions on admin users
-    if (adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -40,7 +40,7 @@ export async function POST(
     const isActive = action === 'activate';
 
     // Find admin user
-    const user = await db.collection('adminusers').findOne({
+    const user = await db.collection('authusers').findOne({
       $or: [
         { _id: new ObjectId(userId) },
         { email: userId }
@@ -73,15 +73,15 @@ export async function POST(
       updateData.lockUntil = null;
     }
 
-    await db.collection('adminusers').updateOne(
+    await db.collection('authusers').updateOne(
       { _id: user._id },
       { $set: updateData }
     );
 
     // Get updated user
-    const updatedUser = await db.collection('adminusers').findOne(
+    const updatedUser = await db.collection('authusers').findOne(
       { _id: user._id },
-      { projection: { password: 0 } }
+      { projection: { passwordHash: 0 } }
     );
 
     return NextResponse.json({

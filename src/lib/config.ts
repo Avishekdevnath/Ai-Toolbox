@@ -99,8 +99,9 @@ export const config: Config = {
     temperature: parseFloat(process.env.GOOGLE_AI_TEMPERATURE || '0.7'),
   },
   
+  // MONGODB_URI is the only required variable — all others are optional with defaults
   mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-toolbox',
+    uri: process.env.MONGODB_URI || '',
     dbName: process.env.MONGODB_DB_NAME || 'ai-toolbox',
     options: {
       maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE || '10'),

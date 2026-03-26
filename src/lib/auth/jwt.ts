@@ -7,7 +7,7 @@ export interface JwtUserClaims {
   username: string;
   email: string;
   name: string;
-  role: 'admin' | 'user' | 'super_admin';
+  role: 'admin' | 'user';
   iat: number;
 }
 

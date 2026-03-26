@@ -8,12 +8,21 @@ export async function POST(request: NextRequest) {
       message: 'Admin logged out successfully'
     });
 
-    // Clear the admin session cookie
-    response.cookies.set('admin_session', '', {
+    // Clear the unified user session cookie (current system)
+    response.cookies.set('user_session', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 0, // Expire immediately
+      path: '/'
+    });
+
+    // Backward compatibility: also clear legacy admin_session cookie if present
+    response.cookies.set('admin_session', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
       path: '/'
     });
 

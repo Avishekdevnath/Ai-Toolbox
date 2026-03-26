@@ -230,7 +230,7 @@ export async function DELETE(
     }
 
     // Only super_admin can delete users
-    if (adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -262,7 +262,7 @@ export async function DELETE(
     }
 
     // Prevent deletion of admin users
-    if (user.role === 'super_admin' || user.role === 'admin') {
+    if (user.role === 'admin') {
       return NextResponse.json(
         { success: false, error: 'Cannot delete admin users' },
         { status: 403 }

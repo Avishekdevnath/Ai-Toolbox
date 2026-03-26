@@ -457,7 +457,7 @@ export default function QuizResults({
   const scoreBadge = getScoreBadge(percentage);
 
   return (
-    <div className={`h-screen ${themeClasses.container} flex items-center justify-center p-2`}>
+    <div className={`form-luxe h-screen ${themeClasses.container} flex items-center justify-center p-2`}>
       <div className="w-full max-w-xl">
         {/* Compact Results Design */}
         <div id="quiz-result-card" className="relative bg-white rounded-lg shadow-2xl border-2 border-gray-300 overflow-hidden">

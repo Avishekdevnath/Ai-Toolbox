@@ -170,7 +170,7 @@ export default function BulkOperations({
 
   if (forms.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={`form-luxe ${className}`}>
         <CardContent className="py-12">
           <div className="text-center">
             <Archive className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -183,7 +183,7 @@ export default function BulkOperations({
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`form-luxe space-y-6 ${className}`}>
       {/* Selection Summary */}
       {selectedForms.size > 0 && (
         <Card className="border-blue-200 bg-blue-50">

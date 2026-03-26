@@ -44,12 +44,27 @@ const initialState: AuthState = {
 };
 
 export const fetchSession = createAsyncThunk('auth/fetchSession', async () => {
+  console.log('🔄 [fetchSession] Checking for existing session...');
+  
   if (typeof window === 'undefined') {
+    console.log('🔄 [fetchSession] Server-side render, skipping');
     return null;
   }
 
+  console.log('🔄 [fetchSession] Calling getClientSession()...');
   const session = getClientSession();
-  return (session?.isAuthenticated ? session.user : null) as AuthUser | null;
+  
+  if (session?.isAuthenticated) {
+    console.log('🔄 [fetchSession] Found session:', {
+      email: session.user.email,
+      role: session.user.role,
+      isAdmin: session.isAdmin
+    });
+    return session.user;
+  }
+  
+  console.log('🔄 [fetchSession] No valid session found');
+  return null;
 });
 
 export const loginThunk = createAsyncThunk(
@@ -83,15 +98,26 @@ export const loginThunk = createAsyncThunk(
 );
 
 export const logoutThunk = createAsyncThunk('auth/logout', async () => {
+  console.log('🔓 [logoutThunk] Starting logout...');
+  
   try {
+    console.log('🔓 [logoutThunk] Calling /api/auth/logout...');
     const res = await fetch('/api/auth/logout', { method: 'POST' });
     const data = await res.json();
 
+    console.log('🔓 [logoutThunk] API Response:', { status: res.status, success: data?.success, message: data?.message });
+    
     if (!res.ok || !data.success) {
-      throw new Error(data.message || 'Logout failed');
+      console.warn('⚠️  [logoutThunk] Logout API failed:', data.message || 'Unknown error');
+      // Continue anyway - we still need to clear local storage
     }
+  } catch (error) {
+    console.error('❌ [logoutThunk] Logout request error:', error);
+    // Continue anyway - we still need to clear local storage
   } finally {
+    console.log('🔓 [logoutThunk] Calling signOutClient()...');
     signOutClient();
+    console.log('🔓 [logoutThunk] Completed. Returning null.');
   }
 
   return null as AuthUser | null;

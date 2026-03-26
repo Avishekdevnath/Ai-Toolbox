@@ -279,7 +279,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
   // Show quiz start button for quizzes (always require explicit start)
   if (isQuiz && !quizStarted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-2">
+      <div className="form-luxe min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-2">
         <div className="w-full max-w-md">
           {/* Header Section */}
           <div className="text-center mb-4">
@@ -405,7 +405,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
 
     if (showCorrectAnswers) {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
+        <div className="form-luxe min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
           <CorrectAnswersView
             formData={schema}
             answers={submittedAnswers}
@@ -417,7 +417,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
     }
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
+      <div className="form-luxe min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
         <QuizResults
           score={score}
           maxScore={max}
@@ -440,7 +440,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
 
   if (result && !isQuiz && submittedSnapshot) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
+      <div className="form-luxe min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 md:p-6">
         <Card className="w-full max-w-3xl md:max-w-4xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">Thank you!</CardTitle>
@@ -488,7 +488,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
 
   if (!isQuiz) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center p-4 md:p-6 ${themeClasses.container}`}>
+      <div className={`form-luxe min-h-screen flex flex-col items-center justify-center p-4 md:p-6 ${themeClasses.container}`}>
         <Card className={`w-full max-w-3xl md:max-w-4xl shadow-xl ${themeClasses.card}`}>
           <CardHeader>
             <CardTitle className={themeClasses.title}>{schema.title}</CardTitle>
@@ -616,7 +616,7 @@ export default function PublicFormRenderer({ schema }: { schema: Schema }) {
   }
 
   return (
-    <div className={`max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4 space-y-6 relative ${themeClasses.container}`}>
+    <div className={`form-luxe max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4 space-y-6 relative ${themeClasses.container}`}>
       {/* Watermark */}
       {isQuiz && quizStarted && (
         <div className="pointer-events-none select-none fixed inset-0 z-30 overflow-hidden" style={{opacity:0.07}}>

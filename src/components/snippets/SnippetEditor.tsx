@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { getShareBaseUrl } from '@/utils/url';
 import { Input } from '@/components/ui/input';
 import LanguageSelect from './LanguageSelect';
 import CodeBlock from './CodeBlock';
@@ -46,10 +47,12 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastCursorPosition = useRef<number>(0);
 
+  const getShareBase = () => getShareBaseUrl();
+
   // Set share URL on mount
   useEffect(() => {
     if (initialData?.slug) {
-      setShareUrl(`${window.location.origin}/s/${initialData.slug}`);
+      setShareUrl(`${getShareBase()}/s/${initialData.slug}`);
     }
   }, [initialData?.slug]);
 

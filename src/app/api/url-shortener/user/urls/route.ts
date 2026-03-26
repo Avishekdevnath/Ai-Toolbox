@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
-import { UserAuthService } from '@/lib/userAuthService';
+import { getShareBaseUrl } from '@/utils/url';import { UserAuthService } from '@/lib/userAuthService';
 import { isUrlExpired } from '@/lib/urlShortenerUtils';
 import { ShortenedUrl } from '@/schemas/urlShortenerSchema';
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     // Add computed fields
     const processedUrls = urls.map(url => ({
       ...url,
-      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`,
+      shortenedUrl: `${getShareBaseUrl()}/${url.shortCode}`,
       isExpired: isUrlExpired(url)
     }));
 
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
     const responseData = {
       ...shortenedUrl,
       _id: result.insertedId,
-      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`
+      shortenedUrl: `${getShareBaseUrl()}/${shortCode}`
     };
 
     return NextResponse.json({

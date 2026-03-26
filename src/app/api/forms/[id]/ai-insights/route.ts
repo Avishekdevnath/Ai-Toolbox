@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = request.cookies.get('auth_token')?.value;
+    const token = request.cookies.get('user_session')?.value;
     const claims = token ? verifyAccessToken(token) : null;
     if (!claims?.id) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 

@@ -160,13 +160,13 @@ export async function GET(request: NextRequest) {
     // Process top URLs
     const processedTopUrls = topUrls.map(url => ({
       ...url,
-      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`
+      shortenedUrl: `${process.env.NEXT_PUBLIC_SHORT_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`
     }));
 
     // Process recent URLs
     const processedRecentUrls = recentUrls.map(url => ({
       ...url,
-      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`
+      shortenedUrl: `${process.env.NEXT_PUBLIC_SHORT_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`
     }));
 
     // Process clicks over time

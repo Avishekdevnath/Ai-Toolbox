@@ -165,7 +165,7 @@ export default function FormFieldEditor({ field, onChange, onDelete, isQuiz = fa
   };
 
   return (
-    <Card className="w-full">
+    <Card className="form-luxe form-luxe-panel w-full">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

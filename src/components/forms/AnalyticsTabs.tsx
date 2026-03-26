@@ -13,7 +13,7 @@ interface AnalyticsTabsProps {
 
 export default function AnalyticsTabs({ formId }: AnalyticsTabsProps) {
   return (
-    <Tabs defaultValue="overview" className="w-full">
+    <Tabs defaultValue="overview" className="form-luxe w-full">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="overview" className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
@@ -26,7 +26,7 @@ export default function AnalyticsTabs({ formId }: AnalyticsTabsProps) {
       </TabsList>
 
       <TabsContent value="overview" className="space-y-6">
-        <Suspense fallback={
+          <Suspense fallback={
           <Card>
             <CardContent className="flex items-center justify-center py-12">
               <div className="text-center">
@@ -36,7 +36,7 @@ export default function AnalyticsTabs({ formId }: AnalyticsTabsProps) {
             </CardContent>
           </Card>
         }>
-          <AnalyticsOverview formId={formId} />
+            <AnalyticsOverview formId={formId} className="form-luxe" />
         </Suspense>
       </TabsContent>
 

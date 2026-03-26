@@ -1,82 +1,57 @@
 "use client";
-
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import PublicFormRenderer from '@/components/forms/PublicFormRenderer';
+import { useParams } from 'next/navigation';
+import { Loader2, AlertCircle } from 'lucide-react';
+import PublicFormShell from '@/components/forms/public/PublicFormShell';
+import { FormSchema } from '@/types/forms';
 
 export default function PublicFormPage() {
   const params = useParams();
   const formId = params.id;
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [formSchema, setFormSchema] = useState(null);
-  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [schema, setSchema] = useState<FormSchema | null>(null);
 
   useEffect(() => {
-    const fetchFormSchema = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/forms/${formId}/schema`, { cache: 'no-store' });
-        
-        if (!res.ok) {
-          if (res.status === 404) {
-            setError("This form doesn't exist or has been removed.");
-          } else if (res.status === 403) {
-            setError("This form is not currently available.");
-          } else {
-            setError("An error occurred while loading this form.");
-          }
-          return;
-        }
-        
-        const data = await res.json();
+    fetch(`/api/forms/${formId}/schema`)
+      .then(res => {
+        if (!res.ok) throw new Error(
+          res.status === 404
+            ? "This form doesn't exist or has been removed."
+            : "This form is not currently available."
+        );
+        return res.json();
+      })
+      .then(data => {
         if (data.success && data.data) {
-          setFormSchema(data.data);
+          setSchema({ ...data.data, settings: { displayMode: 'all', ...data.data.settings } });
         } else {
           setError(data.error || "Failed to load form");
         }
-      } catch (err) {
-        console.error("Error fetching form schema:", err);
-        setError("An error occurred while loading this form.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchFormSchema();
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
   }, [formId]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="text-center">
-          <Loader2 className="animate-spin h-12 w-12 mx-auto mb-4 text-black dark:text-white" />
-          <p className="text-gray-700 dark:text-gray-300">Loading form...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (schema) document.title = schema.title;
+  }, [schema]);
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="text-center max-w-md">
-          <div className="bg-red-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <AlertCircle size={32} className="text-red-500" />
-          </div>
-          <h2 className="text-xl font-bold text-red-600 mb-2">Error</h2>
-          <p className="text-gray-700 dark:text-gray-300">{error}</p>
-          <button
-            className="mt-6 px-4 py-2 bg-black text-white dark:bg-white dark:text-black rounded-md"
-            onClick={() => router.back()}
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+    </div>
+  );
 
-  return <PublicFormRenderer schema={{ ...formSchema }} />;
+  if (error || !schema) return (
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="text-center max-w-sm">
+        <AlertCircle size={40} className="text-red-400 mx-auto mb-3" />
+        <h2 className="font-semibold text-slate-800 mb-1">Form unavailable</h2>
+        <p className="text-[14px] text-slate-500">{error}</p>
+      </div>
+    </div>
+  );
+
+  return <PublicFormShell schema={schema} />;
 }
