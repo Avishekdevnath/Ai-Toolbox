@@ -40,6 +40,7 @@ export const adminNavItems: AdminNavItem[] = [
     name: 'User Management', href: '/admin/users', icon: Users, permission: 'manage_users',
     children: [
       { name: 'All Users', href: '/admin/users', icon: Users },
+      { name: 'Pro Users', href: '/admin/users/pro', icon: Users },
       { name: 'Admin Users', href: '/admin/admin-users', icon: Shield },
       { name: 'User Analytics', href: '/admin/users/analytics', icon: BarChart3 },
       { name: 'User Roles', href: '/admin/users/roles', icon: Shield },

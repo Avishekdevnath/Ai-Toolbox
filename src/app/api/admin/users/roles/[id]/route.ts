@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Only super_admin can modify roles
-    if (adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -106,7 +106,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     // Only super_admin can delete roles
-    if (adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }

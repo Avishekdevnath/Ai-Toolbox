@@ -56,6 +56,7 @@ const nextConfig: NextConfig = {
   // Environment variables
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
+    NEXT_PUBLIC_MAIN_URL: process.env.NEXT_PUBLIC_MAIN_URL || process.env.MAIN_URL || '',
   },
 
   // Experimental features (only stable ones)

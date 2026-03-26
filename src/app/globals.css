@@ -44,6 +44,19 @@
   --color-ring: #3B82F6;
 }
 
+button:not(:disabled),
+a[href],
+[role="button"]:not([aria-disabled="true"]),
+select:not(:disabled),
+label[for] {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-text-primary);

@@ -4,7 +4,7 @@ import { verifyAccessToken } from '@/lib/auth/jwt';
 export interface AdminSession {
   id: string;
   email?: string;
-  role: 'super_admin' | 'admin' | 'user' | string;
+  role: 'admin' | 'user' | string;
   isSuperAdmin: boolean;
 }
 
@@ -19,10 +19,10 @@ export class AdminVerificationService {
         id: claims.id,
         email: claims.email,
         role: claims.role || 'user',
-        isSuperAdmin: claims.role === 'super_admin',
+        isSuperAdmin: false,
       };
 
-      return { success: session.role === 'admin' || session.role === 'super_admin', session };
+      return { success: session.role === 'admin', session };
     } catch (error) {
       return { success: false };
     }

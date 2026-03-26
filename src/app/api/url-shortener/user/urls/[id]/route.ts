@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { UserAuthService } from '@/lib/userAuthService';
+import { getShareBaseUrl } from '@/utils/url';
 import { ObjectId } from 'mongodb';
 
 const COLLECTION_NAME = 'shortened_urls';
@@ -44,7 +45,7 @@ export async function GET(
     // Add computed fields
     const processedUrl = {
       ...url,
-      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`
+      shortenedUrl: `${getShareBaseUrl()}/${url.shortCode}`
     };
 
     return NextResponse.json({
@@ -182,7 +183,7 @@ export async function PUT(
 
     const processedUrl = {
       ...updatedUrl,
-      shortenedUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${updatedUrl.shortCode}`
+      shortenedUrl: `${process.env.NEXT_PUBLIC_SHORT_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${updatedUrl.shortCode}`
     };
 
     return NextResponse.json({

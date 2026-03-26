@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const token = await getAuthCookie();
     const claims = token ? verifyAccessToken(token) : null;
     
-    if (!claims || (claims.role !== 'admin' && claims.role !== 'super_admin')) {
+    if (!claims || (claims.role !== 'admin' )) {
       console.error('❌ Unauthorized access attempt');
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -159,7 +159,7 @@ export async function DELETE(request: NextRequest) {
     const token = await getAuthCookie();
     const claims = token ? verifyAccessToken(token) : null;
     
-    if (!claims || (claims.role !== 'admin' && claims.role !== 'super_admin')) {
+    if (!claims || (claims.role !== 'admin' )) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { UserAuthService } from '@/lib/userAuthService';
+import { getShareBaseUrl } from '@/utils/url';
 import { ObjectId } from 'mongodb';
 
 export async function POST(request: NextRequest) {
@@ -160,10 +161,12 @@ export async function GET(request: NextRequest) {
       isActive: true
     }).sort({ createdAt: -1 }).toArray();
 
+    const shortenerBase = getShareBaseUrl();
+
     const exportData = urls.map(url => ({
       shortCode: url.shortCode,
       originalUrl: url.originalUrl,
-      shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${url.shortCode}`,
+      shortUrl: `${shortenerBase}/${url.shortCode}`,
       clicks: url.clicks,
       createdAt: url.createdAt,
       expiresAt: url.expiresAt,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdminAuthService } from '@/lib/adminAuthService';
 import { getDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { AuthUserModel } from '@/models/AuthUserModel';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       const token = await getAuthCookie();
       const claims = token ? verifyAccessToken(token) : null;
       
-      if (claims && (claims.role === 'admin' || claims.role === 'super_admin')) {
+      if (claims && (claims.role === 'admin')) {
         adminSession = {
           id: claims.id,
           email: claims.email,
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Only admin or super_admin can view admin users
-    if (adminSession.role !== 'admin' && adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -57,24 +57,24 @@ export async function GET(request: NextRequest) {
     const db = await getDatabase();
     const skip = (page - 1) * limit;
 
-    // Build query
-    const query: any = {};
+    // Build query (admin users only)
+    const query: any = { role: 'admin' };
+
+    const andConditions: any[] = [];
 
     if (search) {
-      query.$or = [
+      andConditions.push({
+        $or: [
         { email: { $regex: search, $options: 'i' } },
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } }
-      ];
+      ]
+      });
     }
 
     if (status) {
       if (status === 'active') {
-        query.isActive = true;
-        query.$or = [
-          { lockUntil: { $exists: false } },
-          { lockUntil: { $lt: new Date() } }
-        ];
+        query.isActive = { $ne: false };
       } else if (status === 'inactive') {
         query.isActive = false;
       } else if (status === 'locked') {
@@ -86,11 +86,15 @@ export async function GET(request: NextRequest) {
       query.role = role;
     }
 
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
+    }
+
     // Get total count
-    const totalUsers = await db.collection('adminusers').countDocuments(query);
+    const totalUsers = await db.collection('authusers').countDocuments(query);
 
     // Get admin users
-    const adminUsers = await db.collection('adminusers')
+    const adminUsers = await db.collection('authusers')
       .find(query)
       .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
       .skip(skip)
@@ -99,7 +103,7 @@ export async function GET(request: NextRequest) {
 
     // Remove password field from all users
     const sanitizedUsers = adminUsers.map(user => {
-      const { password, ...userWithoutPassword } = user;
+      const { passwordHash, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
 
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
       const token = await getAuthCookie();
       const claims = token ? verifyAccessToken(token) : null;
       
-      if (claims && (claims.role === 'admin' || claims.role === 'super_admin')) {
+      if (claims && (claims.role === 'admin')) {
         adminSession = {
           id: claims.id,
           email: claims.email,
@@ -172,7 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only super_admin can create admin users
-    if (adminSession.role !== 'super_admin') {
+    if (adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions - Super admin required' },
         { status: 403 }
@@ -180,20 +184,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, firstName, lastName, role, permissions } = body;
+    const { email, username, password, firstName, lastName, role } = body;
 
     // Validate required fields
-    if (!email || !password || !firstName || !lastName || !role) {
+    if (!email || !username || !password || !firstName || !lastName || !role) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const db = await getDatabase();
-
-    // Check if email already exists
-    const existingUser = await db.collection('adminusers').findOne({ email: email.toLowerCase() });
+    const existingUser = await AuthUserModel.findByEmail(email.toLowerCase());
     if (existingUser) {
       return NextResponse.json(
         { success: false, error: 'Email already exists' },
@@ -201,35 +202,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create admin user
-    const newAdminUser = {
+    const createdUser = await AuthUserModel.create({
       email: email.toLowerCase(),
-      password: hashedPassword,
+      username,
       firstName,
       lastName,
-      role,
-      permissions: permissions || [],
-      isActive: true,
-      loginAttempts: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+      password,
+      role: role === 'admin' ? 'admin' : 'user',
+    });
 
-    const result = await db.collection('adminusers').insertOne(newAdminUser);
-
-    // Get created user (without password)
-    const createdUser = await db.collection('adminusers').findOne(
-      { _id: result.insertedId },
-      { projection: { password: 0 } }
-    );
+    const { passwordHash, ...sanitizedUser } = createdUser.toObject();
 
     return NextResponse.json({
       success: true,
-      data: createdUser,
+      data: sanitizedUser,
       message: 'Admin user created successfully'
     });
 

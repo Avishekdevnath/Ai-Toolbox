@@ -67,7 +67,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
 
   return (
     <Dialog open={isOpen} onOpenChange={onCancel}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="form-luxe max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Field</DialogTitle>
         </DialogHeader>

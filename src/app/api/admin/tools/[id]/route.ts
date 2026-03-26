@@ -20,7 +20,7 @@ export async function GET(
     }
 
     // Check if user has admin role
-    const isAdmin = claims?.role === 'admin' || claims?.role === 'super_admin';
+    const isAdmin = claims?.role === 'admin';
 
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
@@ -56,7 +56,7 @@ export async function PUT(
     }
 
     // Check if user has admin role
-    const isAdmin = claims?.role === 'admin' || claims?.role === 'super_admin';
+    const isAdmin = claims?.role === 'admin';
 
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
@@ -97,7 +97,7 @@ export async function DELETE(
     }
 
     // Check if user has admin role
-    const isAdmin = claims?.role === 'admin' || claims?.role === 'super_admin';
+    const isAdmin = claims?.role === 'admin';
 
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });

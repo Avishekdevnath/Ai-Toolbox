@@ -16,7 +16,7 @@ const FIELD_TYPES = [
 
 export default function FormFieldPalette({ onAdd }: { onAdd: (type: string) => void }) {
   return (
-    <div className="space-y-2">
+    <div className="form-luxe form-luxe-panel space-y-2">
       <div className="text-sm font-medium">Add Fields</div>
       <div className="grid grid-cols-2 gap-2">
         {FIELD_TYPES.map((ft) => (

@@ -5,7 +5,7 @@ import { verifyAccessToken } from '@/lib/auth/jwt';
 function isAdmin(req: NextRequest) {
   const token = req.cookies.get('user_session')?.value;
   const claims = token ? verifyAccessToken(token) : null;
-  return claims?.role === 'admin' || claims?.role === 'super_admin' ? claims : null;
+  return claims?.role === 'admin' ? claims : null;
 }
 
 /**

@@ -18,8 +18,8 @@ const NAV_LINKS = [
 const USER_MENU = [
   { href: '', icon: LayoutDashboard, label: 'Dashboard' }, // href set dynamically
   { href: '/profile', icon: UserCheck, label: 'Profile' },
-  { href: '/security', icon: Lock, label: 'Security' },
-  { href: '/settings', icon: Settings, label: 'Settings' },
+  { href: '/dashboard/settings/security', icon: Lock, label: 'Security' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Navbar() {

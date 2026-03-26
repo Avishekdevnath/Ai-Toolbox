@@ -1,641 +1,362 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  Download, 
-  Search,
-  Filter,
-  MoreVertical,
-  FileDown,
-  FileBarChart,
-  FileText,
-  FileSpreadsheet,
-  AlertCircle,
-  Calendar,
-  User,
-  Mail,
-  Hash,
-  Eye,
-  Edit3,
-  Trash2,
-  RefreshCw
-} from 'lucide-react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import ResponsesTable from '@/components/forms/ResponsesTable';
-import ViewResponseModal from '@/components/forms/ViewResponseModal';
-import DeleteConfirmationModal from '@/components/forms/DeleteConfirmationModal';
-
-interface FormResponsesPageProps {
-  params: {
-    id: string;
-  };
-}
+import {
+  ArrowLeft, Download, Search, Edit3, MessageSquare, BarChart,
+  AlertCircle, Calendar, CheckCircle, FileDown, FileText, FileSpreadsheet,
+  FileBarChart, Filter, Trash2
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import FormsStatChips from '@/components/forms/FormsStatChips';
+import { getShareBaseUrl } from '@/utils/url';
+import ResponseSlideOver from '@/components/forms/responses/ResponseSlideOver';
 
 interface FormData {
   _id: string;
   title: string;
   description?: string;
-  fields: {
-    id: string;
-    label: string;
-    type: string;
-  }[];
+  type?: string;
+  fields: { id: string; label: string; type: string }[];
+}
+
+interface ResponseItem {
+  _id: string;
+  submittedAt?: string;
+  createdAt?: string;
+  identity?: { name?: string; email?: string; studentId?: string };
+  data?: Record<string, any>;
+  responses?: Record<string, any>;
+  quizResult?: { score: number; maxScore: number };
 }
 
 export default function FormResponsesPage() {
   const params = useParams();
   const formId = params.id as string;
-  const router = useRouter();
-  const [error, setError] = useState(null);
+
   const [form, setForm] = useState<FormData | null>(null);
-  const [zoom, setZoom] = useState<number>(100);
+  const [responses, setResponses] = useState<ResponseItem[]>([]);
   const [totalResponses, setTotalResponses] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedResponse, setSelectedResponse] = useState<ResponseItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
-  const [showExportDropdown, setShowExportDropdown] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [filterFieldId, setFilterFieldId] = useState<string>('');
-  const [filterValues, setFilterValues] = useState<string[]>([]);
-  const [availableValues, setAvailableValues] = useState<string[]>([]);
-  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
-  const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [modalFieldId, setModalFieldId] = useState<string | null>(null);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedResponse, setSelectedResponse] = useState<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [valueSearch, setValueSearch] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
-  useEffect(() => {
-    fetchFormDetails();
-  }, [formId]);
+  const today = new Date().toDateString();
+  const todayCount = responses.filter(r => new Date(r.submittedAt ?? r.createdAt ?? '').toDateString() === today).length;
+  const completionRate = totalResponses > 0 ? 100 : 0;
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('#export-dropdown') && !target.closest('#export-button')) {
-        setShowExportDropdown(false);
-      }
-    };
+  const mapToSlideOver = (r: ResponseItem) => ({
+    respondentName: r.identity?.name ?? undefined,
+    respondentEmail: r.identity?.email ?? undefined,
+    submittedAt: r.submittedAt ?? r.createdAt ?? new Date().toISOString(),
+    fields: form?.fields?.map(f => ({
+      label: f.label,
+      answer: r.responses?.[f.id] ?? r.data?.[f.id] ?? '—',
+    })) ?? [],
+    isQuiz: form?.type === 'quiz',
+    quizScore: r.quizResult?.score,
+    quizMaxScore: r.quizResult?.maxScore,
+  });
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const fetchFormDetails = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch(`/api/forms/${formId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch form details');
-      }
-      const data = await response.json();
-      if (data.success) {
-        setForm(data.data);
-      } else {
-        throw new Error(data.error || 'Failed to fetch form details');
+      setLoading(true);
+      const [formRes, respRes] = await Promise.all([
+        fetch(`/api/forms/${formId}`),
+        fetch(`/api/forms/${formId}/responses?page=${page}&limit=${pageSize}`),
+      ]);
+      const formData = await formRes.json();
+      const respData = await respRes.json();
+      if (formData.success) setForm(formData.data);
+      if (respData.success) {
+        setResponses(respData.data?.items ?? []);
+        setTotalResponses(respData.data?.total ?? 0);
       }
     } catch (err: any) {
-      console.error('Error fetching form details:', err);
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchFormDetails();
-    setIsRefreshing(false);
-  };
+  useEffect(() => { fetchData(); }, [formId, page]);
 
   const exportResponses = async (format: string) => {
     if (isExporting) return;
-    
     setIsExporting(true);
-    setShowExportDropdown(false);
-    
+    setShowExportMenu(false);
     try {
-      const params = new URLSearchParams({ export: format });
-      if (filterFieldId && filterValues.length > 0) {
-        params.set('filterField', filterFieldId);
-        params.set('filterValues', JSON.stringify(filterValues));
+      const qs = new URLSearchParams({ export: format });
+      if (selectedIds.length > 0) qs.set('selectedIds', JSON.stringify(selectedIds));
+      const res = await fetch(`/api/forms/${formId}/responses?${qs}`);
+      if (!res.ok) throw new Error('Export failed');
+      if (format === 'pdf') {
+        const data = await res.json();
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(`<pre>${JSON.stringify(data.data, null, 2)}</pre>`); w.print(); }
+      } else {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${form?.title ?? 'responses'}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+        a.click();
+        URL.revokeObjectURL(url);
       }
-      if (selectedRowIds.length > 0) {
-        params.set('selectedIds', JSON.stringify(selectedRowIds));
-      }
-      const response = await fetch(`/api/forms/${formId}/responses?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error(`Export failed: ${response.statusText}`);
-      }
-
-      if (format === 'pdf' || format === 'google-docs') {
-        const data = await response.json();
-        if (format === 'pdf') {
-          generatePDF(data.data);
-        } else {
-          openGoogleDocs(data.data);
-        }
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      
-      // Get form owner info for filename
-      const formTitle = form?.title || 'Form';
-      const ownerUsername = 'Owner'; // You might want to get this from user context
-      const sanitizedFormTitle = formTitle.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
-      const sanitizedUsername = ownerUsername.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
-      
-      const filename = `${sanitizedFormTitle}_${sanitizedUsername}_responses.${format === 'excel' ? 'xlsx' : 'csv'}`;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
     } catch (err: any) {
-      console.error('Export error:', err);
       alert(`Export failed: ${err.message}`);
     } finally {
       setIsExporting(false);
     }
   };
 
-  const generatePDF = (data: any) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const { items, form } = data;
-    const hasName = items.some((r: any) => r.identity?.name);
-    const hasEmail = items.some((r: any) => r.identity?.email);
-    const hasStudentId = items.some((r: any) => r.identity?.studentId);
-
-    let html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Form Responses - ${form.title}</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { color: #333; border-bottom: 2px solid #000; padding-bottom: 10px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f5f5f5; font-weight: bold; }
-          .header { margin-bottom: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>${form.title}</h1>
-          <p><strong>Total Responses:</strong> ${items.length}</p>
-          <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Submission Date</th>
-              ${hasName ? '<th>Name</th>' : ''}
-              ${hasEmail ? '<th>Email</th>' : ''}
-              ${hasStudentId ? '<th>Student ID</th>' : ''}
-              ${form.fields.map((f: any) => `<th>${f.label || f.id}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    items.forEach((item: any, index: number) => {
-      html += `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${new Date(item.submittedAt || item.createdAt).toLocaleString()}</td>
-          ${hasName ? `<td>${item.identity?.name || ''}</td>` : ''}
-          ${hasEmail ? `<td>${item.identity?.email || ''}</td>` : ''}
-          ${hasStudentId ? `<td>${item.identity?.studentId || ''}</td>` : ''}
-          ${form.fields.map((f: any) => {
-            const value = item.data?.[f.id];
-            return `<td>${value ? (typeof value === 'object' ? JSON.stringify(value) : String(value)) : ''}</td>`;
-          }).join('')}
-        </tr>
-      `;
-    });
-
-    html += `
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.print();
-  };
-
-  const openGoogleDocs = (data: any) => {
-    const { items, form } = data;
-    const hasName = items.some((r: any) => r.identity?.name);
-    const hasEmail = items.some((r: any) => r.identity?.email);
-    const hasStudentId = items.some((r: any) => r.identity?.studentId);
-
-    let content = `Form Responses: ${form.title}\n`;
-    content += `Total Responses: ${items.length}\n`;
-    content += `Generated: ${new Date().toLocaleString()}\n\n`;
-
-    // Headers
-    const headers = ['#', 'Submission Date'];
-    if (hasName) headers.push('Name');
-    if (hasEmail) headers.push('Email');
-    if (hasStudentId) headers.push('Student ID');
-    headers.push(...form.fields.map((f: any) => f.label || f.id));
-    content += headers.join('\t') + '\n';
-
-    // Data rows
-    items.forEach((item: any, index: number) => {
-      const row = [index + 1, new Date(item.submittedAt || item.createdAt).toLocaleString()];
-      if (hasName) row.push(item.identity?.name || '');
-      if (hasEmail) row.push(item.identity?.email || '');
-      if (hasStudentId) row.push(item.identity?.studentId || '');
-      
-      form.fields.forEach((f: any) => {
-        const value = item.data?.[f.id];
-        row.push(value ? (typeof value === 'object' ? JSON.stringify(value) : String(value)) : '');
-      });
-      
-      content += row.join('\t') + '\n';
-    });
-
-    navigator.clipboard.writeText(content).then(() => {
-      alert('Content copied to clipboard! You can paste it into the new Google Doc.');
-    }).catch(() => {
-      alert('Google Docs opened! Please copy the data manually.');
-    });
-  };
-
-  const updateTotalResponses = (total: number) => {
-    setTotalResponses(total);
-  };
-
-  // Modal handlers
-  const handleViewResponse = (response: any) => {
-    setSelectedResponse(response);
-    setViewModalOpen(true);
-  };
-
-  const handleDeleteResponse = (response: any) => {
-    setSelectedResponse(response);
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedResponse) return;
-    
-    setIsDeleting(true);
+  const deleteResponse = async (id: string) => {
+    if (!confirm('Delete this response?')) return;
     try {
-      const response_api = await fetch(`/api/forms/${formId}/responses/${selectedResponse._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response_api.ok) {
-        throw new Error('Failed to delete response');
-      }
-
-      // Refresh the page data
-      await fetchFormDetails();
-      setDeleteModalOpen(false);
-      setSelectedResponse(null);
-    } catch (error) {
-      console.error('Error deleting response:', error);
-      alert('Failed to delete response. Please try again.');
-    } finally {
-      setIsDeleting(false);
+      await fetch(`/api/forms/${formId}/responses/${id}`, { method: 'DELETE' });
+      setResponses(prev => prev.filter(r => r._id !== id));
+      setTotalResponses(prev => prev - 1);
+    } catch {
+      alert('Failed to delete response.');
     }
   };
 
-  // Build available option values when field changes using a lightweight fetch to first page
-  useEffect(() => {
-    const loadValues = async () => {
-      setAvailableValues([]);
-      if (!filterFieldId) return;
-      try {
-        const res = await fetch(`/api/forms/${formId}/responses?page=1&limit=100&sortField=submittedAt&sortDirection=desc`);
-        const data = await res.json();
-        if (data?.success) {
-          const items = data.data.items || [];
-          const setVals = new Set<string>();
-          items.forEach((it: any) => {
-            const v = it?.data?.[filterFieldId];
-            if (Array.isArray(v)) v.forEach((x: any) => setVals.add(String(x)));
-            else if (v !== undefined && v !== null) setVals.add(String(v));
-          });
-          setAvailableValues(Array.from(setVals));
-        }
-      } catch {}
-    };
-    loadValues();
-  }, [filterFieldId, formId]);
-
-  if (error) {
+  const filteredResponses = responses.filter(r => {
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => router.push('/dashboard/forms')}
-            className="w-full bg-black text-white py-2.5 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
-          >
-            Back to Forms
-          </button>
-        </div>
-      </div>
+      r.identity?.name?.toLowerCase().includes(q) ||
+      r.identity?.email?.toLowerCase().includes(q) ||
+      JSON.stringify(r.data ?? r.responses ?? {}).toLowerCase().includes(q)
     );
-  }
+  });
+
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === filteredResponses.length ? [] : filteredResponses.map(r => r._id));
+  };
+
+  if (error) return (
+    <div className="space-y-4">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+        <AlertCircle size={18} className="text-red-500 shrink-0" />
+        <p className="text-[13px] text-red-700">{error}</p>
+        <Link href="/dashboard/forms" className="ml-auto text-[13px] text-slate-600 hover:underline">← Forms</Link>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Modern Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-3 sm:px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Left Section */}
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-              <button 
-                onClick={() => router.push('/dashboard/forms')} 
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              
-              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FileBarChart className="w-4 h-4 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                    {form?.title || 'Form Responses'}
-                  </h1>
-                  <div className="hidden sm:flex items-center space-x-4 text-xs text-gray-500">
-                    <span className="flex items-center space-x-1">
-                      <Hash size={12} />
-                      <span>{totalResponses} {totalResponses === 1 ? 'response' : 'responses'}</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <Calendar size={12} />
-                      <span>Last updated: {new Date().toLocaleDateString()}</span>
-                    </span>
-                  </div>
-                  <div className="sm:hidden text-xs text-gray-500">
-                    {totalResponses} {totalResponses === 1 ? 'response' : 'responses'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-              >
-                <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
-              </button>
-
-              <button
-                onClick={() => router.push(`/dashboard/forms/${formId}/edit`)}
-                className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-              >
-                <Edit3 size={14} />
-                <span className="font-medium">Edit Form</span>
-              </button>
-              
-              <button
-                onClick={() => router.push(`/dashboard/forms/${formId}/edit`)}
-                className="sm:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Edit Form"
-              >
-                <Edit3 size={16} />
-              </button>
-
-              <div className="relative">
-                <button
-                  id="export-button"
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm"
-                  onClick={() => setShowExportDropdown(!showExportDropdown)}
-                  disabled={isExporting}
-                >
-                  <Download size={14} />
-                  <span className="hidden sm:inline">Export</span>
-                  <Filter size={12} className="ml-1" />
-                </button>
-                
-                {showExportDropdown && (
-                  <div 
-                    id="export-dropdown"
-                    className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
-                  >
-                    <div className="py-2">
-                      <button
-                        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center space-x-3 transition-colors"
-                        onClick={() => exportResponses('csv')}
-                        disabled={isExporting}
-                      >
-                        <FileDown size={16} className="text-gray-500" />
-                        <span>Download CSV</span>
-                      </button>
-                      <button
-                        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center space-x-3 transition-colors"
-                        onClick={() => exportResponses('excel')}
-                        disabled={isExporting}
-                      >
-                        <FileSpreadsheet size={16} className="text-gray-500" />
-                        <span>Download Excel</span>
-                      </button>
-                      <button
-                        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center space-x-3 transition-colors"
-                        onClick={() => exportResponses('pdf')}
-                        disabled={isExporting}
-                      >
-                        <FileText size={16} className="text-gray-500" />
-                        <span>Generate PDF</span>
-                      </button>
-                      <button
-                        className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center space-x-3 transition-colors"
-                        onClick={() => exportResponses('google-docs')}
-                        disabled={isExporting}
-                      >
-                        <FileBarChart size={16} className="text-gray-500" />
-                        <span>Copy for Google Docs</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-4">
+      {/* Page header */}
+      <div>
+        <Link href="/dashboard/forms" className="text-[12px] text-slate-400 hover:text-slate-600 inline-flex items-center gap-1 mb-1">
+          <ArrowLeft size={12} /> Forms
+        </Link>
+        <h1 className="text-[16px] font-semibold text-slate-800">{form?.title ?? 'Responses'}</h1>
       </div>
 
-      {/* Main Content */}
-      <div className="p-2 sm:p-3">
-        {/* Search and Filters */}
-        <div className="mb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-2">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search responses..."
-                  className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-800 text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+      {/* Sub-nav */}
+      <div className="flex gap-1 border-b border-slate-200">
+        {[
+          { label: 'Edit', href: `/dashboard/forms/${formId}/edit`, icon: Edit3 },
+          { label: 'Responses', href: `/dashboard/forms/${formId}/responses`, icon: MessageSquare, active: true },
+          { label: 'Analytics', href: `/dashboard/forms/${formId}/analytics`, icon: BarChart },
+        ].map(({ label, href, icon: Icon, active }) => (
+          <Link key={label} href={href}
+            className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors ${(active as boolean | undefined) ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+            <Icon size={13} /> {label}
+          </Link>
+        ))}
+      </div>
 
-            {/* Zoom Controls - Hidden on mobile */}
-            <div className="hidden md:flex items-center gap-2 ml-auto">
-              <span className="text-xs text-gray-500">Zoom</span>
-              <button
-                className="px-2 py-1 border border-gray-300 rounded-md text-xs"
-                onClick={() => setZoom(z => Math.max(50, z - 5))}
-                title="Zoom out"
-              >
-                -
-              </button>
-              <span className="w-10 text-center text-xs text-gray-700">{zoom}%</span>
-              <button
-                className="px-2 py-1 border border-gray-300 rounded-md text-xs"
-                onClick={() => setZoom(z => Math.min(150, z + 5))}
-                title="Zoom in"
-              >
-                +
-              </button>
-              <button
-                className="px-2 py-1 border border-gray-300 rounded-md text-xs"
-                onClick={() => setZoom(100)}
-                title="Reset zoom"
-              >
-                100%
-              </button>
-            </div>
-          </div>
+      {/* Stats */}
+      {!loading && (
+        <FormsStatChips stats={[
+          { icon: MessageSquare, value: totalResponses, label: 'Total' },
+          { icon: Calendar, value: todayCount, label: 'Today' },
+          { icon: CheckCircle, value: `${completionRate}%`, label: 'Completion Rate' },
+        ]} />
+      )}
+
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search responses..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          />
         </div>
-
-        {/* Filters Modal */}
-        {(showFiltersModal || modalFieldId) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/40" onClick={() => { setShowFiltersModal(false); setModalFieldId(null); }}></div>
-            <div className="relative bg-white w-full max-w-lg rounded-xl shadow-xl border border-gray-200 p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-semibold">Select values</div>
-                <button className="text-gray-500 text-sm" onClick={() => { setShowFiltersModal(false); setModalFieldId(null); }}>Close</button>
-              </div>
-              <div className="mb-2">
-                <input
-                  value={valueSearch}
-                  onChange={(e) => setValueSearch(e.target.value)}
-                  placeholder="Search values"
-                  className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm"
-                />
-              </div>
-              <div className="max-h-64 overflow-auto border border-gray-100 rounded-md">
-                {availableValues
-                  .filter(v => v.toLowerCase().includes(valueSearch.toLowerCase()))
-                  .map(v => {
-                    const active = filterValues.includes(v);
-                    return (
-                      <label key={v} className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer ${active ? 'bg-gray-50' : ''}`}>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={active}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setFilterValues(prev => checked ? Array.from(new Set([...(prev||[]), v])) : prev.filter(x => x !== v));
-                            }}
-                          />
-                          <span className="truncate max-w-[340px]">{v}</span>
-                        </div>
-                      </label>
-                    );
-                  })}
-                {availableValues.length === 0 && (
-                  <div className="p-3 text-xs text-gray-500">No values available for this field yet</div>
-                )}
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <div className="text-xs text-gray-500">{filterValues.length} selected</div>
-                <div className="flex items-center gap-2">
-                  <button className="text-xs px-3 py-1.5 border border-gray-300 rounded-md" onClick={() => setFilterValues([])}>Clear</button>
-                  <button className="text-xs px-3 py-1.5 bg-black text-white rounded-md" onClick={() => { setShowFiltersModal(false); setModalFieldId(null); }}>Apply</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Responses Table */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div
-            className="w-full zoom-container"
-            style={{ 
-              transform: `scale(${zoom/100})`, 
-              transformOrigin: 'top left',
-              width: zoom < 100 ? `${100/zoom * 100}%` : '100%',
-              minWidth: '100%'
-            }}
+        <div className="relative ml-auto">
+          <button
+            onClick={() => setShowExportMenu(v => !v)}
+            disabled={isExporting}
+            className="flex items-center gap-1.5 h-9 px-3 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-600 hover:bg-slate-50 transition-colors"
           >
-            <ResponsesTable 
-              formId={formId} 
-              form={form}
-              searchTerm={searchTerm}
-              filterFieldId={filterFieldId}
-              filterValues={filterValues}
-              updateTotalResponses={updateTotalResponses}
-              onSelectionChange={setSelectedRowIds}
-              onQuickFilter={(fid, vals) => { setFilterFieldId(fid); setFilterValues(vals || []); setShowFiltersModal(false); setModalFieldId(null); }}
-              onOpenFilterModal={(fid) => { setFilterFieldId(fid); setModalFieldId(fid); setShowFiltersModal(true); setValueSearch(''); }}
-              onViewResponse={handleViewResponse}
-              onDeleteResponse={handleDeleteResponse}
-            />
-          </div>
+            <Download size={14} /> Export <Filter size={11} />
+          </button>
+          {showExportMenu && (
+            <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1">
+              {[
+                { label: 'Download CSV', icon: FileDown, format: 'csv' },
+                { label: 'Download Excel', icon: FileSpreadsheet, format: 'excel' },
+                { label: 'Generate PDF', icon: FileText, format: 'pdf' },
+              ].map(({ label, icon: Icon, format }) => (
+                <button key={format} onClick={() => exportResponses(format)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50">
+                  <Icon size={14} /> {label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* View Response Modal */}
-      <ViewResponseModal
-        isOpen={viewModalOpen}
-        onClose={() => {
-          setViewModalOpen(false);
-          setSelectedResponse(null);
-        }}
-        response={selectedResponse}
-        formFields={form?.fields || []}
-      />
+      {/* Bulk actions bar */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
+            <span className="text-[13px] text-blue-700 font-medium">{selectedIds.length} selected</span>
+            <button onClick={() => exportResponses('csv')}
+              className="ml-auto flex items-center gap-1.5 text-[13px] text-blue-700 hover:text-blue-900">
+              <FileBarChart size={13} /> Export selected
+            </button>
+            <button onClick={() => setSelectedIds([])} className="text-[13px] text-slate-500 hover:text-slate-700">Clear</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setSelectedResponse(null);
-        }}
-        onConfirm={confirmDelete}
-        response={selectedResponse}
-        isDeleting={isDeleting}
+      {/* Table */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        {loading ? (
+          <div className="divide-y divide-slate-100">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3 animate-pulse">
+                <div className="w-4 h-4 bg-slate-200 rounded" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-slate-200 rounded w-1/3" />
+                  <div className="h-2.5 bg-slate-100 rounded w-1/4" />
+                </div>
+                <div className="h-3 bg-slate-200 rounded w-16" />
+              </div>
+            ))}
+          </div>
+        ) : filteredResponses.length === 0 ? (
+          <div className="p-16 text-center">
+            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <MessageSquare size={24} className="text-slate-400" />
+            </div>
+            <h3 className="text-[14px] font-semibold text-slate-700 mb-1">
+              {searchTerm ? 'No results found' : 'No responses yet'}
+            </h3>
+            <p className="text-[13px] text-slate-400 mb-4">
+              {searchTerm ? 'Try adjusting your search' : 'Share your form to start collecting responses'}
+            </p>
+            {!searchTerm && (
+              <button
+                onClick={() => {
+                  const origin = getShareBaseUrl();
+                  navigator.clipboard.writeText(`${origin}/f/${formId}`);
+                }}
+                className="inline-flex items-center gap-1.5 h-8 px-3 bg-blue-600 text-white text-[13px] rounded-lg hover:bg-blue-700"
+              >
+                Copy share link
+              </button>
+            )}
+          </div>
+        ) : (
+          <table className="min-w-full text-[13px]">
+            <thead className="bg-slate-50 border-b border-slate-100">
+              <tr>
+                <th className="px-4 py-3 w-8">
+                  <input type="checkbox" checked={selectedIds.length === filteredResponses.length && filteredResponses.length > 0}
+                    onChange={toggleSelectAll} className="rounded border-slate-300" />
+                </th>
+                <th className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium">Respondent</th>
+                <th className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium hidden sm:table-cell">Submitted</th>
+                {form?.type === 'quiz' && (
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium hidden md:table-cell">Score</th>
+                )}
+                <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wide text-slate-400 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredResponses.map(r => {
+                const name = r.identity?.name;
+                const email = r.identity?.email;
+                const date = new Date(r.submittedAt ?? r.createdAt ?? '');
+                const isSelected = selectedIds.includes(r._id);
+                return (
+                  <tr key={r._id}
+                    onClick={() => setSelectedResponse(r)}
+                    className={`cursor-pointer transition-colors ${isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <input type="checkbox" checked={isSelected}
+                        onChange={() => setSelectedIds(prev => isSelected ? prev.filter(i => i !== r._id) : [...prev, r._id])}
+                        className="rounded border-slate-300" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-slate-800">{name ?? 'Anonymous'}</p>
+                      {email && <p className="text-[11px] text-slate-400">{email}</p>}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500 hidden sm:table-cell">
+                      {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+                    {form?.type === 'quiz' && (
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        {r.quizResult ? (
+                          <span className="font-medium text-slate-800">{r.quizResult.score}/{r.quizResult.maxScore}</span>
+                        ) : '—'}
+                      </td>
+                    )}
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => deleteResponse(r._id)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Delete">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalResponses > pageSize && (
+        <div className="flex items-center justify-between text-[13px] text-slate-500">
+          <span>Showing {Math.min((page - 1) * pageSize + 1, totalResponses)}–{Math.min(page * pageSize, totalResponses)} of {totalResponses}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="h-8 px-3 border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page * pageSize >= totalResponses}
+              className="h-8 px-3 border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50">Next</button>
+          </div>
+        </div>
+      )}
+
+      {/* Slide-over */}
+      <ResponseSlideOver
+        open={!!selectedResponse}
+        onClose={() => setSelectedResponse(null)}
+        {...(selectedResponse ? mapToSlideOver(selectedResponse) : {
+          submittedAt: '', fields: [],
+        })}
       />
     </div>
   );

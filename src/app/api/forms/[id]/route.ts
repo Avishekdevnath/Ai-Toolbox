@@ -21,7 +21,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       : null;
     if (!form) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
     if (!ensureOwner(claims, form)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
-    return NextResponse.json({ success: true, data: form });
+    const formData = {
+      ...form,
+      settings: {
+        ...(form as any).settings,
+        displayMode: (form as any).settings?.displayMode ?? 'all',
+      },
+    };
+    return NextResponse.json({ success: true, data: formData });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message || 'Failed to get form' }, { status: 500 });
   }

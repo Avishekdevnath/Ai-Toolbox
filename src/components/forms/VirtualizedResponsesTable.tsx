@@ -218,7 +218,7 @@ export default function VirtualizedResponsesTable({
   const endItem = Math.min((currentPage + 1) * pageSize, totalResponses);
 
   return (
-    <Card className={className}>
+    <Card className={`form-luxe ${className}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Responses ({totalResponses.toLocaleString()})</CardTitle>

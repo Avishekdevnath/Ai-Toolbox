@@ -263,8 +263,22 @@ export default function AIInsights({
     );
   }
 
+  const summary = insights.summary ?? {
+    totalResponses: 0,
+    completionRate: 0,
+    averageTime: 0,
+    keyFindings: [] as string[],
+  };
+  const completionTrend = insights.trends?.completionTrend ?? 0;
+  const responseOverTime = insights.trends?.responseOverTime ?? [];
+  const popularTimes = insights.trends?.popularTimes ?? [];
+  const fieldAnalysis = insights.fieldAnalysis ?? [];
+  const recommendations = insights.recommendations ?? [];
+  const anomalies = insights.anomalies ?? [];
+  const maxResponseCount = responseOverTime.length > 0 ? Math.max(...responseOverTime.map(d => d.count)) : 1;
+
   return (
-    <div className="space-y-6">
+    <div className="form-luxe space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -312,7 +326,7 @@ export default function AIInsights({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Responses</p>
-                    <p className="text-2xl font-bold text-gray-900">{insights.summary.totalResponses}</p>
+                    <p className="text-2xl font-bold text-gray-900">{summary.totalResponses}</p>
                   </div>
                   <Users className="w-8 h-8 text-blue-600" />
                 </div>
@@ -324,7 +338,7 @@ export default function AIInsights({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Completion Rate</p>
-                    <p className="text-2xl font-bold text-gray-900">{insights.summary.completionRate}%</p>
+                    <p className="text-2xl font-bold text-gray-900">{summary.completionRate}%</p>
                   </div>
                   <Target className="w-8 h-8 text-green-600" />
                 </div>
@@ -336,7 +350,7 @@ export default function AIInsights({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Avg. Time</p>
-                    <p className="text-2xl font-bold text-gray-900">{insights.summary.averageTime}m</p>
+                    <p className="text-2xl font-bold text-gray-900">{summary.averageTime}m</p>
                   </div>
                   <Clock className="w-8 h-8 text-orange-600" />
                 </div>
@@ -348,8 +362,8 @@ export default function AIInsights({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Trend</p>
-                    <p className={`text-2xl font-bold ${insights.trends.completionTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {insights.trends.completionTrend >= 0 ? '+' : ''}{insights.trends.completionTrend}%
+                    <p className={`text-2xl font-bold ${completionTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {completionTrend >= 0 ? '+' : ''}{completionTrend}%
                     </p>
                   </div>
                   <TrendingUp className="w-8 h-8 text-purple-600" />
@@ -367,7 +381,7 @@ export default function AIInsights({
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {insights.summary.keyFindings.map((finding, index) => (
+                {(summary.keyFindings || []).map((finding, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
                     <span className="text-sm text-gray-700">{finding}</span>
@@ -391,16 +405,16 @@ export default function AIInsights({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">7-Day Response Trend</span>
-                  <Badge variant={insights.trends.completionTrend >= 0 ? "default" : "destructive"}>
-                    {insights.trends.completionTrend >= 0 ? '+' : ''}{insights.trends.completionTrend}% change
+                  <Badge variant={completionTrend >= 0 ? "default" : "destructive"}>
+                    {completionTrend >= 0 ? '+' : ''}{completionTrend}% change
                   </Badge>
                 </div>
                 <div className="h-32 flex items-end gap-2">
-                  {insights.trends.responseOverTime.map((day, index) => (
+                  {responseOverTime.map((day, index) => (
                     <div key={index} className="flex-1 flex flex-col items-center gap-1">
                       <div
                         className="w-full bg-blue-600 rounded-t"
-                        style={{ height: `${(day.count / Math.max(...insights.trends.responseOverTime.map(d => d.count))) * 100}%` }}
+                        style={{ height: `${(day.count / maxResponseCount) * 100}%` }}
                       />
                       <span className="text-xs text-gray-600">{day.count}</span>
                       <span className="text-xs text-gray-400">{new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
@@ -417,7 +431,7 @@ export default function AIInsights({
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {insights.trends.popularTimes.map((time, index) => (
+                {popularTimes.map((time, index) => (
                   <Badge key={index} variant="outline" className="px-3 py-1">
                     {time}
                   </Badge>
@@ -429,7 +443,7 @@ export default function AIInsights({
 
         {/* Fields Tab */}
         <TabsContent value="fields" className="space-y-6">
-          {insights.fieldAnalysis.map((field) => (
+          {fieldAnalysis.map((field) => (
             <Card key={field.fieldId}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -491,7 +505,7 @@ export default function AIInsights({
 
         {/* Recommendations Tab */}
         <TabsContent value="recommendations" className="space-y-6">
-          {insights.recommendations.map((rec, index) => (
+          {recommendations.map((rec, index) => (
             <Card key={index}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
@@ -527,8 +541,8 @@ export default function AIInsights({
 
         {/* Alerts Tab */}
         <TabsContent value="alerts" className="space-y-6">
-          {insights.anomalies.length > 0 ? (
-            insights.anomalies.map((alert, index) => (
+          {anomalies.length > 0 ? (
+            anomalies.map((alert, index) => (
               <Card key={index}>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">

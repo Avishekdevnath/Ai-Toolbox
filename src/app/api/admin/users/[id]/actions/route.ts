@@ -66,7 +66,7 @@ export async function POST(
     }
 
     // Prevent super_admin from being suspended by non-super_admin
-    if (user.role === 'super_admin' && adminSession.role !== 'super_admin') {
+    if (user.role === 'super_admin' && adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Only super admins can suspend other super admins' },
         { status: 403 }
@@ -74,7 +74,7 @@ export async function POST(
     }
 
     // Prevent admin from being suspended by non-super_admin
-    if (user.role === 'admin' && adminSession.role !== 'super_admin') {
+    if (user.role === 'admin' && adminSession.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Only super admins can suspend admin users' },
         { status: 403 }

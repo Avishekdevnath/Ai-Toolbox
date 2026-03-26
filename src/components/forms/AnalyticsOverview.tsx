@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-export default function AnalyticsOverview({ formId }: { formId: string }) {
+export default function AnalyticsOverview({ formId, className = '' }: { formId: string; className?: string }) {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState('');
   const [insights, setInsights] = useState<string>('');
@@ -32,7 +32,7 @@ export default function AnalyticsOverview({ formId }: { formId: string }) {
   useEffect(() => { fetchAnalytics(); }, [formId]);
 
   return (
-    <div className="space-y-4">
+    <div className={`form-luxe space-y-4 ${className}`}>
       {error && <div className="text-sm text-red-600">{error}</div>}
       <Card>
         <CardHeader>

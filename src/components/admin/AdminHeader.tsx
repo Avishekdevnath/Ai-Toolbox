@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, Search, LogOut, Settings, Activity, AlertTriangle } from 'lucide-react';
+import { signOutClient } from '@/lib/authService';
 
 interface AdminUser {
   email: string;
@@ -31,13 +32,18 @@ export default function AdminHeader() {
   useEffect(() => {
     fetch('/api/admin/auth/session')
       .then((r) => r.json())
-      .then((d) => (d.success && d.admin ? setAdmin(d.admin) : router.push('/admin-login')))
-      .catch(() => router.push('/admin-login'));
+      .then((d) => (d.success && d.admin ? setAdmin(d.admin) : router.push('/')))
+      .catch(() => router.push('/'));
   }, [router]);
 
   const handleLogout = async () => {
+    setProfileOpen(false);
+    setNotifOpen(false);
+    setAdmin(null);
     await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
-    router.push('/admin-login');
+    signOutClient();
+    router.replace('/');
+    router.refresh();
   };
 
   const displayName = admin

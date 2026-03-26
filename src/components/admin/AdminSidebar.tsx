@@ -6,6 +6,7 @@ import { adminNavItems } from './sidebar/admin-nav-config';
 import { AdminSidebarLogo } from './sidebar/AdminSidebarLogo';
 import { AdminSidebarNavItem } from './sidebar/AdminSidebarNavItem';
 import { AdminSidebarFooter } from './sidebar/AdminSidebarFooter';
+import { signOutClient } from '@/lib/authService';
 
 interface AdminUser {
   id: string;
@@ -24,8 +25,8 @@ export default function AdminSidebar() {
   useEffect(() => {
     fetch('/api/admin/auth/session')
       .then((r) => r.json())
-      .then((d) => (d.success && d.admin ? setAdmin(d.admin) : router.push('/admin-login')))
-      .catch(() => router.push('/admin-login'));
+      .then((d) => (d.success && d.admin ? setAdmin(d.admin) : router.push('/')))
+      .catch(() => router.push('/'));
   }, [router]);
 
   const toggle = (name: string) =>
@@ -37,8 +38,11 @@ export default function AdminSidebar() {
     !perm || (admin?.permissions ?? []).includes(perm);
 
   const handleLogout = async () => {
+    setAdmin(null);
     await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
-    router.push('/admin-login');
+    signOutClient();
+    router.replace('/');
+    router.refresh();
   };
 
   if (!admin) {

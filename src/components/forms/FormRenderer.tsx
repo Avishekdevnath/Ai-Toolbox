@@ -215,7 +215,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
 
   if (submitted) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="form-luxe flex items-center justify-center min-h-screen bg-gray-50 p-4">
         <div className="text-center max-w-md">
           <div className="bg-green-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
             <CheckCircle size={32} className="text-green-500" />
@@ -252,7 +252,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
   // Quiz auth screen
   if (formSchema.type === 'quiz' && !showQuizQuestions) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="form-luxe min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm mb-6 p-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">{formSchema.title}</h1>
@@ -354,7 +354,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
 
   // Main form renderer
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="form-luxe min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm mb-6 p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{formSchema.title}</h1>

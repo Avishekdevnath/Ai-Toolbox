@@ -13,7 +13,7 @@ export async function PUT(
     const cookieStore = await cookies();
     const token = cookieStore.get('user_session')?.value;
     const claims = token ? verifyAccessToken(token) : null;
-    const isAdmin = claims?.role === 'admin' || claims?.role === 'super_admin';
+    const isAdmin = claims?.role === 'admin';
     
     if (!claims || !isAdmin) {
       return NextResponse.json(
@@ -102,7 +102,7 @@ export async function DELETE(
     const cookieStore = await cookies();
     const token = cookieStore.get('user_session')?.value;
     const claims = token ? verifyAccessToken(token) : null;
-    const isAdmin = claims?.role === 'admin' || claims?.role === 'super_admin';
+    const isAdmin = claims?.role === 'admin';
     
     if (!claims || !isAdmin) {
       return NextResponse.json(

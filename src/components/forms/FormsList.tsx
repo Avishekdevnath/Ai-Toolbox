@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { getShareBaseUrl } from '@/utils/url';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
@@ -390,7 +391,7 @@ export default function FormsList({ statusFilter }: { statusFilter?: 'draft' | '
   const copyPublicLink = async (id: string, slug?: string) => {
     try {
       setCopyingId(id);
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const origin = getShareBaseUrl();
       const link = `${origin}/f/${slug || id}`;
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(link);
@@ -442,7 +443,7 @@ export default function FormsList({ statusFilter }: { statusFilter?: 'draft' | '
   };
 
   return (
-    <div className="space-y-6">
+    <div className="form-luxe space-y-6">
       {/* Header with Statistics */}
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="px-6 py-4 border-b border-gray-200">

@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         totalUsers: 0,
         activeUsers: 0,
         verifiedUsers: 0,
-        usersByRole: { user: 0, admin: 0, moderator: 0 },
+        usersByRole: { user: 0, admin: 0 },
         usersByPlan: { free: 0, basic: 0, premium: 0, enterprise: 0 },
         recentSignups: 0,
         averageSessionDuration: 0

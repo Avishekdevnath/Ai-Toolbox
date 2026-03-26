@@ -46,10 +46,17 @@ export function HeaderActions() {
   const handleSignOut = async () => {
     if (signingOut) return;
     setSigningOut(true);
+    setProfileOpen(false);
+    setFeedbackOpen(false);
+    console.log('👋 [HeaderActions] User clicked signout');
     try {
+      console.log('👋 [HeaderActions] Calling logout()...');
       await logout();
-      router.push('/');
-    } catch {
+      console.log('👋 [HeaderActions] logout() completed. Navigating to /');
+      router.replace('/');
+      router.refresh();
+    } catch (error) {
+      console.error('❌ [HeaderActions] Logout failed:', error);
       setSigningOut(false);
     }
   };

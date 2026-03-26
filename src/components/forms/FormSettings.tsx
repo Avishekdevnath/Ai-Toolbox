@@ -132,7 +132,7 @@ export default function FormSettings({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="form-luxe space-y-6">
       {/* Header with Save Status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -153,7 +153,7 @@ export default function FormSettings({
         )}
       </div>
 
-      <Card>
+      <Card className="form-luxe-panel">
         <CardContent className="p-0">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-6">

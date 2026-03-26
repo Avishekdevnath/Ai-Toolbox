@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (!claims) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const isAdmin = (claims.role as string) === 'admin' || (claims.role as string) === 'super_admin';
+    const isAdmin = (claims.role as string) === 'admin';
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
     }
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const claims = getClaims(req);
-  if (!claims || ((claims.role as string) !== 'admin' && (claims.role as string) !== 'super_admin')) {
+  if (!claims || ((claims.role as string) !== 'admin')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const claims = getClaims(req);
-  if (!claims || ((claims.role as string) !== 'admin' && (claims.role as string) !== 'super_admin')) {
+  if (!claims || ((claims.role as string) !== 'admin')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {

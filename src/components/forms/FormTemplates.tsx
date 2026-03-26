@@ -543,7 +543,7 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`form-luxe space-y-6 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

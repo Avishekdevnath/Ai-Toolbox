@@ -1,7 +1,11 @@
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/auth/jwt';
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
+import Link from 'next/link';
+import { Edit3, MessageSquare, BarChart, ArrowLeft } from 'lucide-react';
 import AnalyticsTabs from '@/components/forms/AnalyticsTabs';
+import { connectToDatabase } from '@/lib/mongodb';
+import { getFormModel } from '@/models/FormModel';
 
 export default async function FormAnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
@@ -10,19 +14,36 @@ export default async function FormAnalyticsPage({ params }: { params: Promise<{ 
   if (!claims) redirect('/sign-in');
 
   const { id } = await params;
+  await connectToDatabase();
+  const Form = await getFormModel();
+  const form = await Form.findById(id).select('title').lean<{ title: string }>();
+  if (!form) notFound();
+
+  const subNav = [
+    { label: 'Edit', href: `/dashboard/forms/${id}/edit`, icon: Edit3 },
+    { label: 'Responses', href: `/dashboard/forms/${id}/responses`, icon: MessageSquare },
+    { label: 'Analytics', href: `/dashboard/forms/${id}/analytics`, icon: BarChart, active: true },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Form Analytics</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Comprehensive insights and AI-powered analysis of your form responses
-        </p>
+        <Link href="/dashboard/forms" className="text-[12px] text-slate-400 hover:text-slate-600 inline-flex items-center gap-1 mb-1">
+          <ArrowLeft size={12} /> Forms
+        </Link>
+        <h1 className="text-[16px] font-semibold text-slate-800">{form.title}</h1>
+      </div>
+
+      <div className="flex gap-1 border-b border-slate-200">
+        {subNav.map(({ label, href, icon: Icon, active }) => (
+          <Link key={label} href={href}
+            className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors ${active ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+            <Icon size={13} /> {label}
+          </Link>
+        ))}
       </div>
 
       <AnalyticsTabs formId={id} />
     </div>
   );
 }
-
-
