@@ -68,6 +68,7 @@ src/stories/
 /guide/
 /.claude/
 
+.cloude/
 # Development and testing files
 .worktrees/
 *.log
