@@ -97,3 +97,5 @@ LOCAL-ACCOUNTS.md
 *.old
 .env.local
 .env*
+
+# be carefull
