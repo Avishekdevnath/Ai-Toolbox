@@ -58,7 +58,10 @@ export default function FormModeB({ schema, identityData, onSubmitSuccess }: For
       const res = await fetch(`/api/forms/${schema._id}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ responses: values, identity: identityData }),
+        body: JSON.stringify({
+          answers: Object.entries(values).map(([fieldId, value]) => ({ fieldId, value })),
+          responder: identityData,
+        }),
       });
       const data = await res.json();
       if (data.success) {
