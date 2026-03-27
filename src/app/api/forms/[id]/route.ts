@@ -49,16 +49,38 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!form) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
     if (!ensureOwner(claims, form)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
-    // If title changes, do not change slug (immutable). Only update title.
+    // Update title
     if (body.title !== undefined && body.title !== form.title) {
       form.title = body.title;
     }
-    
+
     if (body.description !== undefined) form.description = body.description;
     if (body.type !== undefined) form.type = body.type;
     if (body.fields !== undefined) form.fields = body.fields;
-    
-    // Slug is immutable; ignore explicit slug updates
+
+    // Allow slug updates with duplicate validation
+    if (body.slug !== undefined && body.slug !== form.slug) {
+      // Sanitize: lowercase, trim, replace spaces/special chars with hyphens
+      const sanitized = body.slug
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      if (sanitized) {
+        // Check for duplicates (exclude this form)
+        const existing = await Form.findOne({ slug: sanitized, _id: { $ne: form._id } }).lean();
+        if (existing) {
+          return NextResponse.json(
+            { success: false, error: 'This slug is already in use. Please choose a different one.' },
+            { status: 409 }
+          );
+        }
+        form.slug = sanitized;
+      }
+    }
+
     if (body.settings !== undefined) {
       form.settings = {
         ...form.settings,
