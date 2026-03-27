@@ -14,7 +14,7 @@ export default async function ToolsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tools Management</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Tools Management</h1>
         <p className="mt-1 text-sm text-gray-500">
           Manage and monitor your AI tools usage and performance.
         </p>

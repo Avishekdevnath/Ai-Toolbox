@@ -19,7 +19,7 @@ export default async function AdminSystemPage() {
 	return (
 		<div className="space-y-6">
 			<div>
-				<h1 className="text-2xl font-bold text-gray-900">System Overview</h1>
+				<h1 className="text-xl md:text-2xl font-bold text-gray-900">System Overview</h1>
 				<p className="mt-1 text-sm text-gray-500">
 					Monitor system performance, health, and infrastructure.
 				</p>
