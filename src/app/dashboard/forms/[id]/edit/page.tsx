@@ -165,7 +165,18 @@ export default function FormEditor() {
 
   const addField = (type: FormField['type']) => {
     const f = createDefaultField(type);
-    setFormFields(prev => [...prev, f]);
+    setFormFields(prev => {
+      // Insert after the currently selected field, or append at end
+      if (activeField) {
+        const idx = prev.findIndex(field => field.id === activeField);
+        if (idx !== -1) {
+          const next = [...prev];
+          next.splice(idx + 1, 0, f);
+          return next;
+        }
+      }
+      return [...prev, f];
+    });
     setActiveField(f.id);
   };
 
@@ -197,13 +208,13 @@ export default function FormEditor() {
       const res = await fetch(`/api/forms/${formId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: formTitle, description: formDescription, type: formType, fields: formFields, settings: formSettings, status: formStatus }),
+        body: JSON.stringify({ title: formTitle, description: formDescription, type: formType, fields: formFields, settings: formSettings, status: formStatus, slug: formSlug }),
       });
       const result = await res.json();
       if (!result.success) throw new Error(result.error);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving form:", err);
-      alert("Failed to save form. Please try again.");
+      alert(err.message || "Failed to save form. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -258,7 +269,9 @@ export default function FormEditor() {
       settings={formSettings}
       hasQuizData={hasQuizData()}
       onTypeChange={handleTypeChange}
-      onSlugChange={setFormSlug}
+      onSlugChange={(v: string) => setFormSlug(
+        v.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-')
+      )}
       onSettingsChange={(updates) => setFormSettings(prev => ({ ...prev, ...updates }))}
     />
   );
@@ -267,6 +280,7 @@ export default function FormEditor() {
     <div className="absolute inset-0 overflow-hidden">
       <FormBuilderLayout
         formId={formId}
+        formSlug={formSlug}
         formTitle={formTitle}
         formType={formType}
         formStatus={formStatus}
