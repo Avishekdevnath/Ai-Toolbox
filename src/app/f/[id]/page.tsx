@@ -24,7 +24,7 @@ export default function PublicFormPage() {
       })
       .then(data => {
         if (data.success && data.data) {
-          setSchema({ ...data.data, settings: { displayMode: 'all', ...data.data.settings } });
+          setSchema({ ...data.data, _id: data.data._id || data.data.id, settings: { displayMode: 'all', ...data.data.settings } });
         } else {
           setError(data.error || "Failed to load form");
         }
