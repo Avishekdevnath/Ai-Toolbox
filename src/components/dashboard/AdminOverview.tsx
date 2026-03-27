@@ -287,7 +287,7 @@ export default function AdminOverview({ userId }: AdminOverviewProps) {
                     <Badge className={getSeverityColor(activity.severity)}>
                       {activity.severity}
                     </Badge>
-                    <span className="text-xs text-gray-400">{activity.timestamp}</span>
+                    <span className="hidden sm:inline text-xs text-gray-400">{activity.timestamp}</span>
                   </div>
                 </div>
               ))}
