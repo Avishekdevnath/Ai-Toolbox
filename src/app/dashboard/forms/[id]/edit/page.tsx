@@ -125,6 +125,7 @@ export default function FormEditor() {
   const [formFields, setFormFields] = useState<FormField[]>([createDefaultField()]);
   const [activeField, setActiveField] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [formSettings, setFormSettings] = useState<FormSettingsState>(defaultFormSettings);
   const [formStatus, setFormStatus] = useState("draft");
   const [formSlug, setFormSlug] = useState<string>("");
@@ -205,16 +206,21 @@ export default function FormEditor() {
   const handleSave = async () => {
     try {
       setSaving(true);
+      setSaveError(null);
       const res = await fetch(`/api/forms/${formId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: formTitle, description: formDescription, type: formType, fields: formFields, settings: formSettings, status: formStatus, slug: formSlug }),
       });
       const result = await res.json();
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        setSaveError(result.error || "Failed to save form.");
+        return;
+      }
+      setSaveError(null);
     } catch (err: any) {
       console.error("Error saving form:", err);
-      alert(err.message || "Failed to save form. Please try again.");
+      setSaveError(err.message || "Failed to save form. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -278,6 +284,12 @@ export default function FormEditor() {
 
   return (
     <div className="absolute inset-0 overflow-hidden">
+      {saveError && (
+        <div className="absolute top-0 left-0 right-0 z-50 bg-red-50 border-b border-red-200 px-4 py-2 text-[13px] text-red-700 flex items-center justify-between">
+          <span>{saveError}</span>
+          <button onClick={() => setSaveError(null)} className="text-red-500 hover:text-red-700 font-medium ml-4">Dismiss</button>
+        </div>
+      )}
       <FormBuilderLayout
         formId={formId}
         formSlug={formSlug}

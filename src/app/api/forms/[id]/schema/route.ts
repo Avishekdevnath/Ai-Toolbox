@@ -45,6 +45,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           startAt: form.settings?.startAt || null,
           endAt: form.settings?.endAt || null,
           allowAnonymous: !!form.settings?.allowAnonymous,
+          allowMultipleSubmissions: form.settings?.allowMultipleSubmissions ?? true,
+          displayMode: (form.settings as any)?.displayMode || 'all',
         },
       }
     });

@@ -73,31 +73,43 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Optional scoring for quizzes
     let score: number | undefined = undefined;
     let maxScore: number | undefined = undefined;
+    const breakdown: { label: string; correct: boolean; explanation?: string }[] = [];
     if (form.type === 'quiz') {
-      const fieldIdToField: Record<string, any> = {};
-      for (const f of form.fields || []) fieldIdToField[f.id] = f;
       const answers = body.answers || [];
       score = 0;
       maxScore = 0;
       for (const f of form.fields || []) {
+        if (f.type === 'section') continue;
         const points = f?.quiz?.points || 0;
         maxScore += points;
-        const correct = Array.isArray(f?.quiz?.correctOptions) ? f.quiz.correctOptions : [];
-        if (!points || correct.length === 0) continue;
+        const rawCorrect = Array.isArray(f?.quiz?.correctOptions) ? f.quiz.correctOptions : [];
+        if (!points || rawCorrect.length === 0) continue;
+
+        // Normalize correctOptions: support both numeric indices and string labels
+        const correctLabels = new Set(rawCorrect.map((c: any) => {
+          if (typeof c === 'number') return (f.options || [])[c] ?? '';
+          return String(c);
+        }).filter(Boolean));
+
         const a = answers.find((x: any) => x.fieldId === f.id);
-        if (!a) continue;
-        if (f.type === 'checkbox') {
-          const given = new Set(Array.isArray(a.value) ? a.value : []);
-          const labels = (f.options || []).map((o: any, idx: number) => ({ idx, o }));
-          const correctLabels = new Set(labels.filter(x => correct.includes(x.idx)).map(x => x.o));
-          const givenClean = new Set((Array.isArray(a.value) ? a.value : []).map((v: any) => String(v)));
-          const match = Array.from(correctLabels).every(l => givenClean.has(String(l))) &&
-                       Array.from(givenClean).every(l => correctLabels.has(String(l)));
-          if (match) score += points;
-        } else {
-          const idx = (f.options || []).findIndex((o: any) => o === a.value);
-          if (idx >= 0 && correct.includes(idx)) score += points;
+        let isCorrect = false;
+
+        if (a) {
+          if (f.type === 'checkbox') {
+            const givenSet = new Set((Array.isArray(a.value) ? a.value : []).map((v: any) => String(v)));
+            isCorrect = correctLabels.size === givenSet.size &&
+              Array.from(correctLabels).every(l => givenSet.has(l));
+          } else {
+            isCorrect = correctLabels.has(String(a.value));
+          }
         }
+
+        if (isCorrect) score += points;
+        breakdown.push({
+          label: f.label,
+          correct: isCorrect,
+          explanation: f.quiz?.explanation || undefined,
+        });
       }
     }
 
@@ -112,7 +124,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       maxScore,
     });
 
-    return NextResponse.json({ success: true, data: { id: String(doc._id), score, maxScore } }, { status: 201 });
+    return NextResponse.json({ success: true, data: { id: String(doc._id), score, maxScore, breakdown } }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message || 'Failed to submit form' }, { status: 500 });
   }

@@ -85,6 +85,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       form.settings = {
         ...form.settings,
         ...body.settings,
+        identitySchema: {
+          ...form.settings?.identitySchema,
+          ...body.settings?.identitySchema,
+        },
         timer: {
           enabled: !!body.settings?.timer?.enabled,
           minutes: Number(body.settings?.timer?.minutes || 0),

@@ -65,9 +65,10 @@ export default function FormModeB({ schema, identityData, onSubmitSuccess }: For
       });
       const data = await res.json();
       if (data.success) {
-        onSubmitSuccess(data.responseId ?? '', data.quizResult ?? undefined);
+        const d = data.data || {};
+        onSubmitSuccess(d.id ?? '', d.score != null ? { score: d.score, maxScore: d.maxScore, breakdown: d.breakdown ?? [] } : undefined);
       } else {
-        setSubmitError('Submission failed. Please try again.');
+        setSubmitError(data.error || 'Submission failed. Please try again.');
       }
     } catch {
       setSubmitError('Network error. Please check your connection and try again.');

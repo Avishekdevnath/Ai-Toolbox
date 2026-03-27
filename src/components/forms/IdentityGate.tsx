@@ -26,7 +26,11 @@ export default function IdentityGate({ schema, onComplete }: IdentityGateProps) 
       return;
     }
     setSubmitting(true);
-    onComplete(identity);
+    try {
+      onComplete(identity);
+    } catch {
+      setSubmitting(false);
+    }
   };
 
   const inputClass = (field: string) =>
