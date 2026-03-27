@@ -30,6 +30,7 @@ type Stage = 'identity' | 'form' | 'quiz-end' | 'submitted';
 
 export default function PublicFormShell({ schema }: PublicFormShellProps) {
   const [stage, setStage] = useState<Stage>(() => {
+    if (schema.settings.allowAnonymous) return 'form';
     const needsGate =
       schema.settings.identitySchema.requireName ||
       schema.settings.identitySchema.requireEmail ||

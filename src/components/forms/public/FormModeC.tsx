@@ -30,6 +30,7 @@ export default function FormModeC({ schema, identityData, onSubmitSuccess }: For
   const [values, setValues] = useState<Record<string, string | string[]>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
 
   const isLast = currentSection === sections.length - 1;
@@ -72,9 +73,14 @@ export default function FormModeC({ schema, identityData, onSubmitSuccess }: For
         }),
       });
       const data = await res.json();
-      if (data.success) onSubmitSuccess(data.responseId ?? '', data.quizResult ?? undefined);
+      if (data.success) {
+        const d = data.data || {};
+        onSubmitSuccess(d.id ?? '', d.score != null ? { score: d.score, maxScore: d.maxScore, breakdown: d.breakdown ?? [] } : undefined);
+      } else {
+        setSubmitError(data.error || 'Submission failed. Please try again.');
+      }
     } catch {
-      // leave for retry
+      setSubmitError('Network error. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -136,6 +142,12 @@ export default function FormModeC({ schema, identityData, onSubmitSuccess }: For
             ))}
           </motion.div>
         </AnimatePresence>
+
+        {submitError && (
+          <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-[13px] text-red-700">
+            {submitError}
+          </div>
+        )}
 
         <div className="flex items-center justify-between mt-8">
           <button

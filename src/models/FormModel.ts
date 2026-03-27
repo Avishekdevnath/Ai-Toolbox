@@ -24,8 +24,9 @@ export interface IFormField {
     selection?: { min?: number; max?: number };
   };
   quiz?: {
-    correctOptions?: number[];
+    correctOptions?: (string | number)[];
     points?: number;
+    explanation?: string;
   };
 }
 
@@ -78,8 +79,9 @@ const FormFieldSchema = new Schema<IFormField>({
     },
   },
   quiz: {
-    correctOptions: [{ type: Number }],
+    correctOptions: [{ type: Schema.Types.Mixed }],
     points: { type: Number },
+    explanation: { type: String },
   },
 }, { _id: false });
 
@@ -105,6 +107,7 @@ const FormSchema = new Schema<IForm>({
     },
     startAt: { type: Date },
     endAt: { type: Date },
+    displayMode: { type: String, enum: ['all', 'paginated', 'one-at-a-time'], default: 'all' },
     quiz: {
       scoringEnabled: { type: Boolean, default: false },
       passingScore: { type: Number },
