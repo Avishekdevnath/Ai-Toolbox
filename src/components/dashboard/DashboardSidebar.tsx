@@ -18,7 +18,7 @@ export default function DashboardSidebar({ isMobileMenuOpen = false, onMobileMen
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-20 bg-[var(--color-overlay)] lg:hidden"
           onClick={onMobileMenuClose}
           aria-hidden="true"
         />

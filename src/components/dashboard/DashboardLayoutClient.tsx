@@ -12,7 +12,7 @@ export default function DashboardLayoutClient({ children }: DashboardLayoutClien
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--color-background)]">
       <DashboardSidebar
         isMobileMenuOpen={mobileOpen}
         onMobileMenuClose={() => setMobileOpen(false)}

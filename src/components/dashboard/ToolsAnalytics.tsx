@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { TopProgressBar, SkeletonCards } from '@/components/ui/Loader';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -84,18 +85,9 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-full"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-4">
+        <TopProgressBar show={true} />
+        <SkeletonCards count={6} cols={3} />
       </div>
     );
   }
@@ -118,7 +110,7 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
   return (
     <div className="space-y-6">
       {/* Time Range Selector */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <div className="flex gap-2">
           {(['7d', '30d', '90d'] as const).map((range) => (
             <Button
@@ -131,7 +123,7 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
             </Button>
           ))}
         </div>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="self-start sm:self-auto">
           <Calendar className="w-4 h-4 mr-2" />
           Export Report
         </Button>

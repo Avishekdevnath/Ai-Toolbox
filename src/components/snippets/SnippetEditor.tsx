@@ -1,17 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { getShareBaseUrl } from '@/utils/url';
-import { Input } from '@/components/ui/input';
-import LanguageSelect from './LanguageSelect';
-import CodeBlock from './CodeBlock';
 import SnippetEditorHeader from './SnippetEditorHeader';
+import EditorControls from './EditorControls';
 import { useRouter } from 'next/navigation';
 import { useRealtimeCollaboration } from '@/hooks/useRealtimeCollaboration';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import dynamic from 'next/dynamic';
+import { getShareBaseUrl } from '@/utils/url';
+import {
+  type EditorTheme,
+  getStoredTheme,
+  storeTheme,
+  getTokens,
+} from '@/lib/editorTheme';
+
+const MonacoEditor = dynamic(() => import('./MonacoEditor'), { ssr: false });
 
 export interface SnippetEditorProps {
   initialData?: {
@@ -31,390 +36,250 @@ function SnippetEditorComponent({ initialData, isNew = false }: SnippetEditorPro
   const userId = user?.id;
   const isOwner = !!(userId && initialData?.ownerId && initialData.ownerId === userId);
   const hasOwner = !!initialData?.ownerId;
+
+  // ── Theme ──────────────────────────────────────────────────────────────────
+  const [theme, setTheme] = useState<EditorTheme>('dark'); // SSR-safe default
+  useEffect(() => { setTheme(getStoredTheme()); }, []);    // hydrate from localStorage
+
+  const handleThemeToggle = () => {
+    const next: EditorTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    storeTheme(next);
+  };
+
+  const tokens = getTokens(theme);
+
+  // ── UI state (NOT content — that lives in Monaco) ──────────────────────────
   const [title, setTitle] = useState(initialData?.title || '');
   const [language, setLanguage] = useState(initialData?.language || 'javascript');
-  const [content, setContent] = useState(initialData?.content || '');
   const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? true);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | undefined>(undefined);
   const [copied, setCopied] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
-  const [activeUsers, setActiveUsers] = useState<string[]>([]);
-  
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const lineNumbersRef = useRef<HTMLDivElement>(null);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastCursorPosition = useRef<number>(0);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isForking, setIsForking] = useState(false);
 
-  const getShareBase = () => getShareBaseUrl();
+  // Refs so callbacks always read current values without stale closures
+  const editorRef = useRef<any>(null);
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const titleRef = useRef(title);
+  const languageRef = useRef(language);
+  const isPublicRef = useRef(isPublic);
+  const isSavingRef = useRef(false);
 
-  // Set share URL on mount
+  useEffect(() => { titleRef.current = title; }, [title]);
+  useEffect(() => { languageRef.current = language; }, [language]);
+  useEffect(() => { isPublicRef.current = isPublic; }, [isPublic]);
+
   useEffect(() => {
     if (initialData?.slug) {
-      setShareUrl(`${getShareBase()}/s/${initialData.slug}`);
+      setShareUrl(`${getShareBaseUrl()}/s/${initialData.slug}`);
     }
   }, [initialData?.slug]);
 
-  // Real-time collaboration callbacks
-  const handleRemoteContentChange = useCallback((newContent: string) => {
-    setContent(newContent);
+  const showError = useCallback((msg: string) => {
+    setErrorMessage(msg);
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    errorTimerRef.current = setTimeout(() => setErrorMessage(''), 4000);
   }, []);
 
-  const handleRemoteTitleChange = useCallback((newTitle: string) => {
-    setTitle(newTitle);
+  // ── Real-time collaboration ───────────────────────────────────────────────
+  const handleRemoteContentChange = useCallback((v: string) => {
+    if (editorRef.current) {
+      const model = editorRef.current.getModel();
+      if (model && model.getValue() !== v) editorRef.current.setValue(v);
+    }
   }, []);
+  const handleRemoteTitleChange = useCallback((v: string) => setTitle(v), []);
+  const handleRemoteLanguageChange = useCallback((v: string) => setLanguage(v), []);
+  const handleRemoteVisibilityChange = useCallback((v: boolean) => setIsPublic(v), []);
 
-  const handleRemoteLanguageChange = useCallback((newLanguage: string) => {
-    setLanguage(newLanguage);
-  }, []);
-
-  const handleRemoteVisibilityChange = useCallback((newIsPublic: boolean) => {
-    setIsPublic(newIsPublic);
-  }, []);
-
-  const handleRemoteCursorChange = useCallback((position: number) => {
-    // Visual indicator for other users' cursors could be added here
-    console.log('Remote cursor position:', position);
-  }, []);
-
-  // Initialize real-time collaboration
   const {
     isConnected,
-    activeUsers: collaborationUsers,
+    activeUsers,
     emitContentChange,
     emitTitleChange,
     emitLanguageChange,
     emitVisibilityChange,
-    emitCursorPosition,
   } = useRealtimeCollaboration({
     snippetId: initialData?.slug || '',
     onContentChange: handleRemoteContentChange,
     onTitleChange: handleRemoteTitleChange,
     onLanguageChange: handleRemoteLanguageChange,
     onVisibilityChange: handleRemoteVisibilityChange,
-    onCursorChange: handleRemoteCursorChange,
+    onCursorChange: () => {},
   });
 
-  // Track if we're in the middle of a local change to prevent auto-save conflicts
-  const [isLocalChange, setIsLocalChange] = useState(false);
-
-  // Update active users
-  useEffect(() => {
-    setActiveUsers(collaborationUsers);
-  }, [collaborationUsers]);
-
-  // Auto-save functionality
-  useEffect(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Only auto-save if we have a slug and there are actual changes
-    if (initialData?.slug && (title || content)) {
-      saveTimeoutRef.current = setTimeout(() => {
-        handleSave(true);
-      }, 2000); // Auto-save after 2 seconds of inactivity
-    }
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [title, content, language, isPublic, initialData?.slug]);
-
-  const handleSave = async (isAutoSave = false) => {
-    if (isSaving || !initialData?.slug) return;
-    
+  // ── Save ─────────────────────────────────────────────────────────────────
+  const save = useCallback(async (isAutoSave = false) => {
+    if (isSavingRef.current || !initialData?.slug) return;
+    isSavingRef.current = true;
     setIsSaving(true);
+    const content = editorRef.current?.getValue() ?? '';
     try {
-      const payload = {
-        title: title.trim() || undefined,
-        language,
-        content,
-        isPublic
-      };
-
-      console.log('Saving snippet:', payload); // Debug log
-      console.log('User ID:', userId || 'anonymous'); // Debug log
-
-      const headers: Record<string, string> = { 
-        'Content-Type': 'application/json',
-      };
-      
-      // Add user ID header if user is logged in
-      if (userId) {
-        headers['x-user-id'] = userId;
-      }
-
-      const response = await fetch(`/api/snippets/${initialData.slug}`, {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (userId) headers['x-user-id'] = userId;
+      const res = await fetch(`/api/snippets/${initialData.slug}`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          title: titleRef.current.trim() || undefined,
+          language: languageRef.current,
+          content,
+          isPublic: isPublicRef.current,
+        }),
       });
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          // Permission denied
-          const errorData = await response.json();
-          console.error('Save forbidden:', errorData.error);
-          
-          if (!isAutoSave) {
-            alert(errorData.error || 'You do not have permission to edit this snippet.');
-          }
-          return;
-        }
-        
-        const errorText = await response.text();
-        console.error('Save failed:', errorText);
-        
-        if (!isAutoSave) {
-          alert(`Failed to save snippet: ${errorText}`);
-        }
-        throw new Error(`Failed to save snippet: ${errorText}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Save failed' }));
+        if (!isAutoSave) showError(err.error || 'Failed to save snippet');
+        return;
       }
-
-      const result = await response.json();
-      console.log('Save successful:', result); // Debug log
       setLastSaved(new Date());
-      
-      // Track generate/save usage
-      try {
-        await fetch('/api/tools/code-share/track-usage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usageType: 'generate', userId })
-        });
-      } catch {}
-    } catch (error) {
-      console.error('Error saving snippet:', error);
-      
-      if (!isAutoSave) {
-        alert('An error occurred while saving. Please try again.');
-      }
+      fetch('/api/tools/code-share/track-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usageType: 'generate', userId }),
+      }).catch(() => {});
+    } catch {
+      if (!isAutoSave) showError('An error occurred while saving. Please try again.');
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
-  };
+  }, [initialData?.slug, userId, showError]);
 
+  // Debounce auto-save when title/language/visibility change
+  useEffect(() => {
+    if (!initialData?.slug) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => save(true), 2000);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, language, isPublic, initialData?.slug]);
 
+  // ── Monaco mount ─────────────────────────────────────────────────────────
+  const handleEditorMount = useCallback((editor: any) => {
+    editorRef.current = editor;
+    editor.focus();
+    editor.onDidChangeModelContent(() => {
+      const val = editor.getValue();
+      if (initialData?.slug) emitContentChange(val, editor.getPosition()?.column ?? 0);
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => save(true), 2000);
+    });
+  }, [initialData?.slug, emitContentChange, save]);
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(content);
+    await navigator.clipboard.writeText(editorRef.current?.getValue() ?? '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleCreateNew = () => {
-    window.open('/s/new', '_blank');
-  };
-
   const handleShare = async () => {
-    if (shareUrl) {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      // Track share usage
-      try {
-        await fetch('/api/tools/code-share/track-usage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usageType: 'share', userId })
-        });
-      } catch {}
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    fetch('/api/tools/code-share/track-usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usageType: 'share', userId }),
+    }).catch(() => {});
+  };
+
+  const handleFork = async () => {
+    if (!initialData?.slug || isForking) return;
+    setIsForking(true);
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (userId) headers['x-user-id'] = userId;
+      const res = await fetch(`/api/snippets/${initialData.slug}/fork`, { method: 'POST', headers });
+      if (!res.ok) { showError('Failed to fork snippet'); return; }
+      const { data } = await res.json();
+      router.push(`/s/${data.slug}/edit`);
+    } catch {
+      showError('Failed to fork snippet');
+    } finally {
+      setIsForking(false);
     }
   };
 
-  // Handle content changes with real-time collaboration
-  const handleContentChange = (newContent: string) => {
-    setIsLocalChange(true);
-    setContent(newContent);
-    if (initialData?.slug) {
-      const cursorPos = textareaRef.current?.selectionStart || 0;
-      emitContentChange(newContent, cursorPos);
-      lastCursorPosition.current = cursorPos;
-    }
-    // Reset local change flag after a short delay
-    setTimeout(() => setIsLocalChange(false), 500);
+  const handleTitleChange = (v: string) => {
+    setTitle(v);
+    if (initialData?.slug) emitTitleChange(v);
+  };
+  const handleLanguageChange = (v: string) => {
+    setLanguage(v);
+    if (initialData?.slug) emitLanguageChange(v);
+  };
+  const handleVisibilityChange = (v: boolean) => {
+    setIsPublic(v);
+    if (initialData?.slug) emitVisibilityChange(v);
   };
 
-  // Handle title changes with real-time collaboration
-  const handleTitleChange = (newTitle: string) => {
-    setIsLocalChange(true);
-    setTitle(newTitle);
-    if (initialData?.slug) {
-      emitTitleChange(newTitle);
-    }
-    setTimeout(() => setIsLocalChange(false), 500);
-  };
-
-  // Handle language changes with real-time collaboration
-  const handleLanguageChange = (newLanguage: string) => {
-    setIsLocalChange(true);
-    setLanguage(newLanguage);
-    if (initialData?.slug) {
-      emitLanguageChange(newLanguage);
-    }
-    setTimeout(() => setIsLocalChange(false), 500);
-  };
-
-  // Handle visibility changes with real-time collaboration
-  const handleVisibilityChange = (newIsPublic: boolean) => {
-    setIsLocalChange(true);
-    setIsPublic(newIsPublic);
-    if (initialData?.slug) {
-      emitVisibilityChange(newIsPublic);
-    }
-    setTimeout(() => setIsLocalChange(false), 500);
-  };
-
-  // Handle cursor position changes
-  const handleCursorChange = () => {
-    if (textareaRef.current && initialData?.slug) {
-      const cursorPos = textareaRef.current.selectionStart || 0;
-      if (cursorPos !== lastCursorPosition.current) {
-        emitCursorPosition(cursorPos);
-        lastCursorPosition.current = cursorPos;
-      }
-    }
-  };
-
-  // Synchronize scroll between textarea and line numbers
-  const handleScroll = () => {
-    if (textareaRef.current && lineNumbersRef.current) {
-      const scrollTop = textareaRef.current.scrollTop;
-      lineNumbersRef.current.style.transform = `translateY(-${scrollTop}px)`;
-    }
-  };
+  const showFork = !!(initialData?.slug && hasOwner && !isOwner);
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex-shrink-0">
-        <SnippetEditorHeader
-          isNew={isNew}
-          shareUrl={shareUrl}
-          isConnected={isConnected}
-          activeUsers={activeUsers}
-          lastSaved={lastSaved}
-          isSaving={isSaving}
-          showPreview={showPreview}
-          copied={copied}
-          onTogglePreview={() => setShowPreview(!showPreview)}
-          onCopy={handleCopy}
-          onShare={handleShare}
-          onSave={() => handleSave()}
-          onCreateNew={handleCreateNew}
-          ownerName={isOwner ? (user?.username || user?.email || 'Owner') : undefined}
+    <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-200 ${tokens.pageBg}`}>
+      <SnippetEditorHeader
+        isNew={isNew}
+        shareUrl={shareUrl}
+        isConnected={isConnected}
+        activeUsers={activeUsers}
+        lastSaved={lastSaved}
+        isSaving={isSaving}
+        copied={copied}
+        theme={theme}
+        tokens={tokens}
+        onCopy={handleCopy}
+        onShare={handleShare}
+        onSave={() => save()}
+        onCreateNew={() => window.open('/s/new', '_blank')}
+        onThemeToggle={handleThemeToggle}
+        onFork={handleFork}
+        isForking={isForking}
+        showFork={showFork}
+        errorMessage={errorMessage}
+      />
+
+      <EditorControls
+        title={title}
+        language={language}
+        isPublic={isPublic}
+        isOwner={isOwner}
+        hasOwner={hasOwner}
+        tokens={tokens}
+        onTitleChange={handleTitleChange}
+        onLanguageChange={handleLanguageChange}
+        onVisibilityChange={handleVisibilityChange}
+      />
+
+      <div className="flex-1 min-h-0" style={{ height: 0 }}>
+        <MonacoEditor
+          language={language}
+          defaultValue={initialData?.content ?? ''}
+          theme={theme}
+          onMount={handleEditorMount}
+          height="100%"
         />
-      </div>
-
-      {/* Editor Controls */}
-      <div className="flex-shrink-0 border-b border-gray-800 bg-gray-900 px-3 sm:px-4 py-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <Input
-            placeholder="Untitled snippet"
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            className="bg-white border-gray-300 text-black placeholder-gray-500 text-sm flex-1 w-full sm:max-w-md"
-          />
-          
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <label className={`flex items-center gap-2 text-xs text-gray-300 ${isOwner || !hasOwner ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={isPublic}
-                  onChange={(e) => handleVisibilityChange(e.target.checked)}
-                  disabled={!isOwner && hasOwner}
-                  className="sr-only"
-                  title={!isOwner && hasOwner ? 'Only the owner can change visibility' : ''}
-                />
-                <div className={`w-10 h-5 rounded-full transition-colors duration-200 ${
-                  isPublic ? 'bg-blue-600' : 'bg-gray-600'
-                }`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                    isPublic ? 'translate-x-5' : 'translate-x-0.5'
-                  } mt-0.5`}></div>
-                </div>
-              </div>
-              <span className="text-xs font-medium hidden sm:inline">
-                {isPublic ? 'Public' : 'Private'}
-              </span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Editor Area */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
-        {/* Code Editor */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 flex bg-black min-h-0">
-            {/* Line Numbers Container */}
-            <div className="bg-gray-900 border-r border-gray-700 flex-shrink-0 overflow-hidden relative" style={{ width: '60px' }}>
-              <div 
-                ref={lineNumbersRef}
-                className="text-gray-500 text-xs font-mono py-4 px-2 select-none absolute top-0 left-0 right-0"
-                style={{ 
-                  transform: 'translateY(0px)', // Will be updated by scroll sync
-                }}
-              >
-                {content.split('\n').map((_, index) => (
-                  <div key={index} className="leading-4 text-right h-4">
-                    {index + 1}
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Code Textarea */}
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              onKeyUp={handleCursorChange}
-              onMouseUp={handleCursorChange}
-              onFocus={handleCursorChange}
-              onScroll={handleScroll}
-              placeholder="Start typing your code here..."
-              className="flex-1 bg-black text-white p-4 font-mono text-xs resize-none outline-none leading-4 overflow-auto min-h-0"
-              style={{ tabSize: 2 }}
-              spellCheck={false}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-            />
-          </div>
-        </div>
-
-        {/* Preview Panel */}
-        {showPreview && (
-          <div className="w-full lg:w-1/2 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col min-h-0">
-            <div className="bg-gray-800 px-4 py-2 text-sm text-gray-400 border-b border-gray-700 flex-shrink-0">
-              PREVIEW
-            </div>
-            <div className="flex-1 p-4 overflow-auto min-h-0">
-              <CodeBlock
-                code={content || '// Your code will appear here...'}
-                language={language}
-                className="text-sm"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
-// Client-side only wrapper to prevent hydration issues
 const SnippetEditor = dynamic(() => Promise.resolve(SnippetEditorComponent), {
   ssr: false,
   loading: () => (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center">
-      <div className="text-white">Loading editor...</div>
+    <div className="h-screen bg-[#1e1e1e] text-white flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-gray-600">Loading editor…</span>
+      </div>
     </div>
-  )
+  ),
 });
 
 export default SnippetEditor;

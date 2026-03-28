@@ -54,6 +54,7 @@
     "dotenv": "^17.2.1",
     "framer-motion": "^12.23.6",
     "googleapis": "^150.0.1",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "jsdom": "^26.1.0",
     "jsonwebtoken": "^9.0.2",

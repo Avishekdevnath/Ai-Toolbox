@@ -5,7 +5,7 @@ import ToolPageLayout from '@/components/tools/ToolPageLayout';
 
 export default function WordCounterPage() {
   return (
-    <ToolPageLayout toolId="word-counter" toolName="Word Counter">
+    <ToolPageLayout toolId="word-counter" toolName="Word Counter" maxWidth="xl">
       <WordCounterTool />
     </ToolPageLayout>
   );

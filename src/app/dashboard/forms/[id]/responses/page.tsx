@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft, Download, Search, Edit3, MessageSquare, BarChart,
+  ArrowLeft, Download, Search, Edit3, MessageSquare, BarChart, Sparkles,
   AlertCircle, Calendar, CheckCircle, FileDown, FileText, FileSpreadsheet,
-  FileBarChart, Filter, Trash2
+  FileBarChart, Filter, Trash2, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import FormsStatChips from '@/components/forms/FormsStatChips';
@@ -19,6 +19,7 @@ interface FormData {
   description?: string;
   type?: string;
   fields: { id: string; label: string; type: string }[];
+  allowAnonymous?: boolean;
 }
 
 interface ResponseItem {
@@ -43,6 +44,7 @@ export default function FormResponsesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedResponse, setSelectedResponse] = useState<ResponseItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [page, setPage] = useState(1);
@@ -56,14 +58,39 @@ export default function FormResponsesPage() {
     respondentName: r.identity?.name ?? undefined,
     respondentEmail: r.identity?.email ?? undefined,
     submittedAt: r.submittedAt ?? r.createdAt ?? new Date().toISOString(),
-    fields: form?.fields?.map(f => ({
+    // Exclude section headings and empty answers from slide-over details
+    fields: form?.fields?.filter(f => f.type !== 'section').map(f => ({
       label: f.label,
-      answer: r.responses?.[f.id] ?? r.data?.[f.id] ?? '—',
-    })) ?? [],
+      answer: r.responses?.[f.id] ?? r.data?.[f.id] ?? null,
+    })).filter((fld: any) => fld.answer !== null && fld.answer !== '' ) ?? [],
     isQuiz: form?.type === 'quiz',
     quizScore: r.quizResult?.score,
     quizMaxScore: r.quizResult?.maxScore,
   });
+
+  // Render cell content with clickable links for any URLs found in string values
+  const renderCellContent = (val: any) => {
+    if (val === undefined || val === null || val === '') return <span className="text-slate-400">—</span>;
+    const text = typeof val === 'string' ? val : (typeof val === 'object' ? JSON.stringify(val) : String(val));
+    const urlRegex = /https?:\/\/[\w\-\._~:\/?#\[\]@!$&'()*+,;=%]+/g;
+    const nodes: any[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    const re = new RegExp(urlRegex);
+    while ((match = re.exec(text)) !== null) {
+      const idx = match.index;
+      if (idx > lastIndex) nodes.push(text.substring(lastIndex, idx));
+      const url = match[0];
+      nodes.push(
+        <a key={`${url}-${idx}`} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          {url}
+        </a>
+      );
+      lastIndex = idx + url.length;
+    }
+    if (lastIndex < text.length) nodes.push(text.substring(lastIndex));
+    return <span className="break-words">{nodes}</span>;
+  };
 
   const fetchData = async () => {
     try {
@@ -142,6 +169,11 @@ export default function FormResponsesPage() {
     setSelectedIds(selectedIds.length === filteredResponses.length ? [] : filteredResponses.map(r => r._id));
   };
 
+  // Render non-section form fields as table columns (show question label + value)
+  const visibleFields = (form?.fields ?? []).filter((f: any) => f.type !== 'section');
+
+  const columnsCount = 1 + (visibleFields.length ?? 0) + 1 + (form?.type === 'quiz' ? 1 : 0) + 1; // checkbox + visible fields + submitted + optional score + actions
+
   if (error) return (
     <div className="space-y-4">
       <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
@@ -168,6 +200,7 @@ export default function FormResponsesPage() {
           { label: 'Edit', href: `/dashboard/forms/${formId}/edit`, icon: Edit3 },
           { label: 'Responses', href: `/dashboard/forms/${formId}/responses`, icon: MessageSquare, active: true },
           { label: 'Analytics', href: `/dashboard/forms/${formId}/analytics`, icon: BarChart },
+          { label: 'AI Report', href: `/dashboard/forms/${formId}/ai-report`, icon: Sparkles },
         ].map(({ label, href, icon: Icon, active }) => (
           <Link key={label} href={href}
             className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors ${(active as boolean | undefined) ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
@@ -238,7 +271,7 @@ export default function FormResponsesPage() {
       </AnimatePresence>
 
       {/* Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto">
         {loading ? (
           <div className="divide-y divide-slate-100">
             {[...Array(5)].map((_, i) => (
@@ -283,7 +316,10 @@ export default function FormResponsesPage() {
                   <input type="checkbox" checked={selectedIds.length === filteredResponses.length && filteredResponses.length > 0}
                     onChange={toggleSelectAll} className="rounded border-slate-300" />
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium">Respondent</th>
+                {/* Render each form field as a column header */}
+                {visibleFields.map(f => (
+                  <th key={f.id} className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium">{f.label}</th>
+                ))}
                 <th className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium hidden sm:table-cell">Submitted</th>
                 {form?.type === 'quiz' && (
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium hidden md:table-cell">Score</th>
@@ -292,26 +328,30 @@ export default function FormResponsesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredResponses.map(r => {
+                  {filteredResponses.map(r => {
                 const name = r.identity?.name;
                 const email = r.identity?.email;
                 const date = new Date(r.submittedAt ?? r.createdAt ?? '');
                 const isSelected = selectedIds.includes(r._id);
                 return (
-                  <tr key={r._id}
-                    onClick={() => setSelectedResponse(r)}
-                    className={`cursor-pointer transition-colors ${isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                  <React.Fragment key={r._id}>
+                    <tr
+                      onClick={() => setExpandedId(prev => prev === r._id ? null : r._id)}
+                      className={`cursor-pointer transition-colors ${isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <input type="checkbox" checked={isSelected}
                         onChange={() => setSelectedIds(prev => isSelected ? prev.filter(i => i !== r._id) : [...prev, r._id])}
                         className="rounded border-slate-300" />
                     </td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-slate-800">{name ?? 'Anonymous'}</p>
-                      {email && <p className="text-[11px] text-slate-400">{email}</p>}
-                    </td>
+                    {/* Render visible field values in same order as headers (exclude student info) */}
+                    {visibleFields.map(f => (
+                      <td key={f.id} className="px-4 py-3 text-slate-800">
+                        {renderCellContent(r.responses?.[f.id] ?? r.data?.[f.id])}
+                      </td>
+                    ))}
                     <td className="px-4 py-3 text-slate-500 hidden sm:table-cell">
-                      {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      <div className="whitespace-nowrap">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                      <div className="text-[11px] text-slate-400">{date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>
                     </td>
                     {form?.type === 'quiz' && (
                       <td className="px-4 py-3 hidden md:table-cell">
@@ -322,6 +362,18 @@ export default function FormResponsesPage() {
                     )}
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
+                        {/* Expand toggle icon (also shows state) */}
+                        <button onClick={() => setExpandedId(prev => prev === r._id ? null : r._id)}
+                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-colors"
+                          title="Toggle details">
+                          {expandedId === r._id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                        </button>
+                        {/* Open slide-over / details */}
+                        <button onClick={() => { setSelectedResponse(r); }}
+                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-colors"
+                          title="View">
+                          <FileText size={13} />
+                        </button>
                         <button onClick={() => deleteResponse(r._id)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                           title="Delete">
@@ -330,6 +382,31 @@ export default function FormResponsesPage() {
                       </div>
                     </td>
                   </tr>
+
+                  {/* Expanded details row - show form fields/answers when anonymous responses are allowed */}
+                  {expandedId === r._id && (
+                    <tr key={`${r._id}-expanded`} className="bg-slate-50">
+                      <td colSpan={columnsCount} className="px-4 py-3 border-t border-slate-100">
+                        <div className="space-y-2">
+                          <div className="text-[13px] text-slate-700 font-medium">Response details</div>
+                          <div className="text-[13px] text-slate-600">Respondent: {r.identity?.name ?? 'Anonymous'} {r.identity?.email ? `(${r.identity.email})` : ''}</div>
+                          <div className="pt-2">
+                            {form.fields?.filter(f => f.type !== 'section').map(f => {
+                              const ans = r.responses?.[f.id] ?? r.data?.[f.id];
+                              if (ans === undefined || ans === null || ans === '') return null;
+                              return (
+                                <div key={f.id} className="flex gap-3 items-start">
+                                  <div className="w-40 text-[13px] text-slate-600">{f.label}</div>
+                                  <div className="text-[13px] text-slate-800">{String(ans)}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -361,3 +438,5 @@ export default function FormResponsesPage() {
     </div>
   );
 }
+
+

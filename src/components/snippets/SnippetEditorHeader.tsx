@@ -1,8 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Save, Copy, Share2, Eye, EyeOff, Users, Plus } from 'lucide-react';
+import {
+  Save, Copy, Share2, Users, Plus, GitFork,
+  Check, Code2, Sun, Moon,
+} from 'lucide-react';
+import Link from 'next/link';
+import type { EditorTheme, ThemeTokens } from '@/lib/editorTheme';
 
 interface SnippetEditorHeaderProps {
   isNew: boolean;
@@ -11,14 +15,18 @@ interface SnippetEditorHeaderProps {
   activeUsers: string[];
   lastSaved?: Date;
   isSaving: boolean;
-  showPreview: boolean;
   copied: boolean;
-  onTogglePreview: () => void;
+  theme: EditorTheme;
+  tokens: ThemeTokens;
   onCopy: () => void;
   onShare: () => void;
   onSave: () => void;
   onCreateNew: () => void;
-  ownerName?: string;
+  onThemeToggle: () => void;
+  onFork?: () => void;
+  isForking?: boolean;
+  showFork?: boolean;
+  errorMessage?: string;
 }
 
 export default function SnippetEditorHeader({
@@ -28,146 +36,158 @@ export default function SnippetEditorHeader({
   activeUsers,
   lastSaved,
   isSaving,
-  showPreview,
   copied,
-  onTogglePreview,
+  theme,
+  tokens,
   onCopy,
   onShare,
   onSave,
   onCreateNew,
-  ownerName
+  onThemeToggle,
+  onFork,
+  isForking,
+  showFork,
+  errorMessage,
 }: SnippetEditorHeaderProps) {
+  function formatSaved(d: Date) {
+    const s = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (s < 5) return 'just now';
+    if (s < 60) return `${s}s ago`;
+    return `${Math.floor(s / 60)}m ago`;
+  }
+
+  const isLight = theme === 'light';
+
   return (
-    <div className="border-b border-gray-800 bg-gray-900 px-3 sm:px-4 py-2">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        {/* Left Section - Title and Status */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          <h1 className="text-sm sm:text-base font-medium truncate">
-            {isNew ? 'New Code Snippet' : 'Edit Code Snippet'}
-          </h1>
-          
-          {/* Status indicators - responsive layout */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-            {shareUrl && isConnected && (
-              <div className="flex items-center gap-1 text-xs text-green-400">
-                <Users className="w-3 h-3" />
-                <span className="hidden sm:inline">{activeUsers.length + 1} online</span>
-                <span className="sm:hidden">{activeUsers.length + 1}</span>
-              </div>
+    <div className={`border-b ${tokens.barBg} ${tokens.barBorder} transition-colors duration-200`}>
+      {/* Error banner */}
+      {errorMessage && (
+        <div className="bg-red-500/10 border-b border-red-500/20 text-red-400 text-xs px-4 py-1.5">
+          {errorMessage}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 gap-3">
+        {/* Left: brand + status */}
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href="/"
+            className={`flex items-center gap-1.5 flex-shrink-0 transition-colors ${tokens.textPrimary} ${isLight ? 'hover:text-gray-600' : 'hover:text-gray-300'}`}
+          >
+            <Code2 size={15} className="text-blue-500" />
+            <span className={`text-sm font-semibold hidden sm:inline ${tokens.textMuted}`}>
+              ShareCode
+            </span>
+          </Link>
+
+          <div className={`h-4 w-px hidden sm:block ${isLight ? 'bg-gray-300' : 'bg-gray-700'}`} />
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {isSaving && (
+              <span className={`text-xs ${tokens.textMuted}`}>Saving…</span>
             )}
-            
-            {lastSaved && (
-              <span className="text-xs text-gray-400 hidden sm:inline">
-                Saved {lastSaved.toLocaleTimeString()}
+            {!isSaving && lastSaved && (
+              <span className={`text-xs ${tokens.textMuted}`}>
+                Saved {formatSaved(lastSaved)}
               </span>
             )}
-            
-            {isSaving && (
-              <span className="text-xs text-yellow-400">Saving...</span>
-            )}
-            
             {isConnected && (
-              <div className="flex items-center gap-1 text-xs text-green-400">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <div className={`flex items-center gap-1 text-xs ${tokens.liveColor}`}>
+                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isLight ? 'bg-green-500' : 'bg-green-400'}`} />
                 <span className="hidden sm:inline">Live</span>
               </div>
             )}
-            
-            {ownerName && (
-              <span className="text-xs text-blue-400 hidden sm:inline">Owner: {ownerName}</span>
+            {isConnected && activeUsers.length > 0 && (
+              <div className={`flex items-center gap-1 text-xs ${tokens.textMuted}`}>
+                <Users size={11} />
+                <span>{activeUsers.length + 1}</span>
+              </div>
             )}
           </div>
-          
-          {/* Share URL - hidden on mobile */}
-          {shareUrl && (
-            <div className="hidden lg:flex items-center gap-2">
-              <span className="text-xs text-gray-400">URL:</span>
-              <code className="text-xs bg-gray-800 px-2 py-1 rounded text-green-400 truncate max-w-xs">
-                {shareUrl}
-              </code>
-              <span className="text-xs text-gray-500">(Anyone with this link can edit)</span>
-            </div>
-          )}
         </div>
-        
-        {/* Right Section - Action Buttons */}
-        <div className="flex items-center gap-1 relative z-50 flex-shrink-0 flex-wrap sm:flex-nowrap">
-          <div className="relative group">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCreateNew}
-              aria-label="Create new snippet"
-              className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black p-2 rounded-md cursor-pointer"
+
+        {/* Right: actions */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Fork (non-owner only) */}
+          {showFork && onFork && (
+            <button
+              onClick={onFork}
+              disabled={isForking}
+              title="Fork this snippet"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/20 text-purple-400 text-xs font-medium transition-colors disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" />
-            </Button>
-            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-              Create new snippet
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onTogglePreview}
-              aria-label={showPreview ? 'Hide preview' : 'Show preview'}
-              className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black p-2 rounded-md cursor-pointer"
-            >
-              {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </Button>
-            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-              {showPreview ? 'Hide Preview' : 'Show Preview'}
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCopy}
-              aria-label={copied ? 'Copied' : 'Copy code'}
-              className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black p-2 rounded-md cursor-pointer"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-              {copied ? 'Copied!' : 'Copy code'}
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onShare}
-              className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black disabled:opacity-50 p-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
-              aria-label="Share snippet"
-              disabled={!shareUrl}
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
-            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-              {copied ? 'Link copied!' : 'Share snippet'}
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <Button
-              onClick={onSave}
-              disabled={isSaving}
-              aria-label={isSaving ? 'Saving' : 'Save snippet'}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-            >
-              <Save className="w-4 h-4" />
-            </Button>
-            <div className="hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-              {isSaving ? 'Saving...' : 'Save snippet'}
-            </div>
-          </div>
+              <GitFork size={13} />
+              <span className="hidden sm:inline">{isForking ? 'Forking…' : 'Fork'}</span>
+            </button>
+          )}
+
+          {/* Theme toggle */}
+          <IconBtn
+            onClick={onThemeToggle}
+            title={isLight ? 'Switch to dark theme' : 'Switch to light theme'}
+            tokens={tokens}
+          >
+            {isLight ? (
+              <Moon size={14} className={tokens.textSecondary} />
+            ) : (
+              <Sun size={14} className={tokens.textSecondary} />
+            )}
+          </IconBtn>
+
+          <IconBtn onClick={onCreateNew} title="New snippet" tokens={tokens}>
+            <Plus size={14} />
+          </IconBtn>
+
+          <IconBtn onClick={onCopy} title={copied ? 'Copied!' : 'Copy code'} tokens={tokens}>
+            {copied ? (
+              <Check size={14} className="text-green-500" />
+            ) : (
+              <Copy size={14} />
+            )}
+          </IconBtn>
+
+          <IconBtn onClick={onShare} title="Copy share link" disabled={!shareUrl} tokens={tokens}>
+            <Share2 size={14} />
+          </IconBtn>
+
+          {/* Save — primary CTA */}
+          <button
+            onClick={onSave}
+            disabled={isSaving}
+            title={isSaving ? 'Saving…' : 'Save'}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save size={13} />
+            <span className="hidden sm:inline">{isSaving ? 'Saving…' : 'Save'}</span>
+          </button>
         </div>
       </div>
     </div>
+  );
+}
+
+function IconBtn({
+  children,
+  onClick,
+  title,
+  disabled,
+  tokens,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  title: string;
+  disabled?: boolean;
+  tokens: ThemeTokens;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={`p-1.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+        ${tokens.iconBtnBg} ${tokens.iconBtnHoverBg} ${tokens.iconBtnText} ${tokens.iconBtnHoverText}`}
+    >
+      {children}
+    </button>
   );
 }

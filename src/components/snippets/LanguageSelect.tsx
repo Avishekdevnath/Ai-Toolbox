@@ -1,24 +1,59 @@
-"use client";
-import { languages } from '@/lib/snippetLanguages';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+'use client';
+
 import React from 'react';
+import { ChevronDown } from 'lucide-react';
+import { languages } from '@/lib/snippetLanguages';
+import { getLangColor } from '@/lib/snippetLanguages';
+import type { ThemeTokens } from '@/lib/editorTheme';
 
 interface LanguageSelectProps {
   value: string;
   onChange: (lang: string) => void;
+  tokens?: ThemeTokens;
 }
 
-export default function LanguageSelect({ value, onChange }: LanguageSelectProps) {
+export default function LanguageSelect({ value, onChange, tokens }: LanguageSelectProps) {
+  const isDark = !tokens || tokens.monacoTheme === 'vs-dark';
+
+  const selectBg    = isDark ? '#3c3c3c' : '#ffffff';
+  const selectBorder = isDark ? '#555555' : '#c8c8c8';
+  const selectText  = isDark ? '#e0e0e0' : '#1e1e1e';
+
   return (
-    <Select value={value} onValueChange={onChange} className="w-48">
-      <SelectTrigger className="bg-white border-gray-300 text-black">
-        <SelectValue className="text-black">{value}</SelectValue>
-      </SelectTrigger>
-      <SelectContent className="bg-white border-gray-300">
+    <div className="relative flex items-center">
+      {/* Language colour dot */}
+      <div
+        className={`absolute left-2.5 w-2 h-2 rounded-full flex-shrink-0 pointer-events-none z-10
+          ${getLangColor(value).split(' ').find(c => c.startsWith('bg-')) ?? 'bg-gray-500'}`}
+      />
+
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          background: selectBg,
+          color: selectText,
+          borderColor: selectBorder,
+          appearance: 'none',
+          WebkitAppearance: 'none',
+        }}
+        className="h-8 pl-6 pr-7 text-xs font-mono rounded-md border
+          outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30
+          transition-colors duration-150 cursor-pointer w-36"
+      >
         {languages.map((lang) => (
-          <SelectItem key={lang} value={lang} className="text-black hover:bg-gray-100">{lang}</SelectItem>
+          <option key={lang} value={lang} style={{ background: selectBg, color: selectText }}>
+            {lang}
+          </option>
         ))}
-      </SelectContent>
-    </Select>
+      </select>
+
+      {/* Custom chevron */}
+      <ChevronDown
+        size={12}
+        className="absolute right-2 pointer-events-none"
+        style={{ color: isDark ? '#858585' : '#888888' }}
+      />
+    </div>
   );
 }

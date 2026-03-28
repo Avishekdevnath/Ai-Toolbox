@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, Search, LogOut, Settings, Activity, AlertTriangle } from 'lucide-react';
 import { signOutClient } from '@/lib/authService';
+import ThemeDropdown from '@/components/ui/ThemeDropdown';
 
 interface AdminUser {
   email: string;
@@ -57,14 +58,14 @@ export default function AdminHeader() {
     : 'A';
 
   return (
-    <header className="h-12 flex-shrink-0 flex items-center justify-between px-5 bg-white border-b border-slate-200 gap-4">
+    <header className="h-12 flex-shrink-0 flex items-center justify-between px-5 bg-[var(--color-surface)] border-b border-[var(--color-border)] gap-4">
       {/* Search */}
       <div className="relative hidden md:flex items-center w-full max-w-xs">
-        <Search className="absolute left-2.5 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-2.5 w-3.5 h-3.5 text-[var(--color-text-muted)] pointer-events-none" />
         <input
           type="search"
           placeholder="Search admin panel…"
-          className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-slate-100 border border-slate-200 rounded-lg placeholder:text-slate-400 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition-all"
+          className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-[var(--color-surface-tertiary)] border border-[var(--color-border)] rounded-lg placeholder:text-[var(--color-text-muted)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition-all"
         />
       </div>
 
@@ -74,7 +75,7 @@ export default function AdminHeader() {
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => { setNotifOpen((v) => !v); setProfileOpen(false); }}
-            className="relative p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            className="relative p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-muted)] rounded-lg transition-colors"
             aria-label="Notifications"
           >
             <Bell className="w-4 h-4" />

@@ -7,6 +7,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Menu, X, LogOut, Settings, LayoutDashboard, UserCheck, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { usePathname } from 'next/navigation';
+import ThemeDropdown from '@/components/ui/ThemeDropdown';
 
 const NAV_LINKS = [
   { href: '/ai-tools', label: 'AI Tools' },
@@ -71,6 +72,7 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2 md:justify-self-end">
             <div className="hidden md:flex items-center gap-3">
+              <ThemeDropdown />
               {isAuthenticated ? (
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger asChild>
@@ -119,6 +121,9 @@ export default function Navbar() {
             {isAuthenticated && (
               <Link href={dashHref} className={`block px-3 py-2 rounded-lg ${lnk(dashActive)}`} onClick={close}>Dashboard</Link>
             )}
+            <div className="py-2">
+              <ThemeDropdown />
+            </div>
             <div className="pt-3 mt-2 border-t border-[var(--color-border)] space-y-1">
               {isAuthenticated ? (
                 <>

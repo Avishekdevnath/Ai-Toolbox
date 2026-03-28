@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Eye, Link2, Save, Loader2, MoreHorizontal } from 'lucide-react';
 import { FormType } from '@/types/forms';
@@ -34,6 +34,18 @@ export default function FormBuilderLayout({
   centerPanel, rightPanel, mobileConfigPanel,
 }: FormBuilderLayoutProps) {
   const [mobileTab, setMobileTab] = useState<MobileTab>('canvas');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!menuRef.current) return;
+      if (!(e.target instanceof Node)) return;
+      if (!menuRef.current.contains(e.target)) setMobileMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [mobileMenuOpen]);
   const liveFormHref = formSlug ? `/f/${formSlug}` : `/f/${formId}`;
 
   return (
@@ -87,9 +99,20 @@ export default function FormBuilderLayout({
             {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
             {saving ? 'Saving...' : 'Save'}
           </button>
-          <button className="md:hidden p-1.5 text-slate-500 hover:text-slate-700">
-            <MoreHorizontal size={18} />
-          </button>
+          <div className="relative md:hidden">
+            <button onClick={() => setMobileMenuOpen((s) => !s)} className="p-1.5 text-slate-500 hover:text-slate-700">
+              <MoreHorizontal size={18} />
+            </button>
+            {mobileMenuOpen && (
+              <div ref={menuRef} className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
+                <a href={`/f/${formId}`} target="_blank" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Preview</a>
+                <a href={liveFormHref} target="_blank" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Live</a>
+                <button onClick={() => { onPublishToggle(); setMobileMenuOpen(false); }} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                  {formStatus === 'published' ? 'Unpublish' : 'Publish'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -100,13 +123,13 @@ export default function FormBuilderLayout({
           {centerPanel}
         </div>
 
-        {/* Right panel */}
+        {/* Right panel (desktop) */}
         <div className="hidden md:flex flex-col w-[360px] shrink-0 border-l border-slate-200 bg-white overflow-y-auto">
           {rightPanel}
         </div>
 
-        {/* Mobile: Config panel */}
-        {mobileTab === 'config' && (
+        {/* Mobile: fields / config panel */}
+        {mobileTab !== 'canvas' && (
           <div className="flex-1 overflow-y-auto bg-white md:hidden">
             {mobileConfigPanel}
           </div>
@@ -115,7 +138,7 @@ export default function FormBuilderLayout({
 
       {/* Mobile bottom tabs */}
       <div className="md:hidden flex border-t border-slate-200 bg-white shrink-0" style={{ height: 48 }}>
-        {(['canvas', 'config'] as MobileTab[]).map((tab) => (
+        {(['canvas', 'fields', 'config'] as MobileTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
@@ -123,7 +146,7 @@ export default function FormBuilderLayout({
               mobileTab === tab ? 'text-blue-600 border-t-2 border-blue-600' : 'text-slate-500'
             }`}
           >
-            {tab === 'config' ? 'Settings' : 'Canvas'}
+            {tab === 'config' ? 'Settings' : tab === 'fields' ? 'Fields' : 'Canvas'}
           </button>
         ))}
       </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFormModel } from '@/models/FormModel';
 import { getFormResponseModel } from '@/models/FormResponseModel';
 import mongoose from 'mongoose';
+import { AnalyticsService } from '@/lib/analyticsService';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -123,6 +124,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       score,
       maxScore,
     });
+
+    // Track analytics for form submission so system-wide dashboards include form usage
+    try {
+      AnalyticsService.trackEvent({
+        userId: 'anonymous',
+        toolSlug: 'forms',
+        toolName: 'Forms',
+        eventType: 'generate',
+        metadata: { formId: String(form._id), responder: { email: responder.email } }
+      }).catch((e) => console.warn('Failed to track form submission analytics:', e));
+    } catch (e) {
+      console.warn('AnalyticsService.trackEvent error:', e);
+    }
 
     return NextResponse.json({ success: true, data: { id: String(doc._id), score, maxScore, breakdown } }, { status: 201 });
   } catch (e: any) {

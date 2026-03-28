@@ -52,6 +52,12 @@ export interface IForm extends Document {
     oneAttemptPerIdentity?: boolean;
   };
   status: FormStatus;
+  aiInsights?: {
+    data: any;
+    generatedAt: Date;
+    model?: string;
+    generatedBy?: string;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,6 +124,12 @@ const FormSchema = new Schema<IForm>({
     oneAttemptPerIdentity: { type: Boolean, default: false },
   },
   status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft', index: true },
+  aiInsights: {
+    data: { type: Schema.Types.Mixed },
+    generatedAt: { type: Date },
+    model: { type: String },
+    generatedBy: { type: String },
+  },
 }, { timestamps: true, collection: 'forms' });
 
 FormSchema.index({ ownerId: 1, updatedAt: -1 });

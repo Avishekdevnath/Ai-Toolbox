@@ -25,6 +25,19 @@
   --color-muted-foreground: #64748B;
   --color-destructive: #DC2626;
   --color-ring: #2563EB;
+  --color-surface-secondary: #F8FAFC;
+  --color-surface-tertiary: #F1F5F9;
+  --color-border-subtle: #F1F5F9;
+  --color-text-muted: #94A3B8;
+  --color-text-inverse: #FFFFFF;
+  --color-success: #16A34A;
+  --color-success-muted: #F0FDF4;
+  --color-warning: #D97706;
+  --color-warning-muted: #FFFBEB;
+  --color-destructive-muted: #FEF2F2;
+  --color-primary-muted: #EFF6FF;
+  --color-overlay: rgba(0,0,0,0.5);
+  --color-shadow: rgba(0,0,0,0.08);
 }
 
 /* Dark mode color tokens */
@@ -42,6 +55,19 @@
   --color-muted-foreground: #94A3B8;
   --color-destructive: #EF4444;
   --color-ring: #3B82F6;
+  --color-surface-secondary: #1E293B;
+  --color-surface-tertiary: #263044;
+  --color-border-subtle: #1E293B;
+  --color-text-muted: #718096;
+  --color-text-inverse: #FFFFFF;
+  --color-success: #22C55E;
+  --color-success-muted: #0D2818;
+  --color-warning: #FBBF24;
+  --color-warning-muted: #1F1A0A;
+  --color-destructive-muted: #2D0F0F;
+  --color-primary-muted: #0C2340;
+  --color-overlay: rgba(0,0,0,0.7);
+  --color-shadow: rgba(0,0,0,0.4);
 }
 
 button:not(:disabled),
@@ -61,6 +87,45 @@ body {
   background: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+}
+
+/* Theme transition — applied temporarily on toggle, removed after 300ms */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 200ms ease, color 150ms ease, border-color 200ms ease !important;
+}
+
+/* Dark mode scrollbar */
+.dark {
+  scrollbar-color: #334155 transparent;
+}
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Print — force light mode */
+@media print {
+  html.dark {
+    color-scheme: light;
+    --color-surface: #FFFFFF;
+    --color-background: #FFFFFF;
+    --color-text-primary: #1E293B;
+    --color-text-secondary: #64748B;
+    --color-border: #E2E8F0;
+  }
 }
 
 /* Preserve existing utility classes used by other features */

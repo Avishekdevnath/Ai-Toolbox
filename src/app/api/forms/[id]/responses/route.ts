@@ -84,8 +84,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       if (hasName) systemHeaders.push('name');
       if (hasEmail) systemHeaders.push('email');
       if (hasStudentId) systemHeaders.push('studentId');
-      
-      const headers = ['submittedAt', ...systemHeaders, ...form.fields.map((f: any) => f.label || f.id)];
+      // Exclude section headings from export columns
+      const nonSectionFields = (form.fields || []).filter((f: any) => f.type !== 'section');
+      const headers = ['submittedAt', ...systemHeaders, ...nonSectionFields.map((f: any) => f.label || f.id)];
       const rows: string[][] = [headers];
       
       for (const r of items) {
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         
         const ansMap: Record<string, any> = {};
         for (const a of (r.answers || [])) ansMap[a.fieldId] = a.value;
-        const rest = form.fields.map((f: any) => ansMap[f.id] !== undefined ? (typeof ansMap[f.id] === 'object' ? JSON.stringify(ansMap[f.id]) : String(ansMap[f.id])) : '');
+        const rest = nonSectionFields.map((f: any) => ansMap[f.id] !== undefined ? (typeof ansMap[f.id] === 'object' ? JSON.stringify(ansMap[f.id]) : String(ansMap[f.id])) : '');
         rows.push([...base, ...rest]);
       }
       const csv = toCsv(rows);
@@ -121,7 +122,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       if (hasEmail) systemHeaders.push('email');
       if (hasStudentId) systemHeaders.push('studentId');
       
-      const headers = ['submittedAt', ...systemHeaders, ...form.fields.map((f: any) => f.label || f.id)];
+      // Exclude section headings from export columns
+      const nonSectionFields2 = (form.fields || []).filter((f: any) => f.type !== 'section');
+      const headers = ['submittedAt', ...systemHeaders, ...nonSectionFields2.map((f: any) => f.label || f.id)];
       const rows: any[][] = [headers];
       
       for (const r of items) {
@@ -134,7 +137,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         
         const ansMap: Record<string, any> = {};
         for (const a of (r.answers || [])) ansMap[a.fieldId] = a.value;
-        const rest = form.fields.map((f: any) => ansMap[f.id] !== undefined ? (typeof ansMap[f.id] === 'object' ? JSON.stringify(ansMap[f.id]) : String(ansMap[f.id])) : '');
+        const rest = nonSectionFields2.map((f: any) => ansMap[f.id] !== undefined ? (typeof ansMap[f.id] === 'object' ? JSON.stringify(ansMap[f.id]) : String(ansMap[f.id])) : '');
         rows.push([...base, ...rest]);
       }
       
@@ -164,7 +167,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           form: {
             title: form.title,
             description: form.description,
-            fields: form.fields
+            // Exclude section headings from export payload
+            fields: (form.fields || []).filter((f: any) => f.type !== 'section')
           },
           exportFormat: 'pdf'
         } 
@@ -182,7 +186,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           form: {
             title: form.title,
             description: form.description,
-            fields: form.fields
+            // Exclude section headings from export payload
+            fields: (form.fields || []).filter((f: any) => f.type !== 'section')
           },
           exportFormat: 'google-docs'
         } 

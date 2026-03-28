@@ -11,34 +11,30 @@ export function buildQuotePrompt(request: QuoteRequest): string {
     prompt += `Respond ONLY in ${language}. Do NOT provide translations or explanations. `;
   }
   
-  // Build the main prompt based on request type
-  if (!author) {
-    // Authentic quotes from real authors
-    prompt += `Give me up to ${quoteCount} famous, authentic, and verifiable quotes`;
+  // All paths request REAL, documented quotes only — never invented ones.
+  if (author) {
+    // Real quotes BY the specified author
+    prompt += `Find up to ${quoteCount} real, documented, and verifiable quotes actually said or written by ${author}`;
     if (topic) prompt += ` about ${topic}`;
     if (mood) prompt += ` in a ${mood} tone`;
-    
-    // Bengali-specific: restrict to famous Bengali authors
+    prompt += `. IMPORTANT: Only include quotes that are confirmed to be from ${author}. Do NOT invent, paraphrase, fabricate, or create new quotes. Do NOT write quotes "in the style of" ${author}. If fewer than ${quoteCount} verified quotes exist for these criteria, return only those that are genuinely authentic — do not pad with invented ones. Do NOT include any disclaimers, notes, or caveats. Format: "Quote text" — ${author}. Number each quote.`;
+  } else if (birthDate) {
+    // Birthday — real quotes about celebration/life from well-known figures
+    prompt += `Find up to ${quoteCount} real, documented, and verifiable quotes about life, celebration, or birthdays`;
+    if (mood) prompt += ` in a ${mood} tone`;
+    prompt += `. Return only quotes that are confirmed authentic from real historical figures, authors, or philosophers. Do NOT invent or paraphrase. Format: "Quote text" — Author Name. Number each quote.`;
+  } else {
+    // General — real quotes by topic/mood
+    prompt += `Find up to ${quoteCount} famous, authentic, and verifiable quotes`;
+    if (topic) prompt += ` about ${topic}`;
+    if (mood) prompt += ` in a ${mood} tone`;
+
     if (language === 'Bengali') {
-      prompt += `. Only use real, well-known, and verifiable quotes from these Bengali authors: ${famousBengaliAuthors.join(', ')}. Return only real, verifiable quotes. Do NOT invent, paraphrase, or create new quotes. If not enough real quotes exist, return only those that are authentic. Do NOT include any disclaimers or notes. Do not attribute quotes to 'Unknown' or generic sources.`;
+      prompt += `. Only use real, well-known, and verifiable quotes from these Bengali authors: ${famousBengaliAuthors.join(', ')}. Return only real, verifiable quotes. Do NOT invent, paraphrase, or create new quotes. If not enough real quotes exist, return only those that are authentic. Do NOT include any disclaimers or notes.`;
     } else {
-      prompt += `. Return only real, verifiable, and well-known quotes from authentic sources. Do NOT invent, paraphrase, or create new quotes. If not enough real quotes exist, return only those that are authentic. Do NOT include any disclaimers or notes. For each quote, include the original author's name.`;
+      prompt += `. Return only real, verifiable, and well-known quotes from authentic sources. Do NOT invent, paraphrase, or create new quotes. If not enough real quotes exist, return only those that are authentic. Do NOT include any disclaimers or notes. Include the original author's name for each quote.`;
     }
     prompt += ' Format: "Quote text" — Author Name. Number each quote.';
-  } else if (topic || mood || author) {
-    // Original quotes in specific style
-    prompt += `Write ${quoteCount} short, original, unique quotes`;
-    if (topic) prompt += ` about ${topic}`;
-    if (mood) prompt += ` in a ${mood} tone`;
-    if (author) prompt += ` in the style of ${author}`;
-    if (birthDate) prompt += ` that could be used as a birthday wish`;
-    prompt += `. Number each quote. Avoid cliches. Make them realistic and meaningful.`;
-  } else if (birthDate) {
-    // Birthday quotes
-    prompt += `Write ${quoteCount} short, uplifting, original birthday quotes for someone born on ${birthDate}. Number each quote. Avoid cliches. Make them unique and positive.`;
-  } else {
-    // General life quotes
-    prompt += `Write ${quoteCount} short, original, inspiring quotes about life. Number each quote.`;
   }
   
   return prompt;
@@ -50,18 +46,16 @@ export function buildFallbackPrompt(request: QuoteRequest): string {
   
   let prompt = '';
   
-  if (!author) {
-    prompt += `Give me up to ${quoteCount} famous, authentic, and verifiable quotes`;
+  if (author) {
+    prompt += `Find up to ${quoteCount} real, documented, and verifiable quotes actually said or written by ${author}`;
+    if (topic) prompt += ` about ${topic}`;
+    if (mood) prompt += ` in a ${mood} tone`;
+    prompt += `. Only include quotes confirmed to be from ${author}. Do NOT invent, paraphrase, or fabricate quotes. Format: "Quote text" — ${author}. Number each quote.`;
+  } else {
+    prompt += `Find up to ${quoteCount} famous, authentic, and verifiable quotes`;
     if (topic) prompt += ` about ${topic}`;
     if (mood) prompt += ` in a ${mood} tone`;
     prompt += `. Return only real, verifiable, and well-known quotes from authentic sources. Do NOT invent, paraphrase, or create new quotes. If not enough real quotes exist, return only those that are authentic. Do NOT include any disclaimers or notes. For each quote, include the original author's name. Format: "Quote text" — Author Name. Number each quote.`;
-  } else {
-    prompt += `Write ${quoteCount} short, original, unique quotes`;
-    if (topic) prompt += ` about ${topic}`;
-    if (mood) prompt += ` in a ${mood} tone`;
-    if (author) prompt += ` in the style of ${author}`;
-    if (birthDate) prompt += ` that could be used as a birthday wish`;
-    prompt += `. Number each quote. Avoid cliches. Make them realistic and meaningful.`;
   }
   
   return prompt;

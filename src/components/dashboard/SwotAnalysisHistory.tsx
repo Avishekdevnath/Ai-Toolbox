@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { TopProgressBar, SkeletonList } from '@/components/ui/Loader';
 import { 
   History, 
   Trash2, 
@@ -128,12 +129,10 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>Loading analysis history...</span>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <TopProgressBar show={true} />
+        <SkeletonList rows={5} />
+      </div>
     );
   }
 
@@ -142,7 +141,7 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <BarChart3 className="w-6 h-6 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
             SWOT Analysis History
           </h2>
         </div>
@@ -249,16 +248,14 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDate(item.createdAt)}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <span>{item.accessCount} views</span>
-                    </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>{formatDate(item.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>{item.accessCount} views</span>
                   </div>
                 </div>
 

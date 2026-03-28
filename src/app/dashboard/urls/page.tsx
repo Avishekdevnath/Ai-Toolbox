@@ -6,6 +6,7 @@ import { Settings, X } from 'lucide-react';
 import { createShortenedUrl, generateQRCodeUrl } from '@/lib/urlShortenerService';
 import UserPreferences from '@/components/tools/UserPreferences';
 import UrlCreateTab from '@/components/dashboard/urls/UrlCreateTab';
+import { Spinner } from '@/components/ui/Loader';
 import UrlManageTab from '@/components/dashboard/urls/UrlManageTab';
 import UrlAnalyticsTab from '@/components/dashboard/urls/UrlAnalyticsTab';
 import { useUrlActions } from '@/components/dashboard/urls/useUrlActions';
@@ -56,7 +57,7 @@ export default function UserUrlDashboard() {
   const handleSelectAll = () => setSelectedUrls(selectedUrls.length === shortenedUrls.length ? [] : shortenedUrls.map(u => u._id?.toString() || ''));
   const clearSelected = () => setSelectedUrls([]);
 
-  if (!user) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" /></div>;
+  if (!user) return <Spinner size="lg" className="h-64" />;
 
   return (
     <div className="space-y-5">

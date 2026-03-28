@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { TopProgressBar, SkeletonCards } from '@/components/ui/Loader';
 import { 
   Wrench, 
   Search, 
@@ -278,20 +279,9 @@ export default function ToolsManagement({ userId }: ToolsManagementProps) {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-full"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="space-y-4">
+        <TopProgressBar show={true} />
+        <SkeletonCards count={6} cols={3} />
       </div>
     );
   }
@@ -326,7 +316,7 @@ export default function ToolsManagement({ userId }: ToolsManagementProps) {
             />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <Button
               key={category}

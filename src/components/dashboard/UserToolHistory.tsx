@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { SkeletonList } from '@/components/ui/Loader';
 
 interface ToolUsage {
   _id?: string;
@@ -64,13 +65,14 @@ export default function UserToolHistory({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <Input
           placeholder="Filter by tool slug (e.g., swot-analysis)"
           value={toolFilter}
           onChange={(e) => setToolFilter(e.target.value)}
+          className="flex-1"
         />
-        <Button variant="outline" onClick={() => fetchItems(true)} disabled={loading}>Refresh</Button>
+        <Button variant="outline" onClick={() => fetchItems(true)} disabled={loading} className="shrink-0">Refresh</Button>
       </div>
 
       <Card>
@@ -79,7 +81,7 @@ export default function UserToolHistory({ userId }: { userId: string }) {
         </CardHeader>
         <CardContent>
           {loading && items.length === 0 ? (
-            <div className="text-sm text-gray-500">Loading...</div>
+            <SkeletonList rows={4} />
           ) : error ? (
             <div className="text-sm text-red-600">{error}</div>
           ) : items.length === 0 ? (

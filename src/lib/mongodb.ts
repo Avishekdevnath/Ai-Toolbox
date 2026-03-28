@@ -27,24 +27,34 @@ export async function connectToDatabase() {
       heartbeatFrequencyMS: 10000,
     });
 
-    // Handle connection events - only attach once
-    if (!listenersAttached) {
+    // Handle connection events - avoid attaching duplicate listeners (HMR/dev caution)
+    try {
+      // Allow unlimited listeners on the connection to avoid MaxListeners warnings in dev
+      (mongoose.connection as any).setMaxListeners?.(0);
+    } catch (e) {
+      // ignore
+    }
+
+    // Attach listeners only if not already present
+    if (mongoose.connection.listenerCount('error') === 0) {
       mongoose.connection.on('error', (err) => {
         console.error('❌ MongoDB connection error:', err);
         isConnected = false;
       });
+    }
 
+    if (mongoose.connection.listenerCount('disconnected') === 0) {
       mongoose.connection.on('disconnected', () => {
         console.warn('⚠️ MongoDB disconnected');
         isConnected = false;
       });
+    }
 
+    if (mongoose.connection.listenerCount('reconnected') === 0) {
       mongoose.connection.on('reconnected', () => {
         console.log('✅ MongoDB reconnected');
         isConnected = true;
       });
-
-      listenersAttached = true;
     }
 
     isConnected = true;

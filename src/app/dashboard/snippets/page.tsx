@@ -6,6 +6,7 @@ import { RootState } from '@/lib/store';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Plus, Code2 } from 'lucide-react';
+import { TopProgressBar, SkeletonTable } from '@/components/ui/Loader';
 
 interface SnippetItem {
   slug: string;
@@ -62,12 +63,10 @@ export default function SnippetsDashboardPage() {
       </div>
 
       {loading ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
-            <p className="text-[13px] text-slate-500">Loading snippets...</p>
-          </div>
-        </div>
+        <>
+          <TopProgressBar show={true} />
+          <SkeletonTable rows={6} />
+        </>
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
           <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-3">

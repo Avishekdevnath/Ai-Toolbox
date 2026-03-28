@@ -164,7 +164,9 @@ export default function FormsTable({ forms, openMenuId, rowStartIndex = 0, setOp
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      <table className="min-w-full text-[13px]">
+      {/* Desktop / tablet: table */}
+      <div className="hidden sm:block">
+        <table className="min-w-full text-[13px]">
         <thead className="bg-slate-50 border-b border-slate-100">
           <tr>
             <th className="px-4 py-3 text-left text-[11px] uppercase tracking-wide text-slate-400 font-medium w-10">#</th>
@@ -210,7 +212,46 @@ export default function FormsTable({ forms, openMenuId, rowStartIndex = 0, setOp
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
+
+      {/* Mobile: stacked cards */}
+      <div className="block sm:hidden">
+        <div className="divide-y divide-slate-100">
+          {forms.map((form, idx) => (
+            <div
+              key={form._id}
+              onClick={() => router.push(`/dashboard/forms/${form._id}/edit`)}
+              className="p-3 hover:bg-blue-50/30 transition-colors cursor-pointer"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <div className="text-slate-400 text-sm">{rowStartIndex + idx + 1}.</div>
+                    <div className="font-medium text-slate-800 truncate">{form.title}</div>
+                  </div>
+                  {form.description && <div className="text-[12px] text-slate-400 mt-1 truncate">{form.description}</div>}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${TYPE_BADGE_STYLES[form.type] ?? 'bg-slate-100 text-slate-600'}`}>{TYPE_LABELS[form.type] ?? form.type}</span>
+                    <div><StatusBadge status={form.status} /></div>
+                    <div className="text-[12px] text-slate-500">{formatDate(form.createdAt)}</div>
+                    <div className="text-[12px] font-medium text-slate-800 tabular-nums">{form.responseCount ?? 0} responses</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-1" onClick={(e) => e.stopPropagation()}>
+                  <Link href={`/dashboard/forms/${form._id}/edit`} className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors" title="Edit">
+                    <Edit size={16} />
+                  </Link>
+                  <Link href={`/dashboard/forms/${form._id}/responses`} className="p-1.5 text-slate-400 hover:text-green-600 rounded-md hover:bg-green-50 transition-colors" title="Responses">
+                    <BarChart3 size={16} />
+                  </Link>
+                  <ActionMenu form={form} openMenuId={openMenuId} setOpenMenuId={setOpenMenuId} onDelete={onDelete} onPublish={onPublish} onUnpublish={onUnpublish} onDuplicate={onDuplicate} onCopyLink={onCopyLink} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

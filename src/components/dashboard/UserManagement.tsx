@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TopProgressBar, SkeletonTable } from '@/components/ui/Loader';
 
 interface User {
   id: string;
@@ -98,11 +99,9 @@ export default function UserManagement({}: UserManagementProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading users...</p>
-        </div>
+      <div className="space-y-4">
+        <TopProgressBar show={true} />
+        <SkeletonTable rows={8} />
       </div>
     );
   }
@@ -160,7 +159,7 @@ export default function UserManagement({}: UserManagementProps) {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="text-right">
+                  <div className="hidden sm:block text-right">
                     <p className="text-xs text-gray-500">Created: {user.createdAt}</p>
                     <p className="text-xs text-gray-500">Last login: {user.lastLogin}</p>
                   </div>

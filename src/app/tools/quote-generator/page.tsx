@@ -5,7 +5,7 @@ import ToolPageLayout from '@/components/tools/ToolPageLayout';
 
 export default function QuoteGeneratorPage() {
   return (
-    <ToolPageLayout toolId="quote-generator" toolName="Quote Generator">
+    <ToolPageLayout toolId="quote-generator" toolName="Quote Generator" maxWidth="xl">
       <QuoteGeneratorTool />
     </ToolPageLayout>
   );

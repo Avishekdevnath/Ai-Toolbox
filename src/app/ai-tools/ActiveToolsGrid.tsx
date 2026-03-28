@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import ToolCard from '@/components/tools/ToolCard';
-import { aiTools, utilityTools } from '@/data/tools';
+import { aiTools } from '@/data/tools';
 
-const allTools = [...aiTools, ...utilityTools];
+const allTools = aiTools;
 
 export function ActiveToolsGrid() {
   const [disabledSlugs, setDisabledSlugs] = useState<string[]>([]);

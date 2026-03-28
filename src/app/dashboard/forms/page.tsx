@@ -6,6 +6,7 @@ import { Plus, Search, FileBarChart, ChevronLeft, ChevronRight, AlertCircle, Che
 import FormsTable from "@/components/dashboard/forms/FormsTable";
 import { useFormsData } from "@/components/dashboard/forms/useFormsData";
 import FormsStatChips from "@/components/forms/FormsStatChips";
+import { TopProgressBar, SkeletonStatChips, SkeletonTable } from "@/components/ui/Loader";
 
 export default function FormsPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -59,6 +60,7 @@ export default function FormsPage() {
 
   return (
     <div className="space-y-5">
+      <TopProgressBar show={loading} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-slate-800">Forms</h1>
@@ -69,7 +71,9 @@ export default function FormsPage() {
         </Link>
       </div>
 
-      {!loading && (
+      {loading ? (
+        <SkeletonStatChips count={4} />
+      ) : (
         <FormsStatChips stats={[
           { icon: FileText, value: total, label: 'Total Forms' },
           { icon: CheckCircle2, value: forms.filter(f => f.status === 'published').length, label: 'Published' },
@@ -119,12 +123,7 @@ export default function FormsPage() {
       )}
 
       {loading ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
-            <p className="text-[13px] text-slate-500">Loading forms...</p>
-          </div>
-        </div>
+        <SkeletonTable rows={6} />
       ) : forms.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl p-16 text-center">
           <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">

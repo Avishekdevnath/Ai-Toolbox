@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { TopProgressBar, SkeletonCards } from '@/components/ui/Loader';
 import { 
   QrCode, 
   Plus, 
@@ -134,8 +134,9 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" text="Loading QR generator management..." />
+      <div className="space-y-4">
+        <TopProgressBar show={true} />
+        <SkeletonCards count={4} cols={2} />
       </div>
     );
   }
@@ -292,7 +293,7 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
               />
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}

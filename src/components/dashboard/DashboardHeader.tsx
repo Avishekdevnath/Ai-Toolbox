@@ -4,6 +4,7 @@ import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from './header/SearchBar';
 import { HeaderActions } from './header/HeaderActions';
+import ThemeDropdown from '@/components/ui/ThemeDropdown';
 
 interface DashboardHeaderProps {
   isMobileMenuOpen?: boolean;
@@ -12,12 +13,12 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ isMobileMenuOpen = false, onMobileMenuToggle }: DashboardHeaderProps) {
   return (
-    <header className="h-12 flex items-center justify-between px-4 gap-3 bg-white border-b border-slate-200 flex-shrink-0">
+    <header className="h-12 flex items-center justify-between px-4 gap-3 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex-shrink-0">
       <div className="flex items-center gap-3 min-w-0">
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden w-8 h-8 text-slate-500"
+          className="lg:hidden w-8 h-8 text-[var(--color-text-secondary)]"
           onClick={onMobileMenuToggle}
           aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
         >
@@ -25,7 +26,10 @@ export default function DashboardHeader({ isMobileMenuOpen = false, onMobileMenu
         </Button>
         <SearchBar />
       </div>
-      <HeaderActions />
+      <div className="flex items-center gap-2">
+        <ThemeDropdown />
+        <HeaderActions />
+      </div>
     </header>
   );
 }
