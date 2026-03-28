@@ -460,7 +460,7 @@ export default function QuizResults({
     <div className={`form-luxe h-screen ${themeClasses.container} flex items-center justify-center p-2`}>
       <div className="w-full max-w-xl">
         {/* Compact Results Design */}
-        <div id="quiz-result-card" className="relative bg-white rounded-lg shadow-2xl border-2 border-gray-300 overflow-hidden">
+        <div id="quiz-result-card" className="relative bg-[var(--color-surface)] rounded-lg shadow-2xl border-2 border-[var(--color-border)] overflow-hidden">
           
           {/* Header */}
           <div className="text-center py-4 px-4">
@@ -470,15 +470,15 @@ export default function QuizResults({
             </div>
             
             {/* Quiz Title */}
-            <h1 className="text-xl font-bold text-gray-800 mb-2">{formData.title}</h1>
+            <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{formData.title}</h1>
             
             {/* Student Name */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">
+            <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-lg p-3 mb-4">
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 {responder.name || 'Student'}
               </h2>
               {responder.studentId && (
-                <p className="text-xs text-gray-600 mt-1">ID: {responder.studentId}</p>
+                <p className="text-xs text-[var(--color-text-secondary)] mt-1">ID: {responder.studentId}</p>
               )}
             </div>
             
@@ -488,19 +488,19 @@ export default function QuizResults({
                 <div className={`text-2xl font-bold ${getScoreColor(percentage)}`}>
                   {percentage}%
                 </div>
-                <div className="text-xs text-gray-600">Score</div>
+                <div className="text-xs text-[var(--color-text-secondary)]">Score</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-800">
+                <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                   {score}/{maxScore}
                 </div>
-                <div className="text-xs text-gray-600">Points</div>
+                <div className="text-xs text-[var(--color-text-secondary)]">Points</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-800">
+                <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                   {durationFormatted}
                 </div>
-                <div className="text-xs text-gray-600">Time</div>
+                <div className="text-xs text-[var(--color-text-secondary)]">Time</div>
               </div>
             </div>
             
@@ -512,7 +512,7 @@ export default function QuizResults({
             </div>
             
             {/* Footer */}
-            <div className="text-xs text-gray-500 border-t pt-2">
+            <div className="text-xs text-[var(--color-text-muted)] border-t pt-2">
               {responder.email && (
                 <p>Email: {responder.email}</p>
               )}
@@ -520,18 +520,18 @@ export default function QuizResults({
 
             {/* Time Information */}
             {(startTime || endTime) && (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="bg-[var(--color-surface-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   {startTime && (
                     <div>
-                      <span className="text-gray-600 font-medium">Started:</span>
-                      <p className="text-gray-800 mt-1">{startTime}</p>
+                      <span className="text-[var(--color-text-secondary)] font-medium">Started:</span>
+                      <p className="text-[var(--color-text-primary)] mt-1">{startTime}</p>
                     </div>
                   )}
                   {endTime && (
                     <div>
-                      <span className="text-gray-600 font-medium">Completed:</span>
-                      <p className="text-gray-800 mt-1">{endTime}</p>
+                      <span className="text-[var(--color-text-secondary)] font-medium">Completed:</span>
+                      <p className="text-[var(--color-text-primary)] mt-1">{endTime}</p>
                     </div>
                   )}
                 </div>

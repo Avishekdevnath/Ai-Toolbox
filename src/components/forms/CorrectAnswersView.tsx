@@ -147,7 +147,7 @@ export default function CorrectAnswersView({
                         ? 'border-red-300 bg-red-50 shadow-sm'
                         : isCorrectOption
                         ? 'border-green-300 bg-green-50 shadow-sm'
-                        : 'border-gray-200 bg-gray-50'
+                        : 'border-[var(--color-border)] bg-[var(--color-surface-secondary)]'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export default function CorrectAnswersView({
                           ? 'text-red-800 line-through'
                           : isCorrectOption
                           ? 'text-green-800'
-                          : 'text-gray-600'
+                          : 'text-[var(--color-text-secondary)]'
                       }`}
                     >
                       {option}
@@ -206,7 +206,7 @@ export default function CorrectAnswersView({
                         ? 'border-red-300 bg-red-50 shadow-sm'
                         : isCorrectOption
                         ? 'border-green-300 bg-green-50 shadow-sm'
-                        : 'border-gray-200 bg-gray-50'
+                        : 'border-[var(--color-border)] bg-[var(--color-surface-secondary)]'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export default function CorrectAnswersView({
                           ? 'text-red-800 line-through'
                           : isCorrectOption
                           ? 'text-green-800'
-                          : 'text-gray-600'
+                          : 'text-[var(--color-text-secondary)]'
                       }`}
                     >
                       {option}
@@ -247,8 +247,8 @@ export default function CorrectAnswersView({
 
       default:
         return (
-          <div className="p-3 rounded-lg border border-gray-200 bg-gray-50">
-            <div className="text-sm text-gray-600">
+          <div className="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+            <div className="text-sm text-[var(--color-text-secondary)]">
               {answer?.value || 'No answer provided'}
             </div>
           </div>
@@ -265,11 +265,11 @@ export default function CorrectAnswersView({
             <Eye className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Answer Review</h1>
-          <p className="text-gray-600">Check your answers and see the correct solutions</p>
+          <p className="text-[var(--color-text-secondary)]">Check your answers and see the correct solutions</p>
         </div>
 
         {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-[var(--color-surface)] rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
           {/* Card Header */}
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
             <div className="flex items-center justify-between">
@@ -311,7 +311,7 @@ export default function CorrectAnswersView({
               const points = field.quiz?.points || 0;
 
               return (
-                <div key={field.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                <div key={field.id} className="bg-[var(--color-surface-secondary)] rounded-xl p-6 border border-[var(--color-border)] hover:shadow-md transition-shadow">
                   {/* Question Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -323,13 +323,13 @@ export default function CorrectAnswersView({
                         }`}>
                           {index + 1}
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                           {field.label}
                           {field.required && <span className="text-red-500 ml-1">*</span>}
                         </h3>
                       </div>
                       {field.helpText && (
-                        <p className="text-sm text-gray-600 ml-11">{field.helpText}</p>
+                        <p className="text-sm text-[var(--color-text-secondary)] ml-11">{field.helpText}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
@@ -345,7 +345,7 @@ export default function CorrectAnswersView({
                         </div>
                       )}
                       {points > 0 && (
-                        <div className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                        <div className="bg-[var(--color-muted)] text-[var(--color-text-secondary)] px-3 py-1 rounded-full text-sm font-medium">
                           {points} point{points !== 1 ? 's' : ''}
                         </div>
                       )}

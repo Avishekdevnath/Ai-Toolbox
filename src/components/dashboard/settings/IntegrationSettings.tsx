@@ -110,12 +110,12 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
     <div className={`space-y-6 ${className}`}>
       <div className="flex items-center gap-3">
         <Zap className="w-6 h-6 text-blue-600" />
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
           Integration Settings
         </h2>
       </div>
-      
-      <p className="text-gray-600 dark:text-gray-400">
+
+      <p className="text-[var(--color-text-secondary)]">
         Manage API keys, webhooks, and third-party integrations.
       </p>
 
@@ -149,13 +149,13 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
                     <SelectItem key={option.value} value={option.value}>
                       <div>
                         <div className="font-medium">{option.label}</div>
-                        <div className="text-sm text-gray-500">{option.description}</div>
+                        <div className="text-sm text-[var(--color-text-muted)]">{option.description}</div>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 This format will be used for all data exports
               </p>
             </div>
@@ -201,7 +201,7 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
                 placeholder="https://your-domain.com/webhook"
                 className="font-mono text-sm"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 We'll send POST requests to this URL when events occur
               </p>
               {formData.webhookUrl && (
@@ -216,8 +216,8 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Analysis Complete</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="font-medium text-[var(--color-text-primary)]">Analysis Complete</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Send webhook when analysis is finished
                   </p>
                 </div>
@@ -230,8 +230,8 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
               
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Account Updates</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="font-medium text-[var(--color-text-primary)]">Account Updates</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Send webhook when account settings change
                   </p>
                 </div>
@@ -244,8 +244,8 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
               
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Error Events</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="font-medium text-[var(--color-text-primary)]">Error Events</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Send webhook when errors occur
                   </p>
                 </div>
@@ -298,7 +298,7 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
                   {showApiKey ? 'Hide' : 'Show'}
                 </Button>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Keep your API key secure and never share it publicly
               </p>
               <div className="flex gap-2">
@@ -316,8 +316,8 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Read Access</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="font-medium text-[var(--color-text-primary)]">Read Access</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Allow reading data and analyses
                   </p>
                 </div>
@@ -330,8 +330,8 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
               
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Write Access</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="font-medium text-[var(--color-text-primary)]">Write Access</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Allow creating and updating data
                   </p>
                 </div>
@@ -344,8 +344,8 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
               
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Admin Access</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="font-medium text-[var(--color-text-primary)]">Admin Access</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Allow administrative operations
                   </p>
                 </div>
@@ -381,9 +381,9 @@ export default function IntegrationSettings({ className = '' }: IntegrationSetti
             </div>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">Current Integration Status</h4>
-            <div className="text-sm text-gray-700 space-y-1">
+          <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-lg p-4">
+            <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Current Integration Status</h4>
+            <div className="text-sm text-[var(--color-text-secondary)] space-y-1">
               <p>• Export format: {formData.exportFormat.toUpperCase()}</p>
               <p>• Auto-export: {formData.autoExport ? 'Enabled' : 'Disabled'}</p>
               <p>• Webhook: {formData.webhookUrl ? 'Configured' : 'Not configured'}</p>

@@ -61,7 +61,7 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
       case 'location': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-400';
       case 'vcard': return 'text-pink-600 bg-pink-100 dark:bg-pink-900 dark:text-pink-400';
       case 'event': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-400';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-400';
+      default: return 'text-[var(--color-text-secondary)] bg-[var(--color-muted)] dark:bg-gray-900 dark:text-gray-400';
     }
   };
 
@@ -70,7 +70,7 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
       case 'active': return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-400';
       case 'inactive': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-400';
       case 'expired': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-400';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-400';
+      default: return 'text-[var(--color-text-secondary)] bg-[var(--color-muted)] dark:bg-gray-900 dark:text-gray-400';
     }
   };
 
@@ -154,17 +154,17 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
   const isExpired = qrCode.expiresAt && new Date(qrCode.expiresAt) < new Date();
 
   return (
-    <Card className="p-4 bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow">
+    <Card className="p-4 bg-[var(--color-surface)] dark:bg-gray-800 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className={`p-2 rounded-lg ${getTypeColor(qrCode.type)}`}>
             {getTypeIcon(qrCode.type)}
           </div>
           <div>
-            <h3 className="font-medium text-gray-900 dark:text-white truncate">
+            <h3 className="font-medium text-[var(--color-text-primary)] dark:text-white truncate">
               {qrCode.title || 'Untitled QR Code'}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+            <p className="text-sm text-[var(--color-text-muted)] dark:text-gray-400 capitalize">
               {qrCode.type} • {formatDistanceToNow(new Date(qrCode.createdAt), { addSuffix: true })}
             </p>
           </div>
@@ -183,14 +183,14 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
               <MoreVertical className="w-4 h-4" />
             </Button>
             {showMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg z-10 border border-gray-200 dark:border-gray-600">
+              <div className="absolute right-0 mt-2 w-48 bg-[var(--color-surface)] dark:bg-gray-700 rounded-md shadow-lg z-10 border border-[var(--color-border)] dark:border-gray-600">
                 <div className="py-1">
                   <button
                     onClick={() => {
                       setShowMenu(false);
                       // Handle edit
                     }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    className="flex items-center w-full px-4 py-2 text-sm text-[var(--color-text-secondary)] dark:text-gray-300 hover:bg-[var(--color-muted)] dark:hover:bg-gray-600"
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
@@ -200,7 +200,7 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
                       setShowMenu(false);
                       handleCopyContent();
                     }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    className="flex items-center w-full px-4 py-2 text-sm text-[var(--color-text-secondary)] dark:text-gray-300 hover:bg-[var(--color-muted)] dark:hover:bg-gray-600"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy Content
@@ -210,7 +210,7 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
                       setShowMenu(false);
                       handleDelete();
                     }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-[var(--color-muted)] dark:hover:bg-gray-600"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete
@@ -224,7 +224,7 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
 
       {/* QR Code Preview */}
       <div className="flex justify-center mb-4">
-        <div className="p-4 bg-white rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-600">
+        <div className="p-4 bg-[var(--color-surface)] rounded-lg border-2 border-dashed border-[var(--color-border)] dark:border-gray-600">
           <img
             src={qrCode.qrCodeDataUrl}
             alt="QR Code"
@@ -235,14 +235,14 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
 
       {/* Content Preview */}
       <div className="mb-4">
-        <p className="text-sm text-gray-600 dark:text-gray-400 break-all">
+        <p className="text-sm text-[var(--color-text-secondary)] dark:text-gray-400 break-all">
           {qrCode.content.length > 50 
             ? `${qrCode.content.substring(0, 50)}...` 
             : qrCode.content
           }
         </p>
         {qrCode.description && (
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+          <p className="text-xs text-[var(--color-text-muted)] dark:text-gray-500 mt-1">
             {qrCode.description}
           </p>
         )}
@@ -254,14 +254,14 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
           {qrCode.tags.slice(0, 3).map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+              className="inline-flex items-center px-2 py-1 text-xs bg-[var(--color-muted)] dark:bg-gray-700 text-[var(--color-text-secondary)] dark:text-gray-300 rounded-full"
             >
               <Tag className="w-3 h-3 mr-1" />
               {tag}
             </span>
           ))}
           {qrCode.tags.length > 3 && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-[var(--color-text-muted)] dark:text-gray-400">
               +{qrCode.tags.length - 3} more
             </span>
           )}
@@ -269,7 +269,7 @@ export default function QrCodeCard({ qrCode, onUpdate, onDelete }: QrCodeCardPro
       )}
 
       {/* Analytics */}
-      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] dark:text-gray-400 mb-4">
         <div className="flex items-center space-x-4">
           <span className="flex items-center">
             <Eye className="w-3 h-3 mr-1" />

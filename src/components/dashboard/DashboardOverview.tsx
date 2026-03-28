@@ -38,10 +38,10 @@ function SectionCard({ title, icon: Icon, children, action }: {
   action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4">
+    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="flex items-center gap-2 text-[13px] font-semibold text-slate-700">
-          <Icon className="w-4 h-4 text-slate-400" />
+        <h2 className="flex items-center gap-2 text-[13px] font-semibold text-[var(--color-text-secondary)]">
+          <Icon className="w-4 h-4 text-[var(--color-text-muted)]" />
           {title}
         </h2>
         {action}
@@ -101,8 +101,8 @@ export default function DashboardOverview({ userId }: DashboardOverviewProps) {
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-800 leading-tight">Overview</h1>
-          <p className="text-[12px] text-slate-400 mt-0.5">Welcome back — here's what's happening.</p>
+          <h1 className="text-lg font-semibold text-[var(--color-text-primary)] leading-tight">Overview</h1>
+          <p className="text-[12px] text-[var(--color-text-muted)] mt-0.5">Welcome back — here's what's happening.</p>
         </div>
         <Button size="sm" variant="outline" onClick={fetch} className="h-8 gap-1.5 text-[12px]">
           <RefreshCw className="w-3.5 h-3.5" />
@@ -126,11 +126,11 @@ export default function DashboardOverview({ userId }: DashboardOverviewProps) {
 
       {/* Tools used tags */}
       {stats?.toolsUsed && stats.toolsUsed.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide mb-3">Your Tools</p>
+        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+          <p className="text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">Your Tools</p>
           <div className="flex flex-wrap gap-2">
             {stats.toolsUsed.map((tool) => (
-              <span key={tool} className="px-2.5 py-1 text-[12px] font-medium bg-slate-100 text-slate-600 rounded-full border border-slate-200">
+              <span key={tool} className="px-2.5 py-1 text-[12px] font-medium bg-[var(--color-muted)] text-[var(--color-text-secondary)] rounded-full border border-[var(--color-border)]">
                 {tool}
               </span>
             ))}

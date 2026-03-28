@@ -22,13 +22,13 @@ export default function AnalyticsStatCards({ data }: Props) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map(({ label, value, sub, icon: Icon, bg, color }) => (
-        <div key={label} className="bg-white border border-slate-200 rounded-xl p-4 relative">
+        <div key={label} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 relative">
           <div className={`absolute top-4 right-4 w-8 h-8 ${bg} rounded-lg flex items-center justify-center`}>
             <Icon size={15} className={color} />
           </div>
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">{label}</p>
-          <p className="text-2xl font-bold tabular-nums text-slate-800 mt-1">{value}</p>
-          <p className="text-[11px] text-slate-400 mt-1">{sub}</p>
+          <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
+          <p className="text-2xl font-bold tabular-nums text-[var(--color-text-primary)] mt-1">{value}</p>
+          <p className="text-[11px] text-[var(--color-text-muted)] mt-1">{sub}</p>
         </div>
       ))}
     </div>

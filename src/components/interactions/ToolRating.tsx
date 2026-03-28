@@ -183,9 +183,9 @@ export default function ToolRating({
       <Card>
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-[var(--color-muted)] rounded w-1/4"></div>
+            <div className="h-8 bg-[var(--color-muted)] rounded w-1/2"></div>
+            <div className="h-20 bg-[var(--color-muted)] rounded"></div>
           </div>
         </CardContent>
       </Card>
@@ -206,7 +206,7 @@ export default function ToolRating({
                     className={`w-4 h-4 ${
                       star <= Math.round(stats.averageRating)
                         ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
+                        : 'text-[var(--color-text-muted)]'
                     }`}
                   />
                 ))}
@@ -234,7 +234,7 @@ export default function ToolRating({
                     className={`w-6 h-6 ${
                       star <= userRating
                         ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
+                        : 'text-[var(--color-text-muted)]'
                     }`}
                   />
                 </button>
@@ -278,12 +278,12 @@ export default function ToolRating({
                           className={`w-4 h-4 ${
                             star <= rating.rating
                               ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
+                              : 'text-[var(--color-text-muted)]'
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-[var(--color-text-muted)]">
                       {new Date(rating.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -306,7 +306,7 @@ export default function ToolRating({
                   </div>
                 </div>
                 {rating.review && (
-                  <p className="text-sm text-gray-700">{rating.review}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">{rating.review}</p>
                 )}
               </div>
             ))}

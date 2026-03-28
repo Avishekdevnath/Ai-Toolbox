@@ -136,7 +136,7 @@ export default function FormSettings({
       {/* Header with Save Status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Settings className="w-6 h-6 text-gray-600" />
+          <Settings className="w-6 h-6 text-[var(--color-text-secondary)]" />
           <h2 className="text-2xl font-bold">Form Settings</h2>
           {isPublished && (
             <Badge variant="secondary" className="bg-green-100 text-green-800">
@@ -222,7 +222,7 @@ export default function FormSettings({
                 {/* Identity Requirements */}
                 <div className="space-y-3">
                   <Label className="text-base font-medium">Identity Requirements</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pl-4 border-l-2 border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pl-4 border-l-2 border-[var(--color-border)]">
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="requireName"
@@ -256,7 +256,7 @@ export default function FormSettings({
                     <Clock className="w-4 h-4" />
                     Timer Settings
                   </Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-[var(--color-border)]">
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="timerEnabled"
@@ -305,7 +305,7 @@ export default function FormSettings({
                       startAt: e.target.value ? new Date(e.target.value) : undefined
                     })}
                   />
-                  <p className="text-sm text-gray-500">Form will not be available before this time</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Form will not be available before this time</p>
                 </div>
 
                 <div className="space-y-2">
@@ -321,7 +321,7 @@ export default function FormSettings({
                       endAt: e.target.value ? new Date(e.target.value) : undefined
                     })}
                   />
-                  <p className="text-sm text-gray-500">Form will not accept responses after this time</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Form will not accept responses after this time</p>
                 </div>
 
                 {/* Submission Limits */}
@@ -553,7 +553,7 @@ export default function FormSettings({
                     value={settings.notifications?.webhookUrl || ''}
                     onChange={(e) => updateNestedSettings('notifications', { webhookUrl: e.target.value || undefined })}
                   />
-                  <p className="text-sm text-gray-500">Receive real-time notifications via webhook</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Receive real-time notifications via webhook</p>
                 </div>
 
                 <div className="space-y-2">
@@ -565,7 +565,7 @@ export default function FormSettings({
                     value={settings.notifications?.slackWebhook || ''}
                     onChange={(e) => updateNestedSettings('notifications', { slackWebhook: e.target.value || undefined })}
                   />
-                  <p className="text-sm text-gray-500">Send notifications to Slack channel</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Send notifications to Slack channel</p>
                 </div>
               </div>
             </TabsContent>

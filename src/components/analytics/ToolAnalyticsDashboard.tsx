@@ -78,7 +78,7 @@ export default function ToolAnalyticsDashboard() {
   const getGrowthIcon = (growthRate: number) => {
     if (growthRate > 0) return <TrendingUp className="w-4 h-4 text-green-500" />;
     if (growthRate < 0) return <TrendingDown className="w-4 h-4 text-red-500" />;
-    return <Activity className="w-4 h-4 text-gray-500" />;
+    return <Activity className="w-4 h-4 text-[var(--color-text-muted)]" />;
   };
 
   const getUsageTypeIcon = (type: string) => {
@@ -113,10 +113,10 @@ export default function ToolAnalyticsDashboard() {
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader className="pb-2">
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-[var(--color-muted)] rounded w-1/2"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-8 bg-[var(--color-muted)] rounded w-3/4"></div>
               </CardContent>
             </Card>
           ))}

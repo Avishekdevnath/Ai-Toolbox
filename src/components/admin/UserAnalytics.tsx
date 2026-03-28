@@ -169,16 +169,16 @@ export default function UserAnalytics() {
       case 'moderator':
         return <Shield className="w-4 h-4 text-blue-500" />;
       case 'user':
-        return <User className="w-4 h-4 text-gray-500" />;
+        return <User className="w-4 h-4 text-[var(--color-text-muted)]" />;
       default:
-        return <User className="w-4 h-4 text-gray-500" />;
+        return <User className="w-4 h-4 text-[var(--color-text-muted)]" />;
     }
   };
 
   const getGrowthColor = (growth: number) => {
     if (growth > 0) return 'text-green-600';
     if (growth < 0) return 'text-red-600';
-    return 'text-gray-600';
+    return 'text-[var(--color-text-secondary)]';
   };
 
   const getGrowthIcon = (growth: number) => {
@@ -191,7 +191,7 @@ export default function UserAnalytics() {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Loading user analytics...</span>
+        <span className="ml-2 text-[var(--color-text-secondary)]">Loading user analytics...</span>
       </div>
     );
   }
@@ -202,8 +202,8 @@ export default function UserAnalytics() {
         <div className="text-red-500 mb-4">
           <AlertCircle className="w-12 h-12 mx-auto" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Analytics</h3>
-        <p className="text-gray-500 mb-4">{error}</p>
+        <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">Error Loading Analytics</h3>
+        <p className="text-[var(--color-text-muted)] mb-4">{error}</p>
         <Button onClick={fetchUserAnalytics} variant="outline">
           <RefreshCw className="w-4 h-4 mr-2" />
           Try Again
@@ -223,7 +223,7 @@ export default function UserAnalytics() {
             <BarChart3 className="w-6 h-6 text-blue-600" />
             User Analytics
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-[var(--color-text-secondary)] mt-2">
             Comprehensive insights into user behavior and platform usage
           </p>
         </div>
@@ -305,16 +305,16 @@ export default function UserAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</p>
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">Total Users</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.totalUsers.toLocaleString()}</p>
               </div>
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
             </div>
             {selectedMetric === 'totalUsers' && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-600">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   Total registered users on the platform
                 </p>
               </div>
@@ -327,17 +327,17 @@ export default function UserAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeUsers.toLocaleString()}</p>
-                <p className="text-sm text-gray-500">{stats.activeUserRate.toFixed(1)}% of total</p>
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">Active Users</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.activeUsers.toLocaleString()}</p>
+                <p className="text-sm text-[var(--color-text-muted)]">{stats.activeUserRate.toFixed(1)}% of total</p>
               </div>
               <div className="p-2 bg-green-100 rounded-lg">
                 <Activity className="w-6 h-6 text-green-600" />
               </div>
             </div>
             {selectedMetric === 'activeUsers' && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-600">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   Users active in the last 7 days
                 </p>
               </div>
@@ -350,8 +350,8 @@ export default function UserAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">New Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.newUsers.toLocaleString()}</p>
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">New Users</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.newUsers.toLocaleString()}</p>
                 <div className={`flex items-center gap-1 text-sm ${getGrowthColor(stats.userGrowth)}`}>
                   {getGrowthIcon(stats.userGrowth)}
                   <span>{stats.userGrowth > 0 ? '+' : ''}{stats.userGrowth.toFixed(1)}%</span>
@@ -362,8 +362,8 @@ export default function UserAnalytics() {
               </div>
             </div>
             {selectedMetric === 'newUsers' && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-600">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   New registrations in the selected period
                 </p>
               </div>
@@ -376,16 +376,16 @@ export default function UserAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Session</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.averageSessionDuration} min</p>
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">Avg Session</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.averageSessionDuration} min</p>
               </div>
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Clock className="w-6 h-6 text-orange-600" />
               </div>
             </div>
             {selectedMetric === 'sessionDuration' && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-600">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   Average session duration per user
                 </p>
               </div>
@@ -406,19 +406,19 @@ export default function UserAnalytics() {
           {stats.userActivity.length > 0 ? (
             <div className="space-y-4">
               {stats.userActivity.map((day, index) => (
-                <div key={day.date} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div key={day.date} className="flex items-center justify-between p-3 bg-[var(--color-surface-secondary)] rounded-lg hover:bg-[var(--color-muted)] transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="text-sm font-medium text-gray-900">{day.date}</div>
+                    <div className="text-sm font-medium text-[var(--color-text-primary)]">{day.date}</div>
                     <div className="flex items-center gap-2">
                       <Activity className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-gray-600">{day.activeUsers} active</span>
+                      <span className="text-sm text-[var(--color-text-secondary)]">{day.activeUsers} active</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <UserPlus className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm text-gray-600">{day.newUsers} new</span>
+                      <span className="text-sm text-[var(--color-text-secondary)]">{day.newUsers} new</span>
                     </div>
                   </div>
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                  <div className="w-32 bg-[var(--color-muted)] rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                       style={{ width: `${(day.activeUsers / Math.max(...stats.userActivity.map(d => d.activeUsers))) * 100}%` }}
@@ -428,8 +428,8 @@ export default function UserAnalytics() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+            <div className="text-center py-8 text-[var(--color-text-muted)]">
+              <Calendar className="w-12 h-12 mx-auto mb-2 text-[var(--color-text-muted)]" />
               <p>No activity data available for the selected period</p>
             </div>
           )}
@@ -453,24 +453,24 @@ export default function UserAnalytics() {
                     {getRoleIcon(role.role)}
                     <div>
                       <p className="font-medium capitalize">{role.role.replace('_', ' ')}</p>
-                      <p className="text-sm text-gray-500">{role.count} users</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">{role.count} users</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div className="w-32 bg-[var(--color-muted)] rounded-full h-2">
                       <div 
                         className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                         style={{ width: `${role.percentage}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-600">{role.percentage.toFixed(1)}%</span>
+                    <span className="text-sm font-medium text-[var(--color-text-secondary)]">{role.percentage.toFixed(1)}%</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Shield className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+            <div className="text-center py-8 text-[var(--color-text-muted)]">
+              <Shield className="w-12 h-12 mx-auto mb-2 text-[var(--color-text-muted)]" />
               <p>No role distribution data available</p>
             </div>
           )}
@@ -489,31 +489,31 @@ export default function UserAnalytics() {
           {stats.topTools.length > 0 ? (
             <div className="space-y-4">
               {stats.topTools.map((tool, index) => (
-                <div key={tool.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div key={tool.name} className="flex items-center justify-between p-3 bg-[var(--color-surface-secondary)] rounded-lg hover:bg-[var(--color-muted)] transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                       <span className="text-sm font-bold text-blue-600">{index + 1}</span>
                     </div>
                     <div>
                       <p className="font-medium">{tool.name}</p>
-                      <p className="text-sm text-gray-500">{tool.usage} uses</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">{tool.usage} uses</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div className="w-32 bg-[var(--color-muted)] rounded-full h-2">
                       <div 
                         className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                         style={{ width: `${tool.percentage}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-600">{tool.percentage.toFixed(1)}%</span>
+                    <span className="text-sm font-medium text-[var(--color-text-secondary)]">{tool.percentage.toFixed(1)}%</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Zap className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+            <div className="text-center py-8 text-[var(--color-text-muted)]">
+              <Zap className="w-12 h-12 mx-auto mb-2 text-[var(--color-text-muted)]" />
               <p>No tool usage data available for the selected period</p>
             </div>
           )}
@@ -535,21 +535,21 @@ export default function UserAnalytics() {
                 <Zap className="w-6 h-6 text-green-600" />
               </div>
               <p className="text-lg font-bold text-green-600">{stats.userEngagement.high}</p>
-              <p className="text-sm text-gray-600">High Engagement</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">High Engagement</p>
             </div>
             <div className="text-center p-4 bg-yellow-50 rounded-lg">
               <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Activity className="w-6 h-6 text-yellow-600" />
               </div>
               <p className="text-lg font-bold text-yellow-600">{stats.userEngagement.medium}</p>
-              <p className="text-sm text-gray-600">Medium Engagement</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">Medium Engagement</p>
             </div>
             <div className="text-center p-4 bg-red-50 rounded-lg">
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <UserMinus className="w-6 h-6 text-red-600" />
               </div>
               <p className="text-lg font-bold text-red-600">{stats.userEngagement.low}</p>
-              <p className="text-sm text-gray-600">Low Engagement</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">Low Engagement</p>
             </div>
           </div>
         </CardContent>

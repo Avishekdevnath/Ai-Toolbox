@@ -213,7 +213,7 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
               </thead>
               <tbody>
                 {data.map((tool) => (
-                  <tr key={tool.toolName} className="border-b hover:bg-gray-50">
+                  <tr key={tool.toolName} className="border-b hover:bg-[var(--color-muted)]">
                     <td className="py-3 px-4 font-medium">{tool.toolName}</td>
                     <td className="py-3 px-4">
                       <Badge variant="outline">{tool.category}</Badge>
@@ -232,7 +232,7 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
                       </div>
                     </td>
                     <td className="py-3 px-4">{tool.averageSessionTime}m</td>
-                    <td className="py-3 px-4 text-sm text-gray-500">{tool.lastUsed}</td>
+                    <td className="py-3 px-4 text-sm text-[var(--color-text-muted)]">{tool.lastUsed}</td>
                   </tr>
                 ))}
               </tbody>
@@ -264,7 +264,7 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
                     <span className="font-medium">{category}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                    <div className="w-20 bg-[var(--color-muted)] rounded-full h-2">
                       <div 
                         className="bg-blue-500 h-2 rounded-full" 
                         style={{ 
@@ -272,7 +272,7 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
                         }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-500">{count}</span>
+                    <span className="text-sm text-[var(--color-text-muted)]">{count}</span>
                   </div>
                 </div>
               ))}
@@ -299,7 +299,7 @@ export default function ToolsAnalytics({ userId }: ToolsAnalyticsProps) {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{tool.toolName}</p>
-                      <p className="text-sm text-gray-500">{tool.usageCount} uses</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">{tool.usageCount} uses</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       {tool.growth > 0 ? (

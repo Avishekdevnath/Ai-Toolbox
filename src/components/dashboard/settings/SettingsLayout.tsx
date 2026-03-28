@@ -10,14 +10,14 @@ interface SettingsLayoutProps {
 
 export default function SettingsLayout({ children, className = '' }: SettingsLayoutProps) {
   return (
-    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${className}`}>
+    <div className={`min-h-screen bg-[var(--color-background)] ${className}`}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
               Settings
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-[var(--color-text-secondary)] mt-2">
               Manage your account preferences and application settings
             </p>
           </div>
@@ -28,7 +28,7 @@ export default function SettingsLayout({ children, className = '' }: SettingsLay
               <div className="sticky top-8">
                 {/* Navigation placeholder - will be replaced with SettingsNavigation */}
                 <Card className="p-4">
-                  <div className="text-center text-gray-500">
+                  <div className="text-center text-[var(--color-text-muted)]">
                     Navigation coming soon...
                   </div>
                 </Card>

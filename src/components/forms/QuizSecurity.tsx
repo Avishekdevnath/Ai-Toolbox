@@ -215,7 +215,7 @@ export default function QuizSecurity({
               <Shield className={`w-5 h-5 ${showSecurityWarnings ? 'text-red-600' : 'text-green-600'}`} />
               <div>
                 <div className="font-medium">Security Monitor</div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-[var(--color-text-secondary)]">
                   {showSecurityWarnings ? `${warningCount} security events detected` : 'All security measures active'}
                 </div>
               </div>
@@ -296,10 +296,10 @@ export default function QuizSecurity({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
-              <Copy className={`w-5 h-5 ${preventCopyPaste ? 'text-green-600' : 'text-gray-400'}`} />
+              <Copy className={`w-5 h-5 ${preventCopyPaste ? 'text-green-600' : 'text-[var(--color-text-muted)]'}`} />
               <div>
                 <div className="font-medium">Copy/Paste Prevention</div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-[var(--color-text-secondary)]">
                   {preventCopyPaste ? 'Active' : 'Disabled'}
                 </div>
               </div>
@@ -309,15 +309,15 @@ export default function QuizSecurity({
               <Keyboard className="w-5 h-5 text-green-600" />
               <div>
                 <div className="font-medium">Keyboard Shortcuts</div>
-                <div className="text-sm text-gray-600">Monitored</div>
+                <div className="text-sm text-[var(--color-text-secondary)]">Monitored</div>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Maximize className={`w-5 h-5 ${fullscreenMode ? 'text-green-600' : 'text-gray-400'}`} />
+              <Maximize className={`w-5 h-5 ${fullscreenMode ? 'text-green-600' : 'text-[var(--color-text-muted)]'}`} />
               <div>
                 <div className="font-medium">Fullscreen Mode</div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-[var(--color-text-secondary)]">
                   {fullscreenMode ? 'Required' : 'Optional'}
                 </div>
               </div>
@@ -327,7 +327,7 @@ export default function QuizSecurity({
               <Eye className="w-5 h-5 text-green-600" />
               <div>
                 <div className="font-medium">Window Focus</div>
-                <div className="text-sm text-gray-600">Monitored</div>
+                <div className="text-sm text-[var(--color-text-secondary)]">Monitored</div>
               </div>
             </div>
           </div>
@@ -351,7 +351,7 @@ export default function QuizSecurity({
                     <AlertTriangle className="w-4 h-4 text-red-600" />
                     <span className="text-sm">{violation.details}</span>
                   </div>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-[var(--color-text-secondary)]">
                     {violation.timestamp.toLocaleTimeString()}
                   </span>
                 </div>

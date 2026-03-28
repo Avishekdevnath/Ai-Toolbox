@@ -177,7 +177,7 @@ export default function AdminUserManagement() {
       case 'admin':
         return <Shield className="w-4 h-4 text-blue-500" />;
       default:
-        return <User className="w-4 h-4 text-gray-500" />;
+        return <User className="w-4 h-4 text-[var(--color-text-muted)]" />;
     }
   };
 
@@ -210,7 +210,7 @@ export default function AdminUserManagement() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin users...</p>
+          <p className="text-[var(--color-text-secondary)]">Loading admin users...</p>
         </div>
       </div>
     );
@@ -221,8 +221,8 @@ export default function AdminUserManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin User Management</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Admin User Management</h1>
+          <p className="text-[var(--color-text-secondary)] mt-1">
             Manage administrator accounts, roles, and permissions
           </p>
         </div>
@@ -252,7 +252,7 @@ export default function AdminUserManagement() {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-muted)]" />
               <Input
                 placeholder="Search admin users..."
                 value={searchTerm}
@@ -265,7 +265,7 @@ export default function AdminUserManagement() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-[var(--color-border)] rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -276,7 +276,7 @@ export default function AdminUserManagement() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-[var(--color-border)] rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="admin">Admin</option>
             </select>
@@ -303,16 +303,16 @@ export default function AdminUserManagement() {
               {adminUsers.length}
             </Badge>
           </CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             Manage administrator accounts and their permissions
           </p>
         </CardHeader>
         <CardContent>
           {adminUsers.length === 0 ? (
             <div className="text-center py-12">
-              <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No admin users found</h3>
-              <p className="text-gray-500 mb-4">
+              <Shield className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">No admin users found</h3>
+              <p className="text-[var(--color-text-muted)] mb-4">
                 {searchTerm || statusFilter || roleFilter 
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first admin user'
@@ -330,7 +330,7 @@ export default function AdminUserManagement() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200">
+                    <tr className="border-b border-[var(--color-border)]">
                       <th className="text-left py-3 px-4 font-semibold">Admin User</th>
                       <th className="text-left py-3 px-4 font-semibold">Role</th>
                       <th className="text-left py-3 px-4 font-semibold">Status</th>
@@ -342,7 +342,7 @@ export default function AdminUserManagement() {
                   </thead>
                   <tbody>
                     {adminUsers.map((user) => (
-                      <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={user._id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-muted)]">
                         <td className="py-3 px-4">
                           <div>
                             <div className="font-medium flex items-center gap-2">
@@ -351,7 +351,7 @@ export default function AdminUserManagement() {
                                 Admin
                               </Badge>
                             </div>
-                            <div className="text-sm text-gray-500 flex items-center gap-1">
+                            <div className="text-sm text-[var(--color-text-muted)] flex items-center gap-1">
                               <Mail className="w-3 h-3" />
                               {user.email}
                             </div>
@@ -370,7 +370,7 @@ export default function AdminUserManagement() {
                           <div className="text-sm">
                             <span className="font-medium">{getPermissionCount(user.permissions)}</span> permissions
                             {user.permissions && user.permissions.length > 0 && (
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-[var(--color-text-muted)] mt-1">
                                 {user.permissions.slice(0, 3).join(', ')}
                                 {user.permissions.length > 3 && ` +${user.permissions.length - 3} more`}
                               </div>
@@ -378,12 +378,12 @@ export default function AdminUserManagement() {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-[var(--color-text-muted)]">
                             {formatDate(user.lastLoginAt || '')}
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                          <div className="flex items-center gap-1 text-sm text-[var(--color-text-muted)]">
                             <Calendar className="w-3 h-3" />
                             {formatDate(user.createdAt)}
                           </div>
@@ -469,7 +469,7 @@ export default function AdminUserManagement() {
               {/* Pagination */}
               {pagination && (
                 <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-[var(--color-text-muted)]">
                     Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{' '}
                     {Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} of{' '}
                     {pagination.totalUsers} admin users
@@ -510,7 +510,7 @@ export default function AdminUserManagement() {
         <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)}>
           <ModalHeader>Create Admin User</ModalHeader>
           <ModalContent>
-            <p className="text-gray-600 mb-4">Admin user creation modal will be implemented here.</p>
+            <p className="text-[var(--color-text-secondary)] mb-4">Admin user creation modal will be implemented here.</p>
           </ModalContent>
           <ModalFooter>
             <Button variant="outline" onClick={() => setShowCreateModal(false)}>
@@ -525,7 +525,7 @@ export default function AdminUserManagement() {
         <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)}>
           <ModalHeader>Edit Admin User</ModalHeader>
           <ModalContent>
-            <p className="text-gray-600 mb-4">Edit admin user modal will be implemented here.</p>
+            <p className="text-[var(--color-text-secondary)] mb-4">Edit admin user modal will be implemented here.</p>
           </ModalContent>
           <ModalFooter>
             <Button variant="outline" onClick={() => setShowEditModal(false)}>
@@ -540,7 +540,7 @@ export default function AdminUserManagement() {
         <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)}>
           <ModalHeader>Admin User Details</ModalHeader>
           <ModalContent>
-            <p className="text-gray-600 mb-4">Admin user details modal will be implemented here.</p>
+            <p className="text-[var(--color-text-secondary)] mb-4">Admin user details modal will be implemented here.</p>
           </ModalContent>
           <ModalFooter>
             <Button variant="outline" onClick={() => setShowUserModal(false)}>

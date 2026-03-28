@@ -528,7 +528,7 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
       case 'easy': return 'bg-green-100 text-green-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-[var(--color-muted)] text-[var(--color-text-secondary)]';
     }
   };
 
@@ -537,8 +537,8 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
       case 'survey': return 'bg-blue-100 text-blue-800';
       case 'quiz': return 'bg-purple-100 text-purple-800';
       case 'attendance': return 'bg-orange-100 text-orange-800';
-      case 'general': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'general': return 'bg-[var(--color-muted)] text-[var(--color-text-secondary)]';
+      default: return 'bg-[var(--color-muted)] text-[var(--color-text-secondary)]';
     }
   };
 
@@ -547,8 +547,8 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Form Templates</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Form Templates</h2>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             Choose from pre-built templates to get started quickly
           </p>
         </div>
@@ -560,7 +560,7 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
       {/* Filters */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4" />
           <Input
             placeholder="Search templates..."
             value={searchTerm}
@@ -570,11 +570,11 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-400" />
+          <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-[var(--color-border)] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {categories.map(category => (
               <option key={category} value={category}>{category}</option>
@@ -607,7 +607,7 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
             </CardHeader>
 
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">{template.description}</p>
+              <p className="text-sm text-[var(--color-text-secondary)] mb-4">{template.description}</p>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs text-gray-500">
@@ -651,12 +651,12 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
                       <div className="space-y-6">
                         <div>
                           <h3 className="font-medium mb-2">Description</h3>
-                          <p className="text-sm text-gray-600">{template.description}</p>
+                          <p className="text-sm text-[var(--color-text-secondary)]">{template.description}</p>
                         </div>
 
                         <div>
                           <h3 className="font-medium mb-2">Use Case</h3>
-                          <p className="text-sm text-gray-600">{template.useCase}</p>
+                          <p className="text-sm text-[var(--color-text-secondary)]">{template.useCase}</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -686,7 +686,7 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
                           <h3 className="font-medium mb-2">Fields Included</h3>
                           <div className="space-y-2">
                             {template.fields.map((field, index) => (
-                              <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
+                              <div key={index} className="flex items-center justify-between py-2 px-3 bg-[var(--color-surface-secondary)] rounded">
                                 <span className="text-sm font-medium">{field.label}</span>
                                 <div className="flex items-center gap-2">
                                   <Badge variant="outline" className="text-xs">
@@ -733,9 +733,9 @@ export default function FormTemplates({ onSelectTemplate, className = '' }: Form
 
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
-          <p className="text-sm text-gray-600">
+          <FileText className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">No templates found</h3>
+          <p className="text-sm text-[var(--color-text-secondary)]">
             Try adjusting your search terms or category filter
           </p>
         </div>

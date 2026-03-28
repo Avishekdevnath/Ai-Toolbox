@@ -8,7 +8,7 @@ const actions = [
   { label: 'Diet Planner', href: '/tools/diet-planner', icon: Target, color: 'text-orange-600 bg-orange-50' },
   { label: 'QR Generator', href: '/dashboard/qr-generator', icon: QrCode, color: 'text-purple-600 bg-purple-50' },
   { label: 'Short URL', href: '/dashboard/urls', icon: Link2, color: 'text-pink-600 bg-pink-50' },
-  { label: 'Code Share', href: '/dashboard/snippets', icon: Code2, color: 'text-slate-600 bg-slate-100' },
+  { label: 'Code Share', href: '/dashboard/snippets', icon: Code2, color: 'text-[var(--color-text-secondary)] bg-[var(--color-muted)]' },
 ];
 
 export function QuickActions() {
@@ -18,12 +18,12 @@ export function QuickActions() {
         <Link
           key={href}
           href={href}
-          className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all group"
+          className="flex items-center gap-2.5 p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border)] hover:shadow-sm transition-all group"
         >
           <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', color)}>
             <Icon className="w-4 h-4" />
           </div>
-          <span className="text-[13px] font-medium text-slate-600 group-hover:text-slate-800 truncate">{label}</span>
+          <span className="text-[13px] font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] truncate">{label}</span>
         </Link>
       ))}
     </div>

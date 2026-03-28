@@ -22,7 +22,7 @@ export default function SettingsCard({
   actions
 }: SettingsCardProps) {
   return (
-    <Card className={cn('border border-gray-200 dark:border-gray-700', className)}>
+    <Card className={cn('border border-[var(--color-border)]', className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -32,11 +32,11 @@ export default function SettingsCard({
               </div>
             )}
             <div>
-              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+              <CardTitle className="text-lg font-semibold text-[var(--color-text-primary)]">
                 {title}
               </CardTitle>
               {description && (
-                <CardDescription className="text-gray-600 dark:text-gray-400 mt-1">
+                <CardDescription className="text-[var(--color-text-secondary)] mt-1">
                   {description}
                 </CardDescription>
               )}

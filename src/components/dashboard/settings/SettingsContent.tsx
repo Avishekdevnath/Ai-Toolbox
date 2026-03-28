@@ -62,15 +62,15 @@ export default function SettingsContent({
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <Settings className="w-6 h-6 text-blue-600" />
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
                 Settings
               </h2>
             </div>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-[var(--color-text-secondary)]">
               Select a settings section from the navigation to get started.
             </p>
             <Card className="p-6">
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-[var(--color-text-muted)] py-8">
                 Please select a settings section...
               </div>
             </Card>
@@ -85,7 +85,7 @@ export default function SettingsContent({
       
       {/* Save Button - Only show for sections that have save functionality */}
       {activeSection !== 'default' && activeSection !== 'integrations' && (
-        <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-end pt-4 border-t border-[var(--color-border)]">
           <Button 
             onClick={onSave} 
             disabled={isSaving}

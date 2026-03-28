@@ -31,7 +31,7 @@ export function Slider({
         step={step}
         value={value[0]}
         onChange={handleChange}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+        className="w-full h-2 bg-[var(--color-muted)] rounded-lg appearance-none cursor-pointer slider"
         style={{
           background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((value[0] - min) / (max - min)) * 100}%, #e5e7eb ${((value[0] - min) / (max - min)) * 100}%, #e5e7eb 100%)`
         }}

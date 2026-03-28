@@ -208,7 +208,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
       {/* Search Input */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+          <Search className="h-5 w-5 text-[var(--color-text-muted)]" />
         </div>
         
         <input
@@ -219,7 +219,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
           placeholder={placeholder}
-          className="block w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+          className="block w-full pl-10 pr-20 py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
         />
         
         <div className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -229,7 +229,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                 setQuery('');
                 onClear();
               }}
-              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -240,7 +240,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
             className={`ml-2 p-2 rounded-md transition-colors ${
               hasActiveFilters 
                 ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' 
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
             }`}
           >
             <Filter className="h-4 w-4" />
@@ -250,11 +250,11 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Categories */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">Categories</h4>
+              <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Categories</h4>
               <div className="space-y-2">
                 {categories.map(category => (
                   <label key={category} className="flex items-center">
@@ -262,9 +262,9 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                       type="checkbox"
                       checked={filters.categories.includes(category)}
                       onChange={() => handleFilterChange('categories', category)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{category}</span>
+                    <span className="ml-2 text-sm text-[var(--color-text-secondary)]">{category}</span>
                   </label>
                 ))}
               </div>
@@ -272,7 +272,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
 
             {/* Features */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">Features</h4>
+              <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Features</h4>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {features.map(feature => (
                   <label key={feature} className="flex items-center">
@@ -280,9 +280,9 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                       type="checkbox"
                       checked={filters.features.includes(feature)}
                       onChange={() => handleFilterChange('features', feature)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                    <span className="ml-2 text-sm text-[var(--color-text-secondary)]">{feature}</span>
                   </label>
                 ))}
               </div>
@@ -290,7 +290,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
 
             {/* Sort Options */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">Sort By</h4>
+              <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Sort By</h4>
               <div className="space-y-2">
                 {[
                   { value: 'name', label: 'Name', icon: 'A-Z' },
@@ -307,7 +307,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                       onChange={() => handleFilterChange('sortBy', option.value)}
                       className="border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                    <span className="ml-2 text-sm text-[var(--color-text-secondary)]">
                       {option.icon} {option.label}
                     </span>
                   </label>
@@ -317,10 +317,10 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
           </div>
 
           {/* Filter Actions */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+          <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex justify-between">
             <button
               onClick={clearFilters}
-              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             >
               Clear All Filters
             </button>
@@ -338,25 +338,25 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
       {showSuggestions && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+          className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
         >
           {/* Search Suggestions */}
           {suggestions.length > 0 && (
             <div className="p-2">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1">
+              <div className="text-xs font-medium text-[var(--color-text-muted)] px-2 py-1">
                 Suggestions
               </div>
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full text-left px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md flex items-center"
+                  className="w-full text-left px-2 py-2 hover:bg-[var(--color-muted)] rounded-md flex items-center"
                 >
                   <span className="mr-2">{suggestion.icon || '🔍'}</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-[var(--color-text-secondary)]">
                     {suggestion.text}
                   </span>
-                  <span className="ml-auto text-xs text-gray-500 dark:text-gray-400 capitalize">
+                  <span className="ml-auto text-xs text-[var(--color-text-muted)] capitalize">
                     {suggestion.type}
                   </span>
                 </button>
@@ -366,8 +366,8 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
 
           {/* Recent Searches */}
           {recentSearches.length > 0 && (
-            <div className="p-2 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1 flex items-center">
+            <div className="p-2 border-t border-[var(--color-border)]">
+              <div className="text-xs font-medium text-[var(--color-text-muted)] px-2 py-1 flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
                 Recent Searches
               </div>
@@ -375,7 +375,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick({ type: 'tool', text: search })}
-                  className="w-full text-left px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300"
+                  className="w-full text-left px-2 py-2 hover:bg-[var(--color-muted)] rounded-md text-sm text-[var(--color-text-secondary)]"
                 >
                   {search}
                 </button>
@@ -384,8 +384,8 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
           )}
 
           {/* Popular Searches */}
-          <div className="p-2 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1 flex items-center">
+          <div className="p-2 border-t border-[var(--color-border)]">
+            <div className="text-xs font-medium text-[var(--color-text-muted)] px-2 py-1 flex items-center">
               <TrendingUp className="h-3 w-3 mr-1" />
               Popular Searches
             </div>
@@ -394,7 +394,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick({ type: 'category', text: search })}
-                  className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="px-3 py-1 bg-[var(--color-muted)] text-[var(--color-text-secondary)] rounded-full text-sm hover:bg-[var(--color-muted)] transition-colors"
                 >
                   {search}
                 </button>

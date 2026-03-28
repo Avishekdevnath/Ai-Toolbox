@@ -182,8 +182,8 @@ export default function FormBuilder({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Form</h1>
-          <p className="text-sm text-gray-600 mt-1">Build your form by adding questions</p>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Create Form</h1>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">Build your form by adding questions</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -206,10 +206,10 @@ export default function FormBuilder({
       )}
 
       {/* Form Configuration */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200 space-y-4">
+      <div className="bg-[var(--color-surface)] p-6 rounded-lg border border-[var(--color-border)] space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
               Form Title
             </label>
             <Input
@@ -220,7 +220,7 @@ export default function FormBuilder({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
               Form Type
             </label>
             <Select value={formType} onValueChange={(value: any) => setFormType(value)}>
@@ -242,7 +242,7 @@ export default function FormBuilder({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
             Description (optional)
           </label>
           <Textarea
@@ -255,8 +255,8 @@ export default function FormBuilder({
       </div>
 
       {/* Questions */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
+        <div className="p-6 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Questions</h2>
             <Select onValueChange={addField}>
@@ -279,12 +279,12 @@ export default function FormBuilder({
 
         <div className="p-6 space-y-4">
           {fields.map((field, index) => (
-            <div key={field.id} className="border border-gray-200 rounded-lg p-4">
+            <div key={field.id} className="border border-[var(--color-border)] rounded-lg p-4">
               <div className="flex items-start gap-4">
                 <div className="flex-1 space-y-3">
                   {/* Question Label */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-500">Q{index + 1}</span>
+                    <span className="text-sm font-medium text-[var(--color-text-muted)]">Q{index + 1}</span>
                     <Input
                       value={field.label}
                       onChange={(e) => updateField(field.id, { label: e.target.value })}
@@ -295,7 +295,7 @@ export default function FormBuilder({
                       checked={field.required}
                       onCheckedChange={(checked) => updateField(field.id, { required: checked })}
                     />
-                    <span className="text-sm text-gray-600">Required</span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">Required</span>
                   </div>
 
                   {/* Field Type */}
@@ -321,7 +321,7 @@ export default function FormBuilder({
                   {/* Options for choice fields */}
                   {(field.type === 'dropdown' || field.type === 'radio' || field.type === 'checkbox') && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Options</label>
+                      <label className="text-sm font-medium text-[var(--color-text-secondary)]">Options</label>
                       {field.options?.map((option: string, optIndex: number) => (
                         <div key={optIndex} className="flex items-center gap-2">
                           <Input

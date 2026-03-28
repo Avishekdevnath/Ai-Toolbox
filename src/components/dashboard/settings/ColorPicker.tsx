@@ -35,11 +35,11 @@ export default function ColorPicker({
     <div className={cn('space-y-3', className)}>
       {label && (
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-white">
+          <label className="text-sm font-medium text-[var(--color-text-primary)]">
             {label}
           </label>
           {description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1">
               {description}
             </p>
           )}
@@ -75,7 +75,7 @@ export default function ColorPicker({
         })}
       </div>
       
-      <div className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="text-xs text-[var(--color-text-muted)]">
         Selected: {options.find(opt => opt.value === value)?.label || 'None'}
       </div>
     </div>
@@ -89,7 +89,7 @@ export const themeOptions: ColorOption[] = [
     label: 'Light',
     color: '#ffffff',
     bgColor: 'bg-white',
-    borderColor: 'border-gray-300'
+    borderColor: 'border-[var(--color-border)]'
   },
   {
     value: 'dark',

@@ -53,9 +53,9 @@ export default function ToolPopularityRanking({
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1: return <Trophy className="w-5 h-5 text-yellow-500" />;
-      case 2: return <Medal className="w-5 h-5 text-gray-400" />;
+      case 2: return <Medal className="w-5 h-5 text-[var(--color-text-muted)]" />;
       case 3: return <Award className="w-5 h-5 text-amber-600" />;
-      default: return <span className="w-5 h-5 text-center text-sm font-bold text-gray-500">#{rank}</span>;
+      default: return <span className="w-5 h-5 text-center text-sm font-bold text-[var(--color-text-muted)]">#{rank}</span>;
     }
   };
 
@@ -63,7 +63,7 @@ export default function ToolPopularityRanking({
     switch (trend) {
       case 'up': return <TrendingUp className="w-4 h-4 text-green-500" />;
       case 'down': return <TrendingDown className="w-4 h-4 text-red-500" />;
-      default: return <Minus className="w-4 h-4 text-gray-500" />;
+      default: return <Minus className="w-4 h-4 text-[var(--color-text-muted)]" />;
     }
   };
 
@@ -79,10 +79,10 @@ export default function ToolPopularityRanking({
           <div className="space-y-3">
             {[...Array(limit)].map((_, i) => (
               <div key={i} className="animate-pulse flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                <div className="w-8 h-8 bg-[var(--color-muted)] rounded"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-[var(--color-muted)] rounded w-3/4"></div>
+                  <div className="h-3 bg-[var(--color-muted)] rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -123,7 +123,7 @@ export default function ToolPopularityRanking({
             <Link
               key={tool.toolSlug}
               href={`/tools/${tool.toolSlug}`}
-              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
             >
               <div className="flex items-center justify-center w-8 h-8">
                 {getRankIcon(tool.rank)}
@@ -141,7 +141,7 @@ export default function ToolPopularityRanking({
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{tool.uniqueUsers.toLocaleString()} users</span>
-                  <span className={tool.growthRate > 0 ? 'text-green-600' : tool.growthRate < 0 ? 'text-red-600' : 'text-gray-500'}>
+                  <span className={tool.growthRate > 0 ? 'text-green-600' : tool.growthRate < 0 ? 'text-red-600' : 'text-[var(--color-text-muted)]'}>
                     {tool.growthRate > 0 ? '+' : ''}{tool.growthRate}%
                   </span>
                 </div>

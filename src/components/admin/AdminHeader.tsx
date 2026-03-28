@@ -71,6 +71,7 @@ export default function AdminHeader() {
 
       {/* Actions */}
       <div className="flex items-center gap-2 ml-auto">
+        <ThemeDropdown />
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
@@ -83,9 +84,9 @@ export default function AdminHeader() {
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-10 w-72 bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-                <span className="text-[13px] font-semibold text-slate-700">Notifications</span>
+            <div className="absolute right-0 top-10 w-72 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border-subtle)]">
+                <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">Notifications</span>
                 <button className="text-[11px] text-blue-500 hover:text-blue-700">Mark all read</button>
               </div>
               <NotifItem icon={<Activity className="w-4 h-4 text-blue-500" />} title="New user registration" body="A new user has registered." time="2m ago" />
@@ -98,25 +99,25 @@ export default function AdminHeader() {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => { setProfileOpen((v) => !v); setNotifOpen(false); }}
-            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
           >
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-[11px] font-bold text-white">
               {initials}
             </div>
-            <span className="hidden md:inline text-[13px] font-medium text-slate-600 max-w-[120px] truncate">{displayName}</span>
+            <span className="hidden md:inline text-[13px] font-medium text-[var(--color-text-secondary)] max-w-[120px] truncate">{displayName}</span>
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 top-10 w-52 bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden">
-              <div className="px-3 py-2.5 border-b border-slate-100">
-                <p className="text-[13px] font-semibold text-slate-700 truncate">{displayName}</p>
-                <p className="text-[11px] text-slate-400 truncate">{admin?.email}</p>
+            <div className="absolute right-0 top-10 w-52 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg z-50 overflow-hidden">
+              <div className="px-3 py-2.5 border-b border-[var(--color-border-subtle)]">
+                <p className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">{displayName}</p>
+                <p className="text-[11px] text-[var(--color-text-muted)] truncate">{admin?.email}</p>
               </div>
-              <Link href="/admin/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 transition-colors">
-                <Settings className="w-3.5 h-3.5 text-slate-400" /> Profile & Settings
+              <Link href="/admin/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)] transition-colors">
+                <Settings className="w-3.5 h-3.5 text-[var(--color-text-muted)]" /> Profile & Settings
               </Link>
-              <div className="border-t border-slate-100">
-                <button onClick={handleLogout} className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 transition-colors">
+              <div className="border-t border-[var(--color-border-subtle)]">
+                <button onClick={handleLogout} className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] text-red-500 hover:bg-[var(--color-destructive-muted)] transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> Sign out
                 </button>
               </div>
@@ -130,12 +131,12 @@ export default function AdminHeader() {
 
 function NotifItem({ icon, title, body, time }: { icon: React.ReactNode; title: string; body: string; time: string }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors">
+    <div className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--color-muted)] transition-colors">
       <div className="flex-shrink-0 mt-0.5">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-medium text-slate-700">{title}</p>
-        <p className="text-[12px] text-slate-400 truncate">{body}</p>
-        <p className="text-[11px] text-slate-400 mt-0.5">{time}</p>
+        <p className="text-[13px] font-medium text-[var(--color-text-primary)]">{title}</p>
+        <p className="text-[12px] text-[var(--color-text-muted)] truncate">{body}</p>
+        <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{time}</p>
       </div>
     </div>
   );

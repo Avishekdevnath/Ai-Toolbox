@@ -128,7 +128,7 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
       case 'location': return 'text-red-600 bg-red-100';
       case 'vcard': return 'text-pink-600 bg-pink-100';
       case 'event': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-[var(--color-text-secondary)] bg-[var(--color-muted)]';
     }
   };
 
@@ -173,10 +173,10 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
             QR Generator Management
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-[var(--color-text-muted)]">
             Create, manage, and track your QR codes
           </p>
         </div>
@@ -194,43 +194,43 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-4 bg-white dark:bg-gray-800">
+          <Card className="p-4 bg-[var(--color-surface)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total QR Codes</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalQRCodes}</p>
+                <p className="text-sm font-medium text-[var(--color-text-muted)]">Total QR Codes</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.totalQRCodes}</p>
               </div>
-              <QrCode className="w-8 h-8 text-gray-400" />
+              <QrCode className="w-8 h-8 text-[var(--color-text-muted)]" />
             </div>
           </Card>
 
-          <Card className="p-4 bg-white dark:bg-gray-800">
+          <Card className="p-4 bg-[var(--color-surface)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Scans</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalScans}</p>
+                <p className="text-sm font-medium text-[var(--color-text-muted)]">Total Scans</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.totalScans}</p>
               </div>
-              <Eye className="w-8 h-8 text-gray-400" />
+              <Eye className="w-8 h-8 text-[var(--color-text-muted)]" />
             </div>
           </Card>
 
-          <Card className="p-4 bg-white dark:bg-gray-800">
+          <Card className="p-4 bg-[var(--color-surface)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Downloads</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalDownloads}</p>
+                <p className="text-sm font-medium text-[var(--color-text-muted)]">Downloads</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.totalDownloads}</p>
               </div>
-              <Download className="w-8 h-8 text-gray-400" />
+              <Download className="w-8 h-8 text-[var(--color-text-muted)]" />
             </div>
           </Card>
 
-          <Card className="p-4 bg-white dark:bg-gray-800">
+          <Card className="p-4 bg-[var(--color-surface)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Shares</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalShares}</p>
+                <p className="text-sm font-medium text-[var(--color-text-muted)]">Shares</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.totalShares}</p>
               </div>
-              <Share2 className="w-8 h-8 text-gray-400" />
+              <Share2 className="w-8 h-8 text-[var(--color-text-muted)]" />
             </div>
           </Card>
         </div>
@@ -238,58 +238,58 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+        <Card className="p-4 bg-[var(--color-surface)] hover:bg-[var(--color-muted)] cursor-pointer transition-colors"
               onClick={() => setViewMode('create')}>
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
               <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Create QR Code</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Generate a new QR code</p>
+              <h3 className="font-medium text-[var(--color-text-primary)]">Create QR Code</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">Generate a new QR code</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+        <Card className="p-4 bg-[var(--color-surface)] hover:bg-[var(--color-muted)] cursor-pointer transition-colors"
               onClick={() => setViewMode('history')}>
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
               <History className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">QR History</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">View your QR code history</p>
+              <h3 className="font-medium text-[var(--color-text-primary)]">QR History</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">View your QR code history</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+        <Card className="p-4 bg-[var(--color-surface)] hover:bg-[var(--color-muted)] cursor-pointer transition-colors"
               onClick={() => setViewMode('analytics')}>
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
               <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Analytics</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">View QR code analytics</p>
+              <h3 className="font-medium text-[var(--color-text-primary)]">Analytics</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">View QR code analytics</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Search and Filters */}
-      <Card className="p-4 bg-white dark:bg-gray-800">
+      <Card className="p-4 bg-[var(--color-surface)]">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search QR codes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -297,7 +297,7 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Types</option>
               <option value="url">URL</option>
@@ -313,7 +313,7 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -326,12 +326,12 @@ export default function QrGeneratorManagement({ userId }: QrGeneratorManagementP
 
       {/* QR Codes Grid */}
       {filteredQrCodes.length === 0 ? (
-        <Card className="p-8 text-center bg-white dark:bg-gray-800">
-          <QrCode className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <Card className="p-8 text-center bg-[var(--color-surface)]">
+          <QrCode className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">
             {qrCodes.length === 0 ? 'No QR codes yet' : 'No QR codes match your filters'}
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-[var(--color-text-muted)] mb-4">
             {qrCodes.length === 0 
               ? 'Create your first QR code to get started'
               : 'Try adjusting your search or filter criteria'

@@ -85,16 +85,16 @@ export default function UserToolHistory({ userId }: { userId: string }) {
           ) : error ? (
             <div className="text-sm text-red-600">{error}</div>
           ) : items.length === 0 ? (
-            <div className="text-sm text-gray-500">No usage yet.</div>
+            <div className="text-sm text-[var(--color-text-muted)]">No usage yet.</div>
           ) : (
             <div className="space-y-3">
               {items.map((item) => (
-                <div key={`${item._id}-${item.createdAt}`} className="flex items-center justify-between border rounded-lg p-3 bg-white">
+                <div key={`${item._id}-${item.createdAt}`} className="flex items-center justify-between border rounded-lg p-3 bg-[var(--color-surface)]">
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary">{item.toolSlug}</Badge>
                     <div>
                       <div className="text-sm font-medium">{item.toolName}</div>
-                      <div className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleString()} • {item.action}</div>
+                      <div className="text-xs text-[var(--color-text-muted)]">{new Date(item.createdAt).toLocaleString()} • {item.action}</div>
                     </div>
                   </div>
                   <Badge className={item.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>

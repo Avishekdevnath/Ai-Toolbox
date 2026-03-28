@@ -77,7 +77,7 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
       case 'location': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-400';
       case 'vcard': return 'text-pink-600 bg-pink-100 dark:bg-pink-900 dark:text-pink-400';
       case 'event': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-400';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-400';
+      default: return 'text-[var(--color-text-secondary)] bg-[var(--color-muted)] dark:bg-gray-900 dark:text-gray-400';
     }
   };
 
@@ -92,11 +92,11 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
   if (!stats) {
     return (
       <div className="text-center py-12">
-        <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <BarChart3 className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-[var(--color-text-primary)] dark:text-white mb-2">
           No analytics data available
         </h3>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-[var(--color-text-muted)] dark:text-gray-400">
           Create some QR codes to see analytics
         </p>
       </div>
@@ -117,10 +117,10 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
             Back
           </Button>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] dark:text-white">
               QR Code Analytics
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-[var(--color-text-muted)] dark:text-gray-400">
               Insights and performance metrics for your QR codes
             </p>
           </div>
@@ -129,7 +129,7 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            className="px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -141,11 +141,11 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        <Card className="p-6 bg-[var(--color-surface)] dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total QR Codes</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalQRCodes}</p>
+              <p className="text-sm font-medium text-[var(--color-text-muted)] dark:text-gray-400">Total QR Codes</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] dark:text-white">{stats.totalQRCodes}</p>
               <p className="text-sm text-green-600 dark:text-green-400">
                 {stats.activeQRCodes} active
               </p>
@@ -156,12 +156,12 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
           </div>
         </Card>
 
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        <Card className="p-6 bg-[var(--color-surface)] dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Scans</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalScans}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-[var(--color-text-muted)] dark:text-gray-400">Total Scans</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] dark:text-white">{stats.totalScans}</p>
+              <p className="text-sm text-[var(--color-text-muted)] dark:text-gray-400">
                 {stats.averageScansPerCode.toFixed(1)} avg per code
               </p>
             </div>
@@ -171,12 +171,12 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
           </div>
         </Card>
 
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        <Card className="p-6 bg-[var(--color-surface)] dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Downloads</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalDownloads}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-[var(--color-text-muted)] dark:text-gray-400">Downloads</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] dark:text-white">{stats.totalDownloads}</p>
+              <p className="text-sm text-[var(--color-text-muted)] dark:text-gray-400">
                 {stats.totalQRCodes > 0 ? (stats.totalDownloads / stats.totalQRCodes).toFixed(1) : 0} avg per code
               </p>
             </div>
@@ -186,12 +186,12 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
           </div>
         </Card>
 
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        <Card className="p-6 bg-[var(--color-surface)] dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Shares</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalShares}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-[var(--color-text-muted)] dark:text-gray-400">Shares</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] dark:text-white">{stats.totalShares}</p>
+              <p className="text-sm text-[var(--color-text-muted)] dark:text-gray-400">
                 {stats.totalQRCodes > 0 ? (stats.totalShares / stats.totalQRCodes).toFixed(1) : 0} avg per code
               </p>
             </div>
@@ -204,35 +204,35 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Performing QR Codes */}
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        <Card className="p-6 bg-[var(--color-surface)] dark:bg-gray-800">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] dark:text-white">
               Top Performing QR Codes
             </h3>
-            <TrendingUp className="w-5 h-5 text-gray-400" />
+            <TrendingUp className="w-5 h-5 text-[var(--color-text-muted)]" />
           </div>
           <div className="space-y-3">
             {stats.topPerformingQRCodes.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              <p className="text-[var(--color-text-muted)] dark:text-gray-400 text-center py-4">
                 No QR codes with activity yet
               </p>
             ) : (
               stats.topPerformingQRCodes.map((qr, index) => (
-                <div key={qr.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div key={qr.id} className="flex items-center justify-between p-3 bg-[var(--color-surface-secondary)] dark:bg-gray-700 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <div className="flex items-center justify-center w-8 h-8 bg-[var(--color-muted)] dark:bg-gray-600 rounded-full text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300">
                       {index + 1}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 dark:text-white truncate">
+                      <p className="font-medium text-[var(--color-text-primary)] dark:text-white truncate">
                         {qr.title}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      <p className="text-sm text-[var(--color-text-muted)] dark:text-gray-400 truncate">
                         {qr.content.length > 30 ? `${qr.content.substring(0, 30)}...` : qr.content}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center space-x-4 text-sm text-[var(--color-text-muted)] dark:text-gray-400">
                     <span className="flex items-center">
                       <Eye className="w-3 h-3 mr-1" />
                       {qr.scans}
@@ -253,16 +253,16 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
         </Card>
 
         {/* QR Code Type Distribution */}
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        <Card className="p-6 bg-[var(--color-surface)] dark:bg-gray-800">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] dark:text-white">
               QR Code Types
             </h3>
-            <PieChart className="w-5 h-5 text-gray-400" />
+            <PieChart className="w-5 h-5 text-[var(--color-text-muted)]" />
           </div>
           <div className="space-y-3">
             {Object.entries(stats.typeDistribution).length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              <p className="text-[var(--color-text-muted)] dark:text-gray-400 text-center py-4">
                 No QR codes created yet
               </p>
             ) : (
@@ -274,18 +274,18 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
                       <div className={`p-2 rounded-lg ${getTypeColor(type)}`}>
                         {getTypeIcon(type)}
                       </div>
-                      <span className="font-medium text-gray-900 dark:text-white capitalize">
+                      <span className="font-medium text-[var(--color-text-primary)] dark:text-white capitalize">
                         {type}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                      <div className="w-24 bg-[var(--color-muted)] dark:bg-gray-600 rounded-full h-2">
                         <div
                           className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${(count / stats.totalQRCodes) * 100}%` }}
                         />
                       </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 w-8 text-right">
+                      <span className="text-sm text-[var(--color-text-muted)] dark:text-gray-400 w-8 text-right">
                         {count}
                       </span>
                     </div>
@@ -299,27 +299,27 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
       {/* Recent Activity Chart */}
       <Card className="p-6 bg-white dark:bg-gray-800">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] dark:text-white">
             Recent Activity
           </h3>
-          <Activity className="w-5 h-5 text-gray-400" />
+          <Activity className="w-5 h-5 text-[var(--color-text-muted)]" />
         </div>
         <div className="space-y-4">
           {stats.recentActivity.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+            <p className="text-[var(--color-text-muted)] dark:text-gray-400 text-center py-8">
               No recent activity
             </p>
           ) : (
             <div className="space-y-3">
               {stats.recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 bg-[var(--color-surface-secondary)] dark:bg-gray-700 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="font-medium text-[var(--color-text-primary)] dark:text-white">
                       {new Date(activity.date).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center space-x-6 text-sm text-[var(--color-text-muted)] dark:text-gray-400">
                     <span className="flex items-center">
                       <Eye className="w-3 h-3 mr-1" />
                       {activity.scans} scans
@@ -332,7 +332,7 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
                       <Share2 className="w-3 h-3 mr-1" />
                       {activity.shares} shares
                     </span>
-                    <span className="text-gray-400">
+                    <span className="text-[var(--color-text-muted)]">
                       {activity.newQRCodes} new codes
                     </span>
                   </div>
@@ -345,12 +345,12 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
 
       {/* Scan Trends Chart */}
       {stats.scanTrends.length > 0 && (
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        <Card className="p-6 bg-[var(--color-surface)] dark:bg-gray-800">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] dark:text-white">
               Scan Trends (Last 30 Days)
             </h3>
-            <TrendingUp className="w-5 h-5 text-gray-400" />
+            <TrendingUp className="w-5 h-5 text-[var(--color-text-muted)]" />
           </div>
           <div className="space-y-4">
             <div className="flex items-end space-x-1 h-32">
@@ -363,14 +363,14 @@ export default function QrCodeAnalytics({ userId, onBack }: QrCodeAnalyticsProps
                       className="w-full bg-blue-600 rounded-t"
                       style={{ height: `${height}%` }}
                     />
-                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    <span className="text-xs text-[var(--color-text-muted)] dark:text-gray-400 mt-2">
                       {new Date(trend.date).getDate()}
                     </span>
                   </div>
                 );
               })}
             </div>
-            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between text-xs text-[var(--color-text-muted)] dark:text-gray-400">
               <span>14 days ago</span>
               <span>Today</span>
             </div>

@@ -18,8 +18,8 @@ export function AdminSidebarFooter({ email, name, onLogout }: Props) {
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] text-slate-200 font-medium truncate leading-tight">{name || email || 'Admin'}</p>
-          <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Administrator</p>
+          <p className="text-[12px] text-[var(--color-text-primary)] font-medium truncate leading-tight">{name || email || 'Admin'}</p>
+          <p className="text-[10px] text-[var(--color-text-muted)] leading-tight mt-0.5">Administrator</p>
         </div>
         <button
           onClick={onLogout}

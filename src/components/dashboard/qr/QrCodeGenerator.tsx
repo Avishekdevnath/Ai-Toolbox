@@ -206,7 +206,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Website URL
               </label>
               <input
@@ -214,7 +214,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.content || ''}
                 onChange={(e) => handleInputChange('content', e.target.value)}
                 placeholder="https://example.com"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Text Content
               </label>
               <textarea
@@ -232,7 +232,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 onChange={(e) => handleInputChange('content', e.target.value)}
                 placeholder="Enter your text here..."
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Email Address
               </label>
               <input
@@ -250,7 +250,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.content || ''}
                 onChange={(e) => handleInputChange('content', e.target.value)}
                 placeholder="example@email.com"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Phone Number
               </label>
               <input
@@ -268,7 +268,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.content || ''}
                 onChange={(e) => handleInputChange('content', e.target.value)}
                 placeholder="+1234567890"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Phone Number
               </label>
               <input
@@ -286,11 +286,11 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.content || ''}
                 onChange={(e) => handleInputChange('content', e.target.value)}
                 placeholder="+1234567890"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Message (Optional)
               </label>
               <textarea
@@ -298,7 +298,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Pre-filled message..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -308,7 +308,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Network Name (SSID) *
               </label>
               <input
@@ -316,12 +316,12 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.ssid || ''}
                 onChange={(e) => handleInputChange('ssid', e.target.value)}
                 placeholder="MyWiFiNetwork"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -329,18 +329,18 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.password || ''}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 placeholder="WiFi password"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   Security Type
                 </label>
                 <select
                   value={formData.security || 'WPA2'}
                   onChange={(e) => handleInputChange('security', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="nopass">No Password</option>
                   <option value="WEP">WEP</option>
@@ -370,7 +370,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   First Name
                 </label>
                 <input
@@ -378,11 +378,11 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                   value={formData.firstName || ''}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   placeholder="John"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   Last Name
                 </label>
                 <input
@@ -390,12 +390,12 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                   value={formData.lastName || ''}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                   placeholder="Doe"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Organization
               </label>
               <input
@@ -403,12 +403,12 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.organization || ''}
                 onChange={(e) => handleInputChange('organization', e.target.value)}
                 placeholder="Company Name"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   Phone
                 </label>
                 <input
@@ -416,11 +416,11 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                   value={formData.phone || ''}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="+1234567890"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   Email
                 </label>
                 <input
@@ -428,12 +428,12 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                   value={formData.email || ''}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="john@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Website
               </label>
               <input
@@ -441,7 +441,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.website || ''}
                 onChange={(e) => handleInputChange('website', e.target.value)}
                 placeholder="https://example.com"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -452,7 +452,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   Latitude *
                 </label>
                 <input
@@ -461,12 +461,12 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                   value={formData.latitude || ''}
                   onChange={(e) => handleInputChange('latitude', parseFloat(e.target.value))}
                   placeholder="40.7128"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   Longitude *
                 </label>
                 <input
@@ -475,7 +475,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                   value={formData.longitude || ''}
                   onChange={(e) => handleInputChange('longitude', parseFloat(e.target.value))}
                   placeholder="-74.0060"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
@@ -487,7 +487,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Event Title *
               </label>
               <input
@@ -495,37 +495,37 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.eventTitle || ''}
                 onChange={(e) => handleInputChange('eventTitle', e.target.value)}
                 placeholder="My Event"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 required
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   Start Date *
                 </label>
                 <input
                   type="datetime-local"
                   value={formData.startDate instanceof Date ? formData.startDate.toISOString().slice(0, 16) : formData.startDate || ''}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                   End Date
                 </label>
                 <input
                   type="datetime-local"
                   value={formData.endDate instanceof Date ? formData.endDate.toISOString().slice(0, 16) : formData.endDate || ''}
                   onChange={(e) => handleInputChange('endDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                 Location
               </label>
               <input
@@ -533,7 +533,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                 value={formData.location || ''}
                 onChange={(e) => handleInputChange('location', e.target.value)}
                 placeholder="Event location"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -558,7 +558,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
             Back
           </Button>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] dark:text-white">
               Create QR Code
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -691,7 +691,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                     Title
                   </label>
                   <input
@@ -699,12 +699,12 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                     value={formData.title || ''}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="My QR Code"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                     Description
                   </label>
                   <textarea
@@ -712,13 +712,13 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Optional description..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                       Size (px)
                     </label>
                     <input
@@ -728,17 +728,17 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                       step="50"
                       value={formData.size || 200}
                       onChange={(e) => handleInputChange('size', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                       Error Correction
                     </label>
                     <select
                       value={formData.errorCorrectionLevel || 'M'}
                       onChange={(e) => handleInputChange('errorCorrectionLevel', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2 border border-[var(--color-border)] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="L">Low (7%)</option>
                       <option value="M">Medium (15%)</option>
@@ -750,7 +750,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                       Foreground Color
                     </label>
                     <input
@@ -761,7 +761,7 @@ export default function QrCodeGenerator({ onQrCodeCreated, onCancel }: QrCodeGen
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] dark:text-gray-300 mb-2">
                       Background Color
                     </label>
                     <input

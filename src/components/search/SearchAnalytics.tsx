@@ -78,13 +78,13 @@ const SearchAnalytics: React.FC<SearchAnalyticsProps> = ({ className = "" }) => 
 
   if (loading) {
     return (
-      <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 ${className}`}>
+      <div className={`bg-[var(--color-surface)] rounded-lg shadow-md p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-[var(--color-muted)] rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+            <div className="h-3 bg-[var(--color-muted)] rounded"></div>
+            <div className="h-3 bg-[var(--color-muted)] rounded w-5/6"></div>
+            <div className="h-3 bg-[var(--color-muted)] rounded w-4/6"></div>
           </div>
         </div>
       </div>
@@ -92,9 +92,9 @@ const SearchAnalytics: React.FC<SearchAnalyticsProps> = ({ className = "" }) => 
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 ${className}`}>
+    <div className={`bg-[var(--color-surface)] rounded-lg shadow-md p-6 ${className}`}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center">
           <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
           Search Analytics
         </h3>
@@ -159,14 +159,14 @@ const SearchAnalytics: React.FC<SearchAnalyticsProps> = ({ className = "" }) => 
 
       {/* Popular Queries */}
       <div className="mb-6">
-        <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+        <h4 className="text-md font-semibold text-[var(--color-text-primary)] mb-3">
           Popular Search Queries
         </h4>
         <div className="space-y-2">
           {analytics.popularQueries.map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <span className="text-sm text-gray-700 dark:text-gray-300">{item.query}</span>
-              <span className="text-sm font-medium text-gray-900 dark:text-white">{item.count}</span>
+            <div key={index} className="flex items-center justify-between p-3 bg-[var(--color-surface-secondary)] rounded-lg">
+              <span className="text-sm text-[var(--color-text-secondary)]">{item.query}</span>
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">{item.count}</span>
             </div>
           ))}
         </div>
@@ -174,14 +174,14 @@ const SearchAnalytics: React.FC<SearchAnalyticsProps> = ({ className = "" }) => 
 
       {/* Top Categories */}
       <div className="mb-6">
-        <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+        <h4 className="text-md font-semibold text-[var(--color-text-primary)] mb-3">
           Most Searched Categories
         </h4>
         <div className="space-y-2">
           {analytics.topCategories.map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <span className="text-sm text-gray-700 dark:text-gray-300">{item.category}</span>
-              <span className="text-sm font-medium text-gray-900 dark:text-white">{item.count}</span>
+            <div key={index} className="flex items-center justify-between p-3 bg-[var(--color-surface-secondary)] rounded-lg">
+              <span className="text-sm text-[var(--color-text-secondary)]">{item.category}</span>
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">{item.count}</span>
             </div>
           ))}
         </div>
@@ -189,10 +189,10 @@ const SearchAnalytics: React.FC<SearchAnalyticsProps> = ({ className = "" }) => 
 
       {/* Search Trends Chart */}
       <div>
-        <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+        <h4 className="text-md font-semibold text-[var(--color-text-primary)] mb-3">
           Search Trends (Last 5 Days)
         </h4>
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+        <div className="bg-[var(--color-surface-secondary)] rounded-lg p-4">
           <div className="flex items-end justify-between h-32">
             {analytics.searchTrends.map((item, index) => {
               const maxCount = Math.max(...analytics.searchTrends.map(t => t.count));
@@ -204,10 +204,10 @@ const SearchAnalytics: React.FC<SearchAnalyticsProps> = ({ className = "" }) => 
                     className="w-8 bg-blue-600 rounded-t transition-all duration-300 hover:bg-blue-700"
                     style={{ height: `${height}%` }}
                   ></div>
-                  <span className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  <span className="text-xs text-[var(--color-text-secondary)] mt-2">
                     {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
-                  <span className="text-xs font-medium text-gray-900 dark:text-white">
+                  <span className="text-xs font-medium text-[var(--color-text-primary)]">
                     {item.count}
                   </span>
                 </div>

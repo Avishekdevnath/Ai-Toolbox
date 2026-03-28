@@ -7,7 +7,7 @@ interface SkeletonProps {
 
 export function Skeleton({ className = '', children }: SkeletonProps) {
   return (
-    <div className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded ${className}`}>
+    <div className={`animate-pulse bg-[var(--color-muted)] rounded ${className}`}>
       {children}
     </div>
   );
@@ -15,7 +15,7 @@ export function Skeleton({ className = '', children }: SkeletonProps) {
 
 export function ToolCardSkeleton() {
   return (
-    <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 flex flex-col h-80 border border-gray-200/50 dark:border-gray-700/50">
+    <div className="relative bg-[var(--color-surface)]/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 flex flex-col h-80 border border-[var(--color-border)]/50">
       {/* Icon skeleton */}
       <div className="text-5xl mb-4 flex justify-center">
         <Skeleton className="w-16 h-16 rounded-full" />

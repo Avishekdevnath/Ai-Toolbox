@@ -89,7 +89,7 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
       {/* Search Bar */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+          <Search className="h-5 w-5 text-[var(--color-text-muted)]" />
         </div>
         
         <input
@@ -98,14 +98,14 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="block w-full pl-10 pr-24 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+          className="block w-full pl-10 pr-24 py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
         />
         
         <div className="absolute inset-y-0 right-0 flex items-center pr-2">
           {query && (
             <button
               onClick={handleClear}
-              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mr-2"
+              className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] mr-2"
             >
               <X className="h-4 w-4" />
             </button>
@@ -124,7 +124,7 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
       <div className="flex items-center justify-between">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-muted)] transition-colors"
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
@@ -133,7 +133,7 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
 
         {hasActiveFilters && (
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
+            <span className="text-sm text-[var(--color-text-secondary)]">Active filters:</span>
             {filters.category && (
               <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs rounded-full">
                 {filters.category}
@@ -156,17 +156,17 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
 
       {/* Filter Options */}
       {showFilters && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+        <div className="bg-[var(--color-surface-secondary)] rounded-lg p-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Category Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                 Category
               </label>
               <select
                 value={filters.category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full p-2 border border-[var(--color-border)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--color-surface)] text-[var(--color-text-primary)]"
               >
                 <option value="">All Categories</option>
                 {categories.map((category) => (
@@ -179,13 +179,13 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                 Status
               </label>
               <select
                 value={filters.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full p-2 border border-[var(--color-border)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--color-surface)] text-[var(--color-text-primary)]"
               >
                 <option value="">All Status</option>
                 {statuses.map((status) => (
@@ -199,7 +199,7 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
 
           {/* Quick Filter Chips */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
               Quick Filters
             </label>
             <div className="flex flex-wrap gap-2">
@@ -208,7 +208,7 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   !filters.status
                     ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-[var(--color-muted)] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'
                 }`}
               >
                 All Tools
@@ -218,7 +218,7 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   filters.status === 'Coming Soon'
                     ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-[var(--color-muted)] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'
                 }`}
               >
                 Coming Soon
@@ -228,7 +228,7 @@ const EnhancedSearchBar: React.FC<EnhancedSearchBarProps> = ({
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   !filters.status && filters.category === ''
                     ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-[var(--color-muted)] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'
                 }`}
               >
                 Available Now

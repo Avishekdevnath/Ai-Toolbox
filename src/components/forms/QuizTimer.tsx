@@ -150,7 +150,7 @@ export default function QuizTimer({
           <div className={`text-4xl font-mono font-bold ${getTimeColor()}`}>
             {formatTime(remainingSeconds)}
           </div>
-          <div className="text-sm text-gray-600 mt-1">
+          <div className="text-sm text-[var(--color-text-secondary)] mt-1">
             Total: {totalMinutes} minutes
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function QuizTimer({
         )}
 
         {/* Status Information */}
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-sm text-[var(--color-text-secondary)]">
           {isPaused && <span className="text-yellow-600">⏸️ Timer Paused</span>}
           {isRunning && !isWarning && <span className="text-green-600">▶️ Timer Running</span>}
           {remainingSeconds === 0 && <span className="text-red-600">⏰ Time's Up!</span>}

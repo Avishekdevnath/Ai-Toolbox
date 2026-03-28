@@ -32,26 +32,26 @@ const statItems = (a: Analytics) => [
 export default function UrlCreateTab({ originalUrl, setOriginalUrl, customAlias, setCustomAlias, expiresInDays, setExpiresInDays, expiresAt, setExpiresAt, isLoading, onSubmit, baseUrl, analytics }: Props) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
-        <h2 className="text-[13px] font-semibold text-slate-800 mb-4">Create Short URL</h2>
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
+        <h2 className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-4">Create Short URL</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-[11px] uppercase tracking-wide text-slate-400 mb-1.5">Destination URL</label>
+            <label className="block text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1.5">Destination URL</label>
             <input type="url" value={originalUrl} onChange={(e) => setOriginalUrl(e.target.value)} placeholder="https://example.com/very-long-url"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
           </div>
           <div>
-            <label className="block text-[11px] uppercase tracking-wide text-slate-400 mb-1.5">Custom Alias (optional)</label>
+            <label className="block text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1.5">Custom Alias (optional)</label>
             <div className="flex">
-              <span className="inline-flex items-center px-3 border border-r-0 border-slate-200 bg-slate-50 text-slate-400 text-[12px] rounded-l-lg">{baseUrl}/</span>
+              <span className="inline-flex items-center px-3 border border-r-0 border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] text-[12px] rounded-l-lg">{baseUrl}/</span>
               <input type="text" value={customAlias} onChange={(e) => setCustomAlias(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))} placeholder="my-link" maxLength={20}
-                className="flex-1 border border-slate-200 rounded-r-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                className="flex-1 border border-[var(--color-border)] rounded-r-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
             </div>
           </div>
           <div>
-            <label className="block text-[11px] uppercase tracking-wide text-slate-400 mb-1.5">Expiration</label>
+            <label className="block text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1.5">Expiration</label>
             <select value={expiresInDays || ''} onChange={(e) => setExpiresInDays(e.target.value ? parseInt(e.target.value) : undefined)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20">
               <option value="">No expiration</option>
               <option value="1">1 day</option>
               <option value="7">7 days</option>
@@ -67,14 +67,14 @@ export default function UrlCreateTab({ originalUrl, setOriginalUrl, customAlias,
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
-        <h2 className="text-[13px] font-semibold text-slate-800 mb-4">Overview</h2>
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
+        <h2 className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-4">Overview</h2>
         {analytics ? (
           <div className="grid grid-cols-2 gap-3">
             {statItems(analytics).map(s => (
-              <div key={s.label} className="bg-slate-50 rounded-lg p-4">
+              <div key={s.label} className="bg-[var(--color-surface-secondary)] rounded-lg p-4">
                 <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
-                <div className="text-[11px] uppercase tracking-wide text-slate-400 mt-1">{s.label}</div>
+                <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] mt-1">{s.label}</div>
               </div>
             ))}
           </div>

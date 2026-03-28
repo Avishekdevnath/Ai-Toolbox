@@ -110,11 +110,11 @@ export default function SearchHistory() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
         <div className="max-w-4xl mx-auto px-4 py-16">
           <div className="text-center">
-            <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <Search className="mx-auto h-16 w-16 text-[var(--color-text-muted)] mb-4" />
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4">
               Sign in to view your search history
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
+            <p className="text-[var(--color-text-secondary)] mb-8">
               Create an account or sign in to track and manage your search history.
             </p>
             <div className="flex justify-center space-x-4">
@@ -136,10 +136,10 @@ export default function SearchHistory() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
             Search History
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-[var(--color-text-secondary)]">
             Your recent searches and discoveries
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function SearchHistory() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="px-4 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--color-surface)] text-[var(--color-text-primary)]"
           >
             {categories.map(category => (
               <option key={category} value={category}>
@@ -174,7 +174,7 @@ export default function SearchHistory() {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading search history...</p>
+            <p className="mt-4 text-[var(--color-text-secondary)]">Loading search history...</p>
           </div>
         ) : error ? (
           <div className="text-center py-12">
@@ -183,11 +183,11 @@ export default function SearchHistory() {
           </div>
         ) : filteredHistory.length === 0 ? (
           <div className="text-center py-12">
-            <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <Search className="mx-auto h-16 w-16 text-[var(--color-text-muted)] mb-4" />
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               {searchHistory.length === 0 ? 'No search history yet' : 'No searches match your filter'}
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-[var(--color-text-secondary)] mb-6">
               {searchHistory.length === 0 
                 ? 'Start searching for tools and your history will appear here!' 
                 : 'Try adjusting your filter criteria.'}
@@ -205,13 +205,13 @@ export default function SearchHistory() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 flex-1">
-                      <Search className="h-5 w-5 text-gray-400" />
+                      <Search className="h-5 w-5 text-[var(--color-text-muted)]" />
                       <div className="flex-1">
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                        <h3 className="font-medium text-[var(--color-text-primary)]">
                           {item.query}
                         </h3>
                         <div className="flex items-center space-x-4 mt-1">
-                          <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                          <span className="text-sm text-[var(--color-text-muted)] flex items-center">
                             <Clock className="h-3 w-3 mr-1" />
                             {formatTimestamp(item.timestamp)}
                           </span>
@@ -221,7 +221,7 @@ export default function SearchHistory() {
                             </Badge>
                           )}
                           {item.resultCount && (
-                            <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                            <span className="text-sm text-[var(--color-text-muted)] flex items-center">
                               <TrendingUp className="h-3 w-3 mr-1" />
                               {item.resultCount} results
                             </span>

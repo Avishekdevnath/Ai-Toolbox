@@ -48,21 +48,21 @@ export default function DeleteConfirmationModal({
 
   return (
     <div className="form-luxe fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full flex flex-col max-h-[80vh]">
+      <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-sm w-full flex flex-col max-h-[80vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-red-100 rounded-md">
               <AlertTriangle className="w-4 h-4 text-red-600" />
             </div>
-            <h2 className="text-base font-semibold text-gray-900">Delete Response</h2>
+            <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Delete Response</h2>
           </div>
           <button
             onClick={onClose}
             disabled={isDeleting}
-            className="p-1.5 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 hover:bg-[var(--color-muted)] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <X className="w-4 h-4 text-gray-500" />
+            <X className="w-4 h-4 text-[var(--color-text-muted)]" />
           </button>
         </div>
 
@@ -74,21 +74,21 @@ export default function DeleteConfirmationModal({
                 <Trash2 className="w-4 h-4 text-red-500 mt-0.5" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-gray-700">
+                <p className="text-xs text-[var(--color-text-secondary)]">
                   Are you sure you want to delete the response from{' '}
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-[var(--color-text-primary)]">
                     {getResponseIdentifier()}
                   </span>?
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">
                   This action cannot be undone. All response data will be permanently removed.
                 </p>
               </div>
             </div>
 
             {/* Response Details */}
-            <div className="bg-gray-50 rounded-md p-2">
-              <div className="text-xs text-gray-600 space-y-1">
+            <div className="bg-[var(--color-surface-secondary)] rounded-md p-2">
+              <div className="text-xs text-[var(--color-text-secondary)] space-y-1">
                 <div className="flex justify-between">
                   <span>Submitted:</span>
                   <span>{new Date(response.submittedAt || response.createdAt).toLocaleString()}</span>
@@ -111,11 +111,11 @@ export default function DeleteConfirmationModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-2 p-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end space-x-2 p-3 border-t border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
           <button
             onClick={onClose}
             disabled={isDeleting}
-            className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

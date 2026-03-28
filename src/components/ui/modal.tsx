@@ -101,7 +101,7 @@ export default function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-gray-900/20 backdrop-blur-sm"
+            className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm"
             onClick={handleOverlayClick}
           />
           
@@ -117,22 +117,22 @@ export default function Modal({
                 ease: [0.4, 0, 0.2, 1]
               }}
               className={cn(
-                'relative w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden',
+                'relative w-full bg-[var(--color-surface)] rounded-xl shadow-2xl border border-[var(--color-border)] overflow-hidden',
                 sizeClasses[size],
                 className
               )}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
                   <div>
                     {title && (
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                         {title}
                       </h2>
                     )}
                     {description && (
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                         {description}
                       </p>
                     )}
@@ -140,7 +140,7 @@ export default function Modal({
                   {showCloseButton && (
                     <button
                       onClick={handleClose}
-                      className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-muted)] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                       aria-label="Close modal"
                     >
                       <X className="w-5 h-5" />
@@ -172,7 +172,7 @@ export function ModalHeader({
 }) {
   return (
     <div className={cn(
-      "flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700",
+      "flex items-center justify-between p-6 border-b border-[var(--color-border)]",
       className
     )}>
       {children}
@@ -205,7 +205,7 @@ export function ModalFooter({
 }) {
   return (
     <div className={cn(
-      "flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50",
+      "flex items-center justify-end gap-3 p-6 border-t border-[var(--color-border)] bg-[var(--color-surface-secondary)]",
       className
     )}>
       {children}

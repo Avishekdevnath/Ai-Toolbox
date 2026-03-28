@@ -159,7 +159,7 @@ export default function ForgotPasswordPage() {
             <div className="flex items-center space-x-2">
               <Link
                 href="/sign-in"
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
@@ -215,8 +215,8 @@ export default function ForgotPasswordPage() {
             {step === 'questions' && (
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold text-gray-900">Answer your security questions</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Answer your security questions</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     We selected two of your saved questions for recovery.
                   </p>
                 </div>
@@ -237,8 +237,8 @@ export default function ForgotPasswordPage() {
             {step === 'reset' && (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold text-gray-900">Create a new password</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Create a new password</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Set a new password for your account. You will need to sign in again afterward.
                   </p>
                 </div>
@@ -275,8 +275,8 @@ export default function ForgotPasswordPage() {
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold text-gray-900">Password reset successfully</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Password reset successfully</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Your password has been updated. Sign in again to continue.
                   </p>
                 </div>

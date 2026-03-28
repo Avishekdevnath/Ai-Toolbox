@@ -92,9 +92,9 @@ export default function ToolComparison({ tools, maxTools = 3 }: ToolComparisonPr
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <Plus className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <Plus className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
             <h3 className="text-lg font-semibold mb-2">Start Comparing Tools</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-[var(--color-text-secondary)] mb-4">
               Select up to {maxTools} tools to compare their features and capabilities.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -107,7 +107,7 @@ export default function ToolComparison({ tools, maxTools = 3 }: ToolComparisonPr
                 >
                   <span className="text-2xl">{tool.icon}</span>
                   <span className="font-medium">{tool.name}</span>
-                  <span className="text-xs text-gray-500">{tool.category}</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{tool.category}</span>
                 </Button>
               ))}
             </div>
@@ -200,7 +200,7 @@ export default function ToolComparison({ tools, maxTools = 3 }: ToolComparisonPr
               <tbody>
                 {/* Features */}
                 <tr>
-                  <td className="p-2 font-medium bg-gray-50 dark:bg-gray-800">Features</td>
+                  <td className="p-2 font-medium bg-[var(--color-surface-secondary)]">Features</td>
                   {selectedTools.map(tool => (
                     <td key={tool.id} className="p-2 border-b">
                       <div className="space-y-1">
@@ -217,7 +217,7 @@ export default function ToolComparison({ tools, maxTools = 3 }: ToolComparisonPr
 
                 {/* Pros */}
                 <tr>
-                  <td className="p-2 font-medium bg-gray-50 dark:bg-gray-800">Pros</td>
+                  <td className="p-2 font-medium bg-[var(--color-surface-secondary)]">Pros</td>
                   {selectedTools.map(tool => (
                     <td key={tool.id} className="p-2 border-b">
                       <div className="space-y-1">
@@ -234,7 +234,7 @@ export default function ToolComparison({ tools, maxTools = 3 }: ToolComparisonPr
 
                 {/* Cons */}
                 <tr>
-                  <td className="p-2 font-medium bg-gray-50 dark:bg-gray-800">Cons</td>
+                  <td className="p-2 font-medium bg-[var(--color-surface-secondary)]">Cons</td>
                   {selectedTools.map(tool => (
                     <td key={tool.id} className="p-2 border-b">
                       <div className="space-y-1">
@@ -251,10 +251,10 @@ export default function ToolComparison({ tools, maxTools = 3 }: ToolComparisonPr
 
                 {/* Description */}
                 <tr>
-                  <td className="p-2 font-medium bg-gray-50 dark:bg-gray-800">Description</td>
+                  <td className="p-2 font-medium bg-[var(--color-surface-secondary)]">Description</td>
                   {selectedTools.map(tool => (
                     <td key={tool.id} className="p-2 border-b">
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <p className="text-sm text-[var(--color-text-secondary)]">
                         {tool.description}
                       </p>
                     </td>

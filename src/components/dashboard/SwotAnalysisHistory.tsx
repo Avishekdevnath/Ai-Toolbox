@@ -124,7 +124,7 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
       investment: 'bg-yellow-100 text-yellow-800',
       emotional: 'bg-pink-100 text-pink-800'
     };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+    return colors[type] || 'bg-[var(--color-muted)] text-[var(--color-text-primary)]';
   };
 
   if (loading) {
@@ -141,7 +141,7 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <BarChart3 className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)]">
             SWOT Analysis History
           </h2>
         </div>
@@ -160,11 +160,11 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
       {history.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
-            <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <History className="w-16 h-16 text-[var(--color-text-muted)] mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">
               No Analysis History
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-[var(--color-text-muted)] mb-4">
               You haven't created any SWOT analyses yet. Start by creating your first analysis!
             </p>
             <Button asChild>
@@ -226,29 +226,29 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
                     <div className="text-2xl font-bold text-green-600">
                       {item.result.strengths.length}
                     </div>
-                    <div className="text-sm text-gray-500">Strengths</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Strengths</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-600">
                       {item.result.weaknesses.length}
                     </div>
-                    <div className="text-sm text-gray-500">Weaknesses</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Weaknesses</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">
                       {item.result.opportunities.length}
                     </div>
-                    <div className="text-sm text-gray-500">Opportunities</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Opportunities</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600">
                       {item.result.threats.length}
                     </div>
-                    <div className="text-sm text-gray-500">Threats</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Threats</div>
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[var(--color-text-muted)]">
                   <div className="flex items-center space-x-1">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(item.createdAt)}</span>
@@ -261,7 +261,7 @@ export default function SwotAnalysisHistory({ userId }: SwotAnalysisHistoryProps
 
                 {/* Detailed View */}
                 {viewingId === item.id && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Strengths */}
                       <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">

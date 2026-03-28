@@ -77,9 +77,9 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
   if (loading) return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => <div key={i} className="bg-slate-100 border border-slate-200 rounded-xl h-24 animate-pulse" />)}
+        {[...Array(4)].map((_, i) => <div key={i} className="bg-[var(--color-muted)] border border-[var(--color-border)] rounded-xl h-24 animate-pulse" />)}
       </div>
-      <div className="bg-slate-100 border border-slate-200 rounded-xl h-48 animate-pulse" />
+      <div className="bg-[var(--color-muted)] border border-[var(--color-border)] rounded-xl h-48 animate-pulse" />
     </div>
   );
 
@@ -88,15 +88,15 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+        <div className="flex gap-1 bg-[var(--color-muted)] p-1 rounded-lg">
           {(['7d', '30d', '90d'] as const).map((range) => (
             <button key={range} onClick={() => setTimeRange(range)}
-              className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-all ${timeRange === range ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}>
+              className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-all ${timeRange === range ? 'bg-[var(--color-surface)] shadow-sm text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'}`}>
               {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
             </button>
           ))}
         </div>
-        <button className="inline-flex items-center gap-1.5 h-9 px-3 border border-slate-200 text-[13px] text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
+        <button className="inline-flex items-center gap-1.5 h-9 px-3 border border-[var(--color-border)] text-[13px] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-muted)] transition-colors">
           <Calendar size={14} /> Export
         </button>
       </div>

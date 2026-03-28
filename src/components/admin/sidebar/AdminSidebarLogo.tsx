@@ -8,7 +8,7 @@ export function AdminSidebarLogo() {
       </div>
       <div className="min-w-0">
         <span className="text-[15px] font-semibold text-white tracking-tight leading-none">Admin Panel</span>
-        <p className="text-[11px] text-slate-400 mt-0.5 leading-none">System Control</p>
+        <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-none">System Control</p>
       </div>
     </div>
   );

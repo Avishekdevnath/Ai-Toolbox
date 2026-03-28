@@ -278,7 +278,7 @@ export default function VirtualizedResponsesTable({
           onScroll={handleScroll}
         >
           <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
+            <TableHeader className="sticky top-0 bg-[var(--color-surface)] z-10">
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox
@@ -287,7 +287,7 @@ export default function VirtualizedResponsesTable({
                   />
                 </TableHead>
                 <TableHead
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer hover:bg-[var(--color-muted)]"
                   onClick={() => handleSort('submittedAt')}
                 >
                   <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export default function VirtualizedResponsesTable({
                 {fields.slice(0, 5).map(field => (
                   <TableHead
                     key={field.id}
-                    className="cursor-pointer hover:bg-gray-50 max-w-48"
+                    className="cursor-pointer hover:bg-[var(--color-muted)] max-w-48"
                     onClick={() => handleSort(field.id)}
                   >
                     <div className="flex items-center gap-2 truncate">
@@ -327,13 +327,13 @@ export default function VirtualizedResponsesTable({
                 </TableRow>
               ) : responses.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={fields.length + 3} className="text-center py-12 text-gray-500">
+                  <TableCell colSpan={fields.length + 3} className="text-center py-12 text-[var(--color-text-muted)]">
                     No responses found
                   </TableCell>
                 </TableRow>
               ) : (
                 responses.map((response) => (
-                  <TableRow key={response.id} className="hover:bg-gray-50">
+                  <TableRow key={response.id} className="hover:bg-[var(--color-muted)]">
                     <TableCell>
                       <Checkbox
                         checked={selectedResponses.has(response.id)}
@@ -345,7 +345,7 @@ export default function VirtualizedResponsesTable({
                         <div className="font-medium">
                           {new Date(response.submittedAt).toLocaleDateString()}
                         </div>
-                        <div className="text-gray-500">
+                        <div className="text-[var(--color-text-muted)]">
                           {new Date(response.submittedAt).toLocaleTimeString()}
                         </div>
                       </div>
@@ -378,7 +378,7 @@ export default function VirtualizedResponsesTable({
         </div>
 
         {/* Pagination Info */}
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+        <div className="flex items-center justify-between mt-4 text-sm text-[var(--color-text-secondary)]">
           <div>
             Showing {startItem.toLocaleString()} to {endItem.toLocaleString()} of {totalResponses.toLocaleString()} responses
           </div>
@@ -393,7 +393,7 @@ export default function VirtualizedResponsesTable({
               Previous
             </Button>
 
-            <span className="px-3 py-1 bg-gray-100 rounded">
+            <span className="px-3 py-1 bg-[var(--color-muted)] rounded">
               Page {currentPage + 1} of {totalPages}
             </span>
 

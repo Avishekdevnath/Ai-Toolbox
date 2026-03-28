@@ -24,7 +24,7 @@ function Bone({
 }) {
   return (
     <div
-      className={`bg-slate-100 animate-pulse rounded-md ${className ?? ''}`}
+      className={`bg-[var(--color-muted)] animate-pulse rounded-md ${className ?? ''}`}
       style={style}
     />
   );
@@ -58,7 +58,7 @@ export function SkeletonStatChips({ count = 4 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 flex-1"
+          className="flex items-center gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 flex-1"
         >
           <Bone className="w-8 h-8 rounded-lg shrink-0" style={{ animationDelay: `${i * 80}ms` }} />
           <div className="flex-1 space-y-1.5">
@@ -84,9 +84,9 @@ export function SkeletonTable({
   showHeader?: boolean;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
       {showHeader && (
-        <div className="border-b border-slate-100 px-4 py-3 flex items-center gap-4">
+        <div className="border-b border-[var(--color-border-subtle)] px-4 py-3 flex items-center gap-4">
           <Bone className="w-6 h-3.5" />
           <Bone className="h-3.5 w-28 flex-1 max-w-[120px]" />
           <Bone className="hidden sm:block w-16 h-3.5 ml-auto" />
@@ -98,7 +98,7 @@ export function SkeletonTable({
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="px-4 py-4 border-b border-slate-50 last:border-0 flex items-center gap-4"
+          className="px-4 py-4 border-b border-[var(--color-border-subtle)] last:border-0 flex items-center gap-4"
         >
           <Bone className="w-5 h-4 shrink-0" style={{ animationDelay: `${i * 60}ms` }} />
           <div className="flex-1 min-w-0 space-y-1.5">
@@ -140,7 +140,7 @@ export function SkeletonCards({
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="bg-white border border-slate-200 rounded-xl p-4 space-y-3"
+          className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 space-y-3"
         >
           <div className="flex items-center gap-3">
             <Bone className="w-9 h-9 rounded-lg shrink-0" style={{ animationDelay: `${i * 60}ms` }} />
@@ -162,7 +162,7 @@ export function SkeletonList({ rows = 5 }: { rows?: number }) {
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3"
+          className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 flex items-center gap-3"
         >
           <Bone className="w-8 h-8 rounded-lg shrink-0" style={{ animationDelay: `${i * 60}ms` }} />
           <div className="flex-1 space-y-1.5">
@@ -198,9 +198,9 @@ export function Spinner({
   return (
     <div className={`flex flex-col items-center justify-center gap-2.5 ${className ?? ''}`}>
       <div
-        className={`${dim} ${border} rounded-full border-slate-200 border-t-blue-500 animate-spin`}
+        className={`${dim} ${border} rounded-full border-[var(--color-border)] border-t-blue-500 animate-spin`}
       />
-      {label && <p className="text-[13px] text-slate-500">{label}</p>}
+      {label && <p className="text-[13px] text-[var(--color-text-muted)]">{label}</p>}
     </div>
   );
 }

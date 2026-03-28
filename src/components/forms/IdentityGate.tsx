@@ -34,18 +34,18 @@ export default function IdentityGate({ schema, onComplete }: IdentityGateProps) 
   };
 
   const inputClass = (field: string) =>
-    `w-full rounded-xl border px-4 py-3 text-[14px] text-slate-700 focus:outline-none focus:ring-2 transition-colors ${
+    `w-full rounded-xl border px-4 py-3 text-[14px] text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 transition-colors ${
       errors.includes(field)
         ? 'border-red-400 focus:ring-red-200'
-        : 'border-slate-200 focus:ring-blue-200 focus:border-blue-400'
+        : 'border-[var(--color-border)] focus:ring-blue-200 focus:border-blue-400'
     }`;
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="w-full max-w-[480px] bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
+      <div className="w-full max-w-[480px] bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-8">
         <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1">Form</p>
-        <h1 className="text-xl font-semibold text-slate-800 mb-1">{schema.title}</h1>
-        {schema.description && <p className="text-[13px] text-slate-500 mb-6">{schema.description}</p>}
+        <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mb-1">{schema.title}</h1>
+        {schema.description && <p className="text-[13px] text-[var(--color-text-muted)] mb-6">{schema.description}</p>}
         <hr className="border-slate-100 mb-6" />
 
         <div className="space-y-4">

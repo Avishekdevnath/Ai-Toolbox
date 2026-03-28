@@ -173,9 +173,9 @@ export default function BulkOperations({
       <Card className={`form-luxe ${className}`}>
         <CardContent className="py-12">
           <div className="text-center">
-            <Archive className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No forms available</h3>
-            <p className="text-sm text-gray-600">Create some forms first to use bulk operations.</p>
+            <Archive className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">No forms available</h3>
+            <p className="text-sm text-[var(--color-text-secondary)]">Create some forms first to use bulk operations.</p>
           </div>
         </CardContent>
       </Card>
@@ -207,7 +207,7 @@ export default function BulkOperations({
                     </Badge>
                   )}
                   {statusCounts.archived > 0 && (
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                    <Badge variant="secondary" className="bg-[var(--color-muted)] text-[var(--color-text-secondary)]">
                       {statusCounts.archived} archived
                     </Badge>
                   )}
@@ -324,7 +324,7 @@ export default function BulkOperations({
             </div>
 
             {isProcessing && (
-              <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+              <div className="mt-4 flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                 Processing bulk operation...
               </div>
@@ -343,7 +343,7 @@ export default function BulkOperations({
                 checked={selectedForms.size === forms.length && forms.length > 0}
                 onCheckedChange={handleSelectAll}
               />
-              <span className="text-sm text-gray-600">Select All</span>
+              <span className="text-sm text-[var(--color-text-secondary)]">Select All</span>
             </div>
           </div>
         </CardHeader>
@@ -352,8 +352,8 @@ export default function BulkOperations({
             {forms.map((form) => (
               <div
                 key={form.id}
-                className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${
-                  selectedForms.has(form.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'
+                className={`flex items-center justify-between p-4 border rounded-lg hover:bg-[var(--color-muted)] ${
+                  selectedForms.has(form.id) ? 'border-blue-300 bg-blue-50' : 'border-[var(--color-border)]'
                 }`}
               >
                 <div className="flex items-center gap-4">
@@ -364,7 +364,7 @@ export default function BulkOperations({
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900">{form.title}</h3>
+                      <h3 className="font-medium text-[var(--color-text-primary)]">{form.title}</h3>
                       <Badge
                         variant={
                           form.status === 'published' ? 'default' :
@@ -372,7 +372,7 @@ export default function BulkOperations({
                         }
                         className={
                           form.status === 'published' ? 'bg-green-100 text-green-800' :
-                          form.status === 'archived' ? 'bg-gray-100 text-gray-800' : ''
+                          form.status === 'archived' ? 'bg-[var(--color-muted)] text-[var(--color-text-secondary)]' : ''
                         }
                       >
                         {form.status}
@@ -382,7 +382,7 @@ export default function BulkOperations({
                       </Badge>
                     </div>
 
-                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 mt-1 text-sm text-[var(--color-text-secondary)]">
                       <span>{form.responseCount} responses</span>
                       <span>Created {new Date(form.createdAt).toLocaleDateString()}</span>
                       <span>Updated {new Date(form.updatedAt).toLocaleDateString()}</span>

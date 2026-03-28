@@ -143,15 +143,15 @@ export default function UserManagement({}: UserManagementProps) {
               <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
+                    <div className="w-10 h-10 bg-[var(--color-muted)] rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                         {user.name.split(' ').map(n => n[0]).join('')}
                       </span>
                     </div>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium">{user.name}</h3>
-                    <p className="text-sm text-gray-500">{user.email}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{user.email}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       {getRoleBadge(user.role)}
                       {getStatusBadge(user.status)}
@@ -160,8 +160,8 @@ export default function UserManagement({}: UserManagementProps) {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="hidden sm:block text-right">
-                    <p className="text-xs text-gray-500">Created: {user.createdAt}</p>
-                    <p className="text-xs text-gray-500">Last login: {user.lastLogin}</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">Created: {user.createdAt}</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">Last login: {user.lastLogin}</p>
                   </div>
                   <div className="flex space-x-1">
                     <Button size="sm" variant="outline">Edit</Button>
@@ -174,7 +174,7 @@ export default function UserManagement({}: UserManagementProps) {
 
           {filteredUsers.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-gray-500">No users found matching your criteria.</p>
+              <p className="text-[var(--color-text-muted)]">No users found matching your criteria.</p>
             </div>
           )}
         </CardContent>

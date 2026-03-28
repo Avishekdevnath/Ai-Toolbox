@@ -127,14 +127,14 @@ export default function Navigation({
 
   if (loading) {
     return (
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-[var(--color-surface)] shadow-sm border-b border-[var(--color-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>
+              <div className="animate-pulse bg-[var(--color-muted)] h-8 w-32 rounded"></div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
+              <div className="animate-pulse bg-[var(--color-muted)] h-8 w-8 rounded-full"></div>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function Navigation({
   return (
     <>
       {/* Main Navigation */}
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-[var(--color-surface)] shadow-sm border-b border-[var(--color-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left side - Logo and breadcrumbs */}
@@ -153,7 +153,7 @@ export default function Navigation({
               {showHome && (
                 <Link
                   href="/"
-                  className="flex items-center space-x-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
+                  className="flex items-center space-x-2 text-xl font-bold text-[var(--color-text-primary)] hover:text-blue-600 transition-colors"
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                     <Home className="w-5 h-5 text-white" />
@@ -163,17 +163,17 @@ export default function Navigation({
               )}
               
               {showBreadcrumbs && pathname !== '/' && (
-                <div className="hidden md:flex items-center space-x-2 text-sm text-gray-500">
+                <div className="hidden md:flex items-center space-x-2 text-sm text-[var(--color-text-muted)]">
                   <ChevronRight className="w-4 h-4" />
                   {getBreadcrumbs().map((breadcrumb, index) => (
                     <div key={breadcrumb.path} className="flex items-center space-x-2">
                       {index > 0 && <ChevronRight className="w-4 h-4" />}
                       {breadcrumb.isLast ? (
-                        <span className="text-gray-900 font-medium">{breadcrumb.name}</span>
+                        <span className="text-[var(--color-text-primary)] font-medium">{breadcrumb.name}</span>
                       ) : (
                         <Link
                           href={breadcrumb.path}
-                          className="text-gray-500 hover:text-blue-600 transition-colors"
+                          className="text-[var(--color-text-muted)] hover:text-blue-600 transition-colors"
                         >
                           {breadcrumb.name}
                         </Link>
@@ -194,7 +194,7 @@ export default function Navigation({
                     className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
                       pathname === '/dashboard'
                         ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
                     Dashboard
@@ -204,7 +204,7 @@ export default function Navigation({
                     className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
                       pathname === '/profile'
                         ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
                     Profile
@@ -214,7 +214,7 @@ export default function Navigation({
                     className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
                       pathname === '/security'
                         ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
                     Security
@@ -224,7 +224,7 @@ export default function Navigation({
                     className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
                       pathname.startsWith('/user')
                         ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
                     Settings
@@ -236,7 +236,7 @@ export default function Navigation({
               {showBack && (
                 <Link
                   href={backUrl}
-                  className="bg-white text-blue-600 px-4 py-2 rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors text-sm font-medium"
+                  className="bg-[var(--color-surface)] text-blue-600 px-4 py-2 rounded-lg border border-blue-600 hover:bg-[var(--color-primary-muted)] transition-colors text-sm font-medium"
                 >
                   ← {backText}
                 </Link>
@@ -252,7 +252,7 @@ export default function Navigation({
                           {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                         </span>
                       </div>
-                      <span className="hidden md:block text-sm font-medium text-gray-700">
+                      <span className="hidden md:block text-sm font-medium text-[var(--color-text-secondary)]">
                         {user.firstName || 'User'}
                       </span>
                     </div>
@@ -285,8 +285,8 @@ export default function Navigation({
 
       {/* Page Title for mobile */}
       {showBreadcrumbs && pathname !== '/' && (
-        <div className="md:hidden bg-gray-50 border-b px-4 py-3">
-          <h1 className="text-lg font-semibold text-gray-900">{getPageTitle()}</h1>
+        <div className="md:hidden bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)] px-4 py-3">
+          <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">{getPageTitle()}</h1>
         </div>
       )}
     </>

@@ -147,7 +147,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
   };
 
   const renderFieldValue = (field: any, value: any) => {
-    if (!value) return <span className="text-gray-400 italic">Not provided</span>;
+    if (!value) return <span className="text-[var(--color-text-muted)] italic">Not provided</span>;
     
     if (Array.isArray(value)) {
       return value.join(', ');
@@ -348,7 +348,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center space-x-3">
           <Loader2 size={24} className="text-blue-600 animate-spin" />
-          <span className="text-gray-600 font-medium">Loading responses...</span>
+          <span className="text-[var(--color-text-secondary)] font-medium">Loading responses...</span>
         </div>
       </div>
     );
@@ -357,11 +357,11 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
   if (responses.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FileBarChart className="h-8 w-8 text-gray-400" />
+        <div className="w-16 h-16 bg-[var(--color-muted)] rounded-full flex items-center justify-center mx-auto mb-4">
+          <FileBarChart className="h-8 w-8 text-[var(--color-text-muted)]" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No responses yet</h3>
-        <p className="text-gray-500 mb-6 max-w-md mx-auto">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">No responses yet</h3>
+        <p className="text-[var(--color-text-muted)] mb-6 max-w-md mx-auto">
           {searchTerm ? 'No responses match your search criteria' : 'Your form has not received any responses yet'}
         </p>
         <Link
@@ -387,10 +387,10 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
   return (
     <div className="form-luxe h-full flex flex-col">
       {/* Table Header */}
-      <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <div className="px-3 sm:px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Responses</h3>
-          <div className="flex items-center space-x-2 text-xs text-gray-500">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Responses</h3>
+          <div className="flex items-center space-x-2 text-xs text-[var(--color-text-muted)]">
             <span className="hidden sm:inline">Showing {startIndex + 1}-{Math.min(startIndex + responsesPerPage, totalResponses)} of {totalResponses}</span>
             <span className="sm:hidden">{totalResponses} total</span>
           </div>
@@ -400,12 +400,12 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
       {/* Table (horizontal scroll only inside card) */}
       <div className="flex-1 overflow-x-auto relative responsive-table">
         <table className="min-w-max divide-y divide-gray-200 text-[13px]">
-          <thead className="bg-gray-50 sticky top-0 z-10">
+          <thead className="bg-[var(--color-surface-secondary)] sticky top-0 z-10">
             <tr>
               {/* Select + Serial */}
               <th
                 scope="col"
-                className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-14"
+                className="px-4 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-14"
               >
                 <input
                   type="checkbox"
@@ -420,11 +420,11 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
               {/* Submission Date column */}
               <th
                 scope="col"
-                className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--color-muted)] transition-colors"
                 onClick={() => handleSortChange('submittedAt')}
               >
                 <div className="flex items-center space-x-1">
-                  <Calendar size={12} className="text-gray-400" />
+                  <Calendar size={12} className="text-[var(--color-text-muted)]" />
                   <span>Submission Date</span>
                   {getSortIcon('submittedAt')}
                 </div>
@@ -434,11 +434,11 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
               {hasIdentityName && (
                 <th
                   scope="col"
-                  className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--color-muted)] transition-colors"
                   onClick={() => handleSortChange('identity.name')}
                 >
                   <div className="flex items-center space-x-1">
-                    <User size={12} className="text-gray-400" />
+                    <User size={12} className="text-[var(--color-text-muted)]" />
                     <span>Name</span>
                     {getSortIcon('identity.name')}
                   </div>
@@ -448,11 +448,11 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
               {hasIdentityEmail && (
                 <th
                   scope="col"
-                  className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--color-muted)] transition-colors"
                   onClick={() => handleSortChange('identity.email')}
                 >
                   <div className="flex items-center space-x-1">
-                    <Mail size={12} className="text-gray-400" />
+                    <Mail size={12} className="text-[var(--color-text-muted)]" />
                     <span>Email</span>
                     {getSortIcon('identity.email')}
                   </div>
@@ -462,11 +462,11 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
               {hasIdentityStudentId && (
                 <th
                   scope="col"
-                  className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--color-muted)] transition-colors"
                   onClick={() => handleSortChange('identity.studentId')}
                 >
                   <div className="flex items-center space-x-1">
-                    <Hash size={12} className="text-gray-400" />
+                    <Hash size={12} className="text-[var(--color-text-muted)]" />
                     <span>Student ID</span>
                     {getSortIcon('identity.studentId')}
                   </div>
@@ -478,7 +478,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                 <th
                   key={field.id}
                   scope="col"
-                  className="relative px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-100 transition-colors"
+                  className="relative px-4 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider hover:bg-[var(--color-muted)] transition-colors"
                 >
                   <div className="flex items-center space-x-2">
                     <button
@@ -494,15 +494,15 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                       {getSortIcon(`data.${field.id}`)}
                     </button>
                     <button
-                      className="text-gray-400 hover:text-gray-700 border border-gray-300 rounded p-0.5 leading-none"
+                      className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded p-0.5 leading-none"
                       title="Filter values"
                       onClick={(e) => { e.stopPropagation(); onOpenFilterModal && onOpenFilterModal(field.id); }}
                     >
                       <Filter size={12} />
                     </button>
                     <div className="flex items-center gap-1">
-                      <button className="text-gray-400 hover:text-gray-700" title="Sort A→Z" onClick={(e) => { e.stopPropagation(); handleSortChange(`data.${field.id}`, 'asc'); }}>A</button>
-                      <button className="text-gray-400 hover:text-gray-700" title="Sort Z→A" onClick={(e) => { e.stopPropagation(); handleSortChange(`data.${field.id}`, 'desc'); }}>Z</button>
+                      <button className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]" title="Sort A→Z" onClick={(e) => { e.stopPropagation(); handleSortChange(`data.${field.id}`, 'asc'); }}>A</button>
+                      <button className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]" title="Sort Z→A" onClick={(e) => { e.stopPropagation(); handleSortChange(`data.${field.id}`, 'desc'); }}>Z</button>
                     </div>
                   </div>
 
@@ -513,17 +513,17 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
               {/* Actions column */}
               <th
                 scope="col"
-                className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-20"
+                className="px-4 py-2 text-right text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-20"
               >
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
+          <tbody className="bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
             {responses.map((response, idx) => (
-              <tr key={response._id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} hover:bg-gray-100 transition-colors`}>
+              <tr key={response._id} className={`${idx % 2 === 0 ? 'bg-[var(--color-surface)]' : 'bg-[var(--color-surface-secondary)]'} hover:bg-[var(--color-muted)] transition-colors`}>
                 {/* Select + Serial */}
-                <td className="px-4 py-3 whitespace-nowrap text-xs font-medium text-gray-900">
+                <td className="px-4 py-3 whitespace-nowrap text-xs font-medium text-[var(--color-text-primary)]">
                   <input
                     type="checkbox"
                     aria-label="Select row"
@@ -535,13 +535,13 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                 </td>
 
                 {/* Submission Date */}
-                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
+                <td className="px-4 py-3 whitespace-nowrap text-xs text-[var(--color-text-primary)]">
                   {formatDate(response.submittedAt || response.createdAt)}
                 </td>
 
                 {/* Identity columns - only show if data exists */}
                 {hasIdentityName && (
-                  <td className="px-4 py-3 text-xs text-gray-900">
+                  <td className="px-4 py-3 text-xs text-[var(--color-text-primary)]">
                     <span className="truncate max-w-[140px] block" title={response.identity?.name || 'Not provided'}>
                       {response.identity?.name || 'Not provided'}
                     </span>
@@ -549,13 +549,13 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                 )}
 
                 {hasIdentityEmail && (
-                  <td className="px-4 py-3 text-xs text-gray-900">
+                  <td className="px-4 py-3 text-xs text-[var(--color-text-primary)]">
                     <span className="truncate max-w-32 block" title={response.identity?.email || 'Not provided'}>{response.identity?.email || 'Not provided'}</span>
                   </td>
                 )}
 
                 {hasIdentityStudentId && (
-                  <td className="px-4 py-3 text-xs text-gray-900">
+                  <td className="px-4 py-3 text-xs text-[var(--color-text-primary)]">
                     <span className="truncate max-w-[120px] block" title={response.identity?.studentId || 'Not provided'}>
                       {response.identity?.studentId || 'Not provided'}
                     </span>
@@ -564,7 +564,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
 
                 {/* Form fields */}
                 {form?.fields?.filter((f: any) => f.type !== 'section').map((field: any) => (
-                  <td key={field.id} className="px-4 py-3 text-xs text-gray-900">
+                  <td key={field.id} className="px-4 py-3 text-xs text-[var(--color-text-primary)]">
                     <div className="max-w-[140px] truncate" title={
                       typeof response.data?.[field.id] === 'object' 
                         ? JSON.stringify(response.data?.[field.id]) 
@@ -580,21 +580,21 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                   <div className="flex items-center justify-end space-x-1">
                     <button 
                       onClick={() => handleViewResponse(response)}
-                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      className="p-1 text-[var(--color-text-muted)] hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                       title="View Response"
                     >
                       <Eye size={12} />
                     </button>
                     <button 
                       onClick={() => handleDownloadResponse(response)}
-                      className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                      className="p-1 text-[var(--color-text-muted)] hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
                       title="Download Response"
                     >
                       <Download size={12} />
                     </button>
                     <button 
                       onClick={() => handleDeleteResponse(response)}
-                      className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                      className="p-1 text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                       title="Delete Response"
                     >
                       <Trash2 size={12} />
@@ -609,13 +609,13 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
       
       {/* Pagination */}
       {totalResponses > responsesPerPage && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+        <div className="bg-[var(--color-surface)] px-4 py-3 flex items-center justify-between border-t border-[var(--color-border)]">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => setPage(Math.max(page - 1, 1))}
               disabled={page === 1}
-              className={`relative inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md ${
-                page === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'
+              className={`relative inline-flex items-center px-3 py-1.5 border border-[var(--color-border)] text-xs font-medium rounded-md ${
+                page === 1 ? 'bg-[var(--color-muted)] text-[var(--color-text-muted)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'
               }`}
             >
               Previous
@@ -623,8 +623,8 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
             <button
               onClick={() => setPage(Math.min(page + 1, totalPages))}
               disabled={page === totalPages}
-              className={`ml-3 relative inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md ${
-                page === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'
+              className={`ml-3 relative inline-flex items-center px-3 py-1.5 border border-[var(--color-border)] text-xs font-medium rounded-md ${
+                page === totalPages ? 'bg-[var(--color-muted)] text-[var(--color-text-muted)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'
               }`}
             >
               Next
@@ -632,7 +632,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
           </div>
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs text-gray-700">
+              <p className="text-xs text-[var(--color-text-secondary)]">
                 Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
                 <span className="font-medium">{Math.min(startIndex + responsesPerPage, totalResponses)}</span> of{' '}
                 <span className="font-medium">{totalResponses}</span> results
@@ -643,8 +643,8 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                 <button
                   onClick={() => setPage(Math.max(page - 1, 1))}
                   disabled={page === 1}
-                  className={`relative inline-flex items-center px-2 py-1.5 rounded-l-md border border-gray-300 bg-white text-xs font-medium ${
-                    page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                  className={`relative inline-flex items-center px-2 py-1.5 rounded-l-md border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-medium ${
+                    page === 1 ? 'text-[var(--color-text-muted)] opacity-50 cursor-not-allowed' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-muted)]'
                   }`}
                 >
                   <ChevronLeft className="h-3 w-3" />
@@ -669,7 +669,7 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                       className={`relative inline-flex items-center px-3 py-1.5 border text-xs font-medium ${
                         page === pageNumber
                           ? 'z-10 bg-black border-black text-white'
-                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-muted)]'
                       }`}
                     >
                       {pageNumber}
@@ -680,8 +680,8 @@ export default function ResponsesTable({ formId, form, searchTerm, filterFieldId
                 <button
                   onClick={() => setPage(Math.min(page + 1, totalPages))}
                   disabled={page === totalPages}
-                  className={`relative inline-flex items-center px-2 py-1.5 rounded-r-md border border-gray-300 bg-white text-xs font-medium ${
-                    page === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                  className={`relative inline-flex items-center px-2 py-1.5 rounded-r-md border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-medium ${
+                    page === totalPages ? 'text-[var(--color-text-muted)] opacity-50 cursor-not-allowed' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-muted)]'
                   }`}
                 >
                   <ChevronRight className="h-3 w-3" />

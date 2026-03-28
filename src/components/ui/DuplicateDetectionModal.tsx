@@ -143,7 +143,7 @@ export default function DuplicateDetectionModal({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Similarity Score:</span>
+              <span className="text-sm font-medium text-[var(--color-text-secondary)]">Similarity Score:</span>
               <Badge className={getSimilarityColor(similarity)}>
                 {(similarity * 100).toFixed(1)}% {getSimilarityText(similarity)}
               </Badge>
@@ -151,10 +151,10 @@ export default function DuplicateDetectionModal({
             
             {differences.length > 0 && (
               <div>
-                <span className="text-sm font-medium text-gray-700 block mb-2">
+                <span className="text-sm font-medium text-[var(--color-text-secondary)] block mb-2">
                   Key Differences:
                 </span>
-                <ul className="text-sm text-gray-600 space-y-1">
+                <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
                   {differences.slice(0, 3).map((diff, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <XCircle className="w-3 h-3 text-red-500" />
@@ -162,7 +162,7 @@ export default function DuplicateDetectionModal({
                     </li>
                   ))}
                   {differences.length > 3 && (
-                    <li className="text-xs text-gray-500">
+                    <li className="text-xs text-[var(--color-text-muted)]">
                       +{differences.length - 3} more differences
                     </li>
                   )}
@@ -183,20 +183,20 @@ export default function DuplicateDetectionModal({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">Tool:</span>
+                <span className="text-[var(--color-text-muted)]">Tool:</span>
                 <p className="font-medium">{duplicateAnalysis.toolName}</p>
               </div>
               <div>
-                <span className="text-gray-500">Created:</span>
+                <span className="text-[var(--color-text-muted)]">Created:</span>
                 <p className="font-medium">{formatDate(duplicateAnalysis.createdAt)}</p>
               </div>
               <div>
-                <span className="text-gray-500">Processing Time:</span>
+                <span className="text-[var(--color-text-muted)]">Processing Time:</span>
                 <p className="font-medium">{formatDuration(duplicateAnalysis.metadata.processingTime)}</p>
               </div>
               {duplicateAnalysis.metadata.tokensUsed && (
                 <div>
-                  <span className="text-gray-500">Tokens Used:</span>
+                  <span className="text-[var(--color-text-muted)]">Tokens Used:</span>
                   <p className="font-medium">{duplicateAnalysis.metadata.tokensUsed.toLocaleString()}</p>
                 </div>
               )}
@@ -204,11 +204,11 @@ export default function DuplicateDetectionModal({
 
             {/* Result Preview */}
             <div>
-              <span className="text-sm font-medium text-gray-700 block mb-2">
+              <span className="text-sm font-medium text-[var(--color-text-secondary)] block mb-2">
                 Result Preview:
               </span>
-              <div className="bg-gray-50 rounded-md p-3 max-h-32 overflow-y-auto">
-                <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+              <div className="bg-[var(--color-surface-secondary)] rounded-md p-3 max-h-32 overflow-y-auto">
+                <pre className="text-xs text-[var(--color-text-secondary)] whitespace-pre-wrap">
                   {JSON.stringify(duplicateAnalysis.result, null, 2).substring(0, 300)}
                   {JSON.stringify(duplicateAnalysis.result, null, 2).length > 300 ? '...' : ''}
                 </pre>
@@ -219,7 +219,7 @@ export default function DuplicateDetectionModal({
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          <div className="text-sm font-medium text-gray-700">
+          <div className="text-sm font-medium text-[var(--color-text-secondary)]">
             Choose an option:
           </div>
           
@@ -234,7 +234,7 @@ export default function DuplicateDetectionModal({
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <div className="text-left">
                   <div className="font-medium">Use Cached Result</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-[var(--color-text-muted)]">
                     Use the existing analysis (instant, no cost)
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function DuplicateDetectionModal({
                 <RefreshCw className="w-5 h-5 text-blue-600" />
                 <div className="text-left">
                   <div className="font-medium">Generate New Analysis</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-[var(--color-text-muted)]">
                     Create a fresh analysis (may take time, uses tokens)
                   </div>
                 </div>
@@ -268,7 +268,7 @@ export default function DuplicateDetectionModal({
                 <Eye className="w-5 h-5 text-purple-600" />
                 <div className="text-left">
                   <div className="font-medium">Modify Parameters</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-[var(--color-text-muted)]">
                     Go back and change your input parameters
                   </div>
                 </div>
@@ -281,7 +281,7 @@ export default function DuplicateDetectionModal({
         {isLoading && (
           <div className="text-center py-4">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               {selectedOption === 'cached' && 'Loading cached result...'}
               {selectedOption === 'regenerate' && 'Generating new analysis...'}
               {selectedOption === 'modify' && 'Preparing parameter form...'}
@@ -291,7 +291,7 @@ export default function DuplicateDetectionModal({
 
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 border-t">
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-[var(--color-text-muted)]">
             This helps save API costs and processing time
           </div>
           <Button

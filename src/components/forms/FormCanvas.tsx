@@ -84,9 +84,9 @@ export default function FormCanvas({
   return (
     <div className="form-luxe space-y-4">
       {fields.map((f, index) => (
-        <div key={f.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+        <div key={f.id} className="border border-[var(--color-border)] rounded-lg p-4 bg-[var(--color-surface)]">
           <div className="flex items-start justify-between mb-3">
-            <div className="text-sm font-medium text-gray-700">Question {index + 1}</div>
+            <div className="text-sm font-medium text-[var(--color-text-secondary)]">Question {index + 1}</div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => moveField(f.id, 'up')} disabled={index === 0}>↑</Button>
               <Button variant="outline" size="sm" onClick={() => moveField(f.id, 'down')} disabled={index === fields.length - 1}>↓</Button>
@@ -100,13 +100,13 @@ export default function FormCanvas({
           {/* Main row: prominent label on left, compact type on right */}
           <div className="flex items-start gap-3 mb-3">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Question Label</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Question Label</label>
               <Input value={f.label} onChange={(e) => update(f.id, { label: e.target.value })} placeholder="Enter question text" />
             </div>
             <div className="w-48">
-              <label className="block text-xs font-medium text-gray-600 mb-1 text-right">Field Type</label>
+              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1 text-right">Field Type</label>
               <select
-                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
+                className="w-full px-2 py-1.5 border border-[var(--color-border)] rounded-md text-xs"
                 value={f.type}
                 onChange={(e) => {
                   const nextType = e.target.value;
@@ -142,21 +142,21 @@ export default function FormCanvas({
 
           {(extrasOpen[f.id]?.description || !!f.helpText) && (
             <div className="mt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Description (optional)</label>
               <Input value={f.helpText || ''} onChange={(e) => update(f.id, { helpText: e.target.value })} placeholder="Helper text for respondents" />
             </div>
           )}
 
           {(extrasOpen[f.id]?.placeholder || !!f.placeholder) && ['short_text','long_text','email','number','date','time'].includes(f.type) && (
             <div className="mt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Placeholder (optional)</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Placeholder (optional)</label>
               <Input value={f.placeholder || ''} onChange={(e) => update(f.id, { placeholder: e.target.value })} placeholder="e.g., Type your answer here..." />
             </div>
           )}
 
           {(extrasOpen[f.id]?.image || !!f.imageUrl) && (
             <div className="mt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (optional)</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Image URL (optional)</label>
               <Input value={f.imageUrl || ''} onChange={(e) => update(f.id, { imageUrl: e.target.value })} placeholder="https://..." />
               {f.imageUrl ? (
                 <div className="mt-2">
@@ -180,7 +180,7 @@ export default function FormCanvas({
 
           {['dropdown', 'radio', 'checkbox'].includes(f.type) && (
             <div className="mt-4">
-              <div className="text-sm font-medium text-gray-700 mb-2">Options</div>
+              <div className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Options</div>
               <div className="space-y-2">
                 {(f.options || []).map((o, i) => (
                   <div key={i} className="flex items-center gap-2">

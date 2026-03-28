@@ -11,10 +11,10 @@ const insights = [
 
 export default function AnalyticsInsights() {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Zap size={15} className="text-slate-500" />
-        <h3 className="text-[13px] font-semibold text-slate-800">Key Insights</h3>
+        <Zap size={15} className="text-[var(--color-text-muted)]" />
+        <h3 className="text-[13px] font-semibold text-[var(--color-text-primary)]">Key Insights</h3>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {insights.map(({ title, body, bg, titleColor, bodyColor }) => (

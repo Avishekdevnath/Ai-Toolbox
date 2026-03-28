@@ -94,11 +94,11 @@ export default function FileUpload({
     <div className={cn('space-y-3', className)}>
       {label && (
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-white">
+          <label className="text-sm font-medium text-[var(--color-text-primary)]">
             {label}
           </label>
           {description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1">
               {description}
             </p>
           )}
@@ -112,7 +112,7 @@ export default function FileUpload({
             <img
               src={preview}
               alt="Preview"
-              className="w-20 h-20 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+              className="w-20 h-20 rounded-lg object-cover border border-[var(--color-border)]"
             />
             <button
               type="button"
@@ -131,7 +131,7 @@ export default function FileUpload({
             'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
             isDragOver
               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500',
+              : 'border-[var(--color-border)] hover:border-[var(--color-border)]',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
           onDrop={handleDrop}
@@ -149,12 +149,12 @@ export default function FileUpload({
 
           <div className="space-y-2">
             {preview ? (
-              <User className="w-8 h-8 mx-auto text-gray-400" />
+              <User className="w-8 h-8 mx-auto text-[var(--color-text-muted)]" />
             ) : (
-              <Upload className="w-8 h-8 mx-auto text-gray-400" />
+              <Upload className="w-8 h-8 mx-auto text-[var(--color-text-muted)]" />
             )}
             
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-[var(--color-text-secondary)]">
               {preview ? (
                 'Click to change image'
               ) : (
@@ -167,7 +167,7 @@ export default function FileUpload({
               )}
             </div>
             
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-[var(--color-text-muted)]">
               {accept === 'image/*' ? 'PNG, JPG, GIF' : 'Any file'} up to {maxSize}MB
             </p>
           </div>

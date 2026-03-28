@@ -87,7 +87,7 @@ export function SelectTrigger({ children, className = '', onClick, id, disabled 
       id={id}
       onClick={onClick}
       aria-disabled={disabled}
-      className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+      className={`flex h-10 w-full items-center justify-between rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 ${
         disabled ? 'cursor-not-allowed opacity-50' : ''
       } ${className}`}
     >
@@ -100,7 +100,7 @@ export function SelectTrigger({ children, className = '', onClick, id, disabled 
 export function SelectContent({ children, className = '', ...props }: SelectContentProps & { onSelect?: (value: string) => void }) {
   return (
     <div
-      className={`absolute top-full z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg ${className}`}
+      className={`absolute top-full z-50 mt-1 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg ${className}`}
     >
       <div className="py-1">
         {React.Children.map(children, (child) => {
@@ -120,7 +120,7 @@ export function SelectItem({ value, children, className = '', ...props }: Select
   return (
     <div
       onClick={() => (props as any).onSelect?.(value)}
-      className={`relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 ${className}`}
+      className={`relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-[var(--color-text-primary)] outline-none hover:bg-[var(--color-muted)] focus:bg-[var(--color-muted)] ${className}`}
     >
       {children}
     </div>

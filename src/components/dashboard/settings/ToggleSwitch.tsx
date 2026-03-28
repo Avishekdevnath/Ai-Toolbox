@@ -42,8 +42,8 @@ export default function ToggleSwitch({
           <label 
             htmlFor={id}
             className={cn(
-              'text-sm font-medium text-gray-900 dark:text-white cursor-pointer',
-              disabled && 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              'text-sm font-medium text-[var(--color-text-primary)] cursor-pointer',
+              disabled && 'text-[var(--color-text-muted)] cursor-not-allowed'
             )}
           >
             {label}
@@ -51,8 +51,8 @@ export default function ToggleSwitch({
         )}
         {description && (
           <p className={cn(
-            'text-sm text-gray-500 dark:text-gray-400 mt-1',
-            disabled && 'text-gray-400 dark:text-gray-500'
+            'text-sm text-[var(--color-text-muted)] mt-1',
+            disabled && 'text-[var(--color-text-muted)]'
           )}>
             {description}
           </p>
@@ -72,7 +72,7 @@ export default function ToggleSwitch({
           'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
           checked 
             ? 'bg-blue-600 dark:bg-blue-500' 
-            : 'bg-gray-200 dark:bg-gray-700',
+            : 'bg-[var(--color-muted)]',
           disabled && 'opacity-50 cursor-not-allowed',
           !disabled && 'cursor-pointer'
         )}

@@ -8,12 +8,12 @@ interface ActiveData { dau: number; wau: number; mau: number }
 
 function MetricCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number | string; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
+    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
       <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center mb-3`}>
         <Icon className="w-4 h-4 text-white" />
       </div>
-      <p className="text-[22px] font-bold text-slate-800">{value}</p>
-      <p className="text-[12px] text-slate-500 mt-0.5">{label}</p>
+      <p className="text-[22px] font-bold text-[var(--color-text-primary)]">{value}</p>
+      <p className="text-[12px] text-[var(--color-text-muted)] mt-0.5">{label}</p>
     </div>
   );
 }
@@ -36,7 +36,7 @@ export default function AnalyticsOverview() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-[14px] font-semibold text-slate-700">Visitors</h2>
+      <h2 className="text-[14px] font-semibold text-[var(--color-text-secondary)]">Visitors</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <MetricCard icon={Users} label="Total unique visitors" value={fmt(visitors?.total)} color="bg-blue-600" />
         <MetricCard icon={UserCheck} label="Logged-in visitors" value={fmt(visitors?.loggedIn)} color="bg-green-600" />
@@ -44,7 +44,7 @@ export default function AnalyticsOverview() {
         <MetricCard icon={TrendingUp} label="New this month" value={fmt(visitors?.newThisMonth)} color="bg-purple-600" />
       </div>
 
-      <h2 className="text-[14px] font-semibold text-slate-700 mt-6">Active Users</h2>
+      <h2 className="text-[14px] font-semibold text-[var(--color-text-secondary)] mt-6">Active Users</h2>
       <div className="grid grid-cols-3 gap-4">
         <MetricCard icon={Users} label="Daily active (DAU)" value={fmt(active?.dau)} color="bg-blue-600" />
         <MetricCard icon={Users} label="Weekly active (WAU)" value={fmt(active?.wau)} color="bg-indigo-600" />

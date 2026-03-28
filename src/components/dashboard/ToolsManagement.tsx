@@ -272,8 +272,8 @@ export default function ToolsManagement({ userId }: ToolsManagementProps) {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'beta': return 'bg-yellow-100 text-yellow-800';
-      case 'coming-soon': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'coming-soon': return 'bg-[var(--color-muted)] text-[var(--color-text-primary)]';
+      default: return 'bg-[var(--color-muted)] text-[var(--color-text-primary)]';
     }
   };
 
@@ -307,7 +307,7 @@ export default function ToolsManagement({ userId }: ToolsManagementProps) {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] h-4 w-4" />
             <Input
               placeholder="Search tools..."
               value={searchTerm}
@@ -353,9 +353,9 @@ export default function ToolsManagement({ userId }: ToolsManagementProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 mb-4">{tool.description}</p>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-4">{tool.description}</p>
                 
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                <div className="flex items-center justify-between text-sm text-[var(--color-text-muted)] mb-4">
                   <span>Category: {tool.category}</span>
                   <span>{tool.usageCount} uses</span>
                 </div>
@@ -382,9 +382,9 @@ export default function ToolsManagement({ userId }: ToolsManagementProps) {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <Wrench className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tools found</h3>
-              <p className="text-gray-500 mb-4">
+              <Wrench className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
+              <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">No tools found</h3>
+              <p className="text-[var(--color-text-muted)] mb-4">
                 Try adjusting your search or filter criteria.
               </p>
               <Button onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}>
@@ -409,19 +409,19 @@ export default function ToolsManagement({ userId }: ToolsManagementProps) {
               <div className="text-2xl font-bold text-blue-600">
                 {toolsWithStats.filter(t => t.status === 'active').length}
               </div>
-              <div className="text-sm text-gray-500">Active Tools</div>
+              <div className="text-sm text-[var(--color-text-muted)]">Active Tools</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
                 {toolsWithStats.reduce((sum, tool) => sum + tool.usageCount, 0)}
               </div>
-              <div className="text-sm text-gray-500">Total Uses</div>
+              <div className="text-sm text-[var(--color-text-muted)]">Total Uses</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {categories.length - 1}
               </div>
-              <div className="text-sm text-gray-500">Categories</div>
+              <div className="text-sm text-[var(--color-text-muted)]">Categories</div>
             </div>
           </div>
         </CardContent>

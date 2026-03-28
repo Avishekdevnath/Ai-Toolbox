@@ -37,7 +37,7 @@ export function AdminSidebarNavItem({ item, isActive, isExpanded, hasActiveChild
         }}
       >
         <span className="flex items-center gap-2.5 min-w-0">
-          <item.icon className={cn('w-4 h-4 flex-shrink-0', highlighted ? 'text-white' : 'text-slate-400 group-hover:text-slate-200')} />
+          <item.icon className={cn('w-4 h-4 flex-shrink-0', highlighted ? 'text-white' : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)]')} />
           <span className="truncate">{item.name}</span>
         </span>
         {hasChildren && (

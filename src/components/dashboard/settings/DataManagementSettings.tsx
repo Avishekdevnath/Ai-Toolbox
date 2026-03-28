@@ -113,12 +113,12 @@ export default function DataManagementSettings({ className = '' }: DataManagemen
     <div className={`space-y-6 ${className}`}>
       <div className="flex items-center gap-3">
         <Database className="w-6 h-6 text-blue-600" />
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
           Data Management
         </h2>
       </div>
-      
-      <p className="text-gray-600 dark:text-gray-400">
+
+      <p className="text-[var(--color-text-secondary)]">
         Control your data retention, backups, and export settings.
       </p>
 
@@ -161,13 +161,13 @@ export default function DataManagementSettings({ className = '' }: DataManagemen
                   step={30}
                   className="w-full"
                 />
-                <div className="flex justify-between text-xs text-gray-500">
+                <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
                   <span>30 days</span>
                   <span>1 year</span>
                   <span>7 years</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Data older than this period will be automatically deleted if auto-delete is enabled
               </p>
             </div>
@@ -205,13 +205,13 @@ export default function DataManagementSettings({ className = '' }: DataManagemen
                     <SelectItem key={option.value} value={option.value}>
                       <div>
                         <div className="font-medium">{option.label}</div>
-                        <div className="text-sm text-gray-500">{option.description}</div>
+                        <div className="text-sm text-[var(--color-text-muted)]">{option.description}</div>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Automatic backups help protect your data from loss
               </p>
             </div>
@@ -219,7 +219,7 @@ export default function DataManagementSettings({ className = '' }: DataManagemen
 
           <SettingsSection title="Manual Backup" description="Create a backup of your data now">
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 Create a manual backup of all your data including analyses, settings, and preferences.
               </p>
               <Button onClick={handleExportData} variant="outline" size="sm">
@@ -260,9 +260,9 @@ export default function DataManagementSettings({ className = '' }: DataManagemen
           <SettingsSection title="Export Options" description="Export your data in different formats">
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Export All Data</h4>
-                  <p className="text-sm text-gray-600 mb-3">
+                <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-lg p-4">
+                  <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Export All Data</h4>
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-3">
                     Download all your data including analyses, settings, and preferences.
                   </p>
                   <Button onClick={handleExportData} size="sm" className="w-full">
@@ -270,9 +270,9 @@ export default function DataManagementSettings({ className = '' }: DataManagemen
                   </Button>
                 </div>
                 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Import Data</h4>
-                  <p className="text-sm text-gray-600 mb-3">
+                <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-lg p-4">
+                  <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Import Data</h4>
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-3">
                     Import data from a previous export or backup file.
                   </p>
                   <Button onClick={handleImportData} variant="outline" size="sm" className="w-full">
@@ -301,9 +301,9 @@ export default function DataManagementSettings({ className = '' }: DataManagemen
             </ul>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">Current Data Status</h4>
-            <div className="text-sm text-gray-700 space-y-1">
+          <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-lg p-4">
+            <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Current Data Status</h4>
+            <div className="text-sm text-[var(--color-text-secondary)] space-y-1">
               <p>• Auto-delete: {formData.autoDeleteOldAnalyses ? 'Enabled' : 'Disabled'}</p>
               <p>• Retention period: {formatRetentionPeriod(formData.retentionPeriod)}</p>
               <p>• Backup frequency: {formData.backupFrequency}</p>

@@ -92,7 +92,7 @@ export default function SettingsNavigation({
   return (
     <Card className="p-4">
       <div className="space-y-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="font-semibold text-[var(--color-text-primary)] mb-4">
           Settings
         </h3>
         
@@ -106,24 +106,24 @@ export default function SettingsNavigation({
                 variant={isActive ? "default" : "ghost"}
                 className={`w-full justify-start h-auto p-3 ${
                   isActive 
-                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800' 
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'
+                    : 'hover:bg-[var(--color-muted)]'
                 }`}
                 onClick={() => handleSectionClick(section.id)}
               >
                 <div className="flex items-center w-full">
-                  <div className={`mr-3 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <div className={`mr-3 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-[var(--color-text-muted)]'}`}>
                     {section.icon}
                   </div>
                   <div className="flex-1 text-left">
-                    <div className={`font-medium ${isActive ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-white'}`}>
+                    <div className={`font-medium ${isActive ? 'text-blue-700 dark:text-blue-300' : 'text-[var(--color-text-primary)]'}`}>
                       {section.title}
                     </div>
-                    <div className={`text-sm ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <div className={`text-sm ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-[var(--color-text-muted)]'}`}>
                       {section.description}
                     </div>
                   </div>
-                  <ChevronRight className={`w-4 h-4 ml-2 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`} />
+                  <ChevronRight className={`w-4 h-4 ml-2 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-[var(--color-text-muted)]'}`} />
                 </div>
               </Button>
             );

@@ -249,7 +249,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-[var(--color-border)]">
         <nav className="-mb-px flex flex-wrap sm:flex-nowrap space-x-2 sm:space-x-8 overflow-x-auto">
           {tabs.map((tab) => {
             const IconComponent = tab.icon;
@@ -260,7 +260,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
                 className={`py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-1 sm:space-x-2 whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border)]'
                 }`}
               >
                 <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -288,7 +288,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
                 <div className="flex items-center space-x-4">
                   <div>
                     <h3 className="text-lg font-medium">{(firstName || lastName) ? `${firstName} ${lastName}`.trim() : (username || 'User')}</h3>
-                    <p className="text-gray-500">{email}</p>
+                    <p className="text-[var(--color-text-muted)]">{email}</p>
                     <Badge variant="secondary" className="mt-1">
                       {user?.role ?? 'user'}
                     </Badge>
@@ -358,15 +358,15 @@ export default function UserSettings({ userId }: UserSettingsProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">{totalToolsUsed}</div>
-                    <div className="text-sm text-gray-500">Tools Used</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Tools Used</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">{totalUses}</div>
-                    <div className="text-sm text-gray-500">Total Uses</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Total Uses</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">{totalAnalyses}</div>
-                    <div className="text-sm text-gray-500">Days Active</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Days Active</div>
                   </div>
                 </div>
               </CardContent>
@@ -406,7 +406,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
 
               <div>
                 <Label className="text-base font-medium">Language</Label>
-                <select className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <select className="mt-2 block w-full rounded-md border-[var(--color-border)] shadow-sm focus:border-blue-500 focus:ring-blue-500">
                   <option value="en">English</option>
                   <option value="es">Spanish</option>
                   <option value="fr">French</option>
@@ -418,7 +418,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
 
               <div>
                 <Label className="text-base font-medium">Time Zone</Label>
-                <select className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <select className="mt-2 block w-full rounded-md border-[var(--color-border)] shadow-sm focus:border-blue-500 focus:ring-blue-500">
                   <option value="UTC">UTC</option>
                   <option value="EST">Eastern Time</option>
                   <option value="PST">Pacific Time</option>
@@ -443,7 +443,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base font-medium">Email Notifications</Label>
-                  <p className="text-sm text-gray-500">Receive updates via email</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Receive updates via email</p>
                 </div>
                 <input type="checkbox" defaultChecked className="rounded" />
               </div>
@@ -451,7 +451,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base font-medium">Tool Usage Alerts</Label>
-                  <p className="text-sm text-gray-500">Get notified about tool usage</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Get notified about tool usage</p>
                 </div>
                 <input type="checkbox" defaultChecked className="rounded" />
               </div>
@@ -459,7 +459,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base font-medium">Weekly Reports</Label>
-                  <p className="text-sm text-gray-500">Receive weekly usage summaries</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Receive weekly usage summaries</p>
                 </div>
                 <input type="checkbox" className="rounded" />
               </div>
@@ -467,7 +467,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base font-medium">New Features</Label>
-                  <p className="text-sm text-gray-500">Learn about new tools and features</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Learn about new tools and features</p>
                 </div>
                 <input type="checkbox" defaultChecked className="rounded" />
               </div>
@@ -509,9 +509,9 @@ export default function UserSettings({ userId }: UserSettingsProps) {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4 text-[var(--color-text-muted)]" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4 text-[var(--color-text-muted)]" />
                       )}
                     </button>
                   </div>
@@ -560,7 +560,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">2FA Status</p>
-                    <p className="text-sm text-gray-500">Add an extra layer of security</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">Add an extra layer of security</p>
                   </div>
                   <Badge variant="outline">Not Enabled</Badge>
                 </div>
@@ -585,7 +585,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base font-medium">Data Collection</Label>
-                    <p className="text-sm text-gray-500">Allow us to collect usage data for improvements</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">Allow us to collect usage data for improvements</p>
                   </div>
                   <input type="checkbox" defaultChecked className="rounded" />
                 </div>
@@ -593,7 +593,7 @@ export default function UserSettings({ userId }: UserSettingsProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base font-medium">Analytics</Label>
-                    <p className="text-sm text-gray-500">Help us improve by sharing analytics data</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">Help us improve by sharing analytics data</p>
                   </div>
                   <input type="checkbox" defaultChecked className="rounded" />
                 </div>

@@ -440,7 +440,7 @@ export default function FormFieldEditor({ field, onChange, onDelete, isQuiz = fa
                   onChange={(e) => updateValidation({ pattern: e.target.value || undefined })}
                   placeholder="e.g., ^[A-Z]{2}\d{6}$"
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Use regex patterns for custom validation. Leave empty for no pattern validation.
                 </p>
               </div>

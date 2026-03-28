@@ -81,7 +81,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
 
           <TabsContent value="basic" className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                 Question Text *
               </label>
               <Input
@@ -92,7 +92,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                 Help Text
               </label>
               <Input
@@ -103,7 +103,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                 Placeholder Text
               </label>
               <Input
@@ -118,7 +118,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                 checked={editedField.required}
                 onCheckedChange={(checked) => updateField({ required: checked as boolean })}
               />
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-[var(--color-text-secondary)]">
                 Required field
               </label>
             </div>
@@ -128,7 +128,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
             {hasOptions ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700">Answer Choices</h3>
+                  <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Answer Choices</h3>
                   <Button size="sm" onClick={addOption}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Option
@@ -138,7 +138,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                 <div className="space-y-2">
                   {editedField.options?.map((option, index) => (
                     <div key={index} className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                      <div className="w-8 h-8 bg-[var(--color-muted)] rounded-full flex items-center justify-center text-xs font-medium text-[var(--color-text-secondary)]">
                         {String.fromCharCode(65 + index)}
                       </div>
                       <Input
@@ -177,10 +177,10 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
               </div>
             ) : (
               <div className="text-center py-8">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Settings className="w-6 h-6 text-gray-400" />
+                <div className="w-12 h-12 bg-[var(--color-muted)] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Settings className="w-6 h-6 text-[var(--color-text-muted)]" />
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   No additional options available for this field type.
                 </p>
               </div>
@@ -197,7 +197,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                   <>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                           Minimum Length
                         </label>
                         <Input
@@ -213,7 +213,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                           Maximum Length
                         </label>
                         <Input
@@ -231,7 +231,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                         Pattern (Regex)
                       </label>
                       <Input
@@ -244,7 +244,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                         })}
                         placeholder="^[A-Za-z]+$"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
                         Use regular expressions to validate input format
                       </p>
                     </div>
@@ -252,7 +252,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                 ) : editedField.type === 'number' ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                         Minimum Value
                       </label>
                       <Input
@@ -267,7 +267,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                         Maximum Value
                       </label>
                       <Input
@@ -283,7 +283,7 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     No validation rules available for this field type.
                   </p>
                 )}
@@ -297,8 +297,8 @@ export default function FieldEditor({ field, onSave, onCancel, isOpen }: FieldEd
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Field Visibility</label>
-                    <p className="text-xs text-gray-500">Control who can see this field</p>
+                    <label className="text-sm font-medium text-[var(--color-text-secondary)]">Field Visibility</label>
+                    <p className="text-xs text-[var(--color-text-muted)]">Control who can see this field</p>
                   </div>
                   <Select
                     value="public"

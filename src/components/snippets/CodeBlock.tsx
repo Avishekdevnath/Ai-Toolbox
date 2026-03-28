@@ -7,22 +7,112 @@ import React, { useMemo } from 'react';
 const SyntaxHighlighter = dynamic(async () => {
   const mod = await import('react-syntax-highlighter');
   const Prism = mod.PrismAsyncLight;
-  // Register only common languages to reduce bundle work; others can be added as needed
   try {
-    const [{ default: js }, { default: ts }, { default: json }, { default: python }] = await Promise.all([
+    const [
+      { default: js },
+      { default: jsx },
+      { default: ts },
+      { default: tsx },
+      { default: json },
+      { default: python },
+      { default: css },
+      { default: html },
+      { default: bash },
+      { default: go },
+      { default: rust },
+      { default: java },
+      { default: cpp },
+      { default: c },
+      { default: csharp },
+      { default: php },
+      { default: ruby },
+      { default: swift },
+      { default: kotlin },
+      { default: yaml },
+      { default: markdown },
+      { default: sql },
+      { default: graphql },
+      { default: docker },
+    ] = await Promise.all([
       import('react-syntax-highlighter/dist/esm/languages/prism/javascript'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/jsx'),
       import('react-syntax-highlighter/dist/esm/languages/prism/typescript'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/tsx'),
       import('react-syntax-highlighter/dist/esm/languages/prism/json'),
       import('react-syntax-highlighter/dist/esm/languages/prism/python'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/css'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/markup'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/bash'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/go'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/rust'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/java'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/cpp'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/c'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/csharp'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/php'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/ruby'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/swift'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/kotlin'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/yaml'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/markdown'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/sql'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/graphql'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/docker'),
     ]);
     // @ts-ignore register is available on PrismAsyncLight
     Prism.registerLanguage('javascript', js);
     // @ts-ignore
+    Prism.registerLanguage('jsx', jsx);
+    // @ts-ignore
     Prism.registerLanguage('typescript', ts);
+    // @ts-ignore
+    Prism.registerLanguage('tsx', tsx);
     // @ts-ignore
     Prism.registerLanguage('json', json);
     // @ts-ignore
     Prism.registerLanguage('python', python);
+    // @ts-ignore
+    Prism.registerLanguage('css', css);
+    // @ts-ignore
+    Prism.registerLanguage('html', html);
+    // @ts-ignore
+    Prism.registerLanguage('markup', html);
+    // @ts-ignore
+    Prism.registerLanguage('bash', bash);
+    // @ts-ignore
+    Prism.registerLanguage('shell', bash);
+    // @ts-ignore
+    Prism.registerLanguage('go', go);
+    // @ts-ignore
+    Prism.registerLanguage('rust', rust);
+    // @ts-ignore
+    Prism.registerLanguage('java', java);
+    // @ts-ignore
+    Prism.registerLanguage('cpp', cpp);
+    // @ts-ignore
+    Prism.registerLanguage('c', c);
+    // @ts-ignore
+    Prism.registerLanguage('csharp', csharp);
+    // @ts-ignore
+    Prism.registerLanguage('php', php);
+    // @ts-ignore
+    Prism.registerLanguage('ruby', ruby);
+    // @ts-ignore
+    Prism.registerLanguage('swift', swift);
+    // @ts-ignore
+    Prism.registerLanguage('kotlin', kotlin);
+    // @ts-ignore
+    Prism.registerLanguage('yaml', yaml);
+    // @ts-ignore
+    Prism.registerLanguage('markdown', markdown);
+    // @ts-ignore
+    Prism.registerLanguage('sql', sql);
+    // @ts-ignore
+    Prism.registerLanguage('graphql', graphql);
+    // @ts-ignore
+    Prism.registerLanguage('docker', docker);
+    // @ts-ignore
+    Prism.registerLanguage('dockerfile', docker);
   } catch {}
   return Prism;
 }, { ssr: false });
@@ -66,36 +156,36 @@ const CODE_STYLE: any = {
     msHyphens: 'none',
     hyphens: 'none'
   },
-  'token.comment': { color: '#6a9955', fontStyle: 'italic' },
-  'token.prolog': { color: '#6a9955' },
-  'token.doctype': { color: '#6a9955' },
-  'token.cdata': { color: '#6a9955' },
-  'token.punctuation': { color: '#d4d4d4' },
-  'token.property': { color: '#9cdcfe' },
-  'token.tag': { color: '#569cd6' },
-  'token.boolean': { color: '#569cd6' },
-  'token.number': { color: '#b5cea8' },
-  'token.constant': { color: '#4fc1ff' },
-  'token.symbol': { color: '#4fc1ff' },
-  'token.selector': { color: '#d7ba7d' },
-  'token.attr-name': { color: '#92c5f8' },
-  'token.string': { color: '#ce9178' },
-  'token.char': { color: '#ce9178' },
-  'token.builtin': { color: '#4ec9b0' },
-  'token.inserted': { color: '#4ec9b0' },
-  'token.operator': { color: '#d4d4d4' },
-  'token.entity': { color: '#d4d4d4' },
-  'token.url': { color: '#ce9178' },
-  'token.variable': { color: '#d4d4d4' },
-  'token.atrule': { color: '#ce9178' },
-  'token.attr-value': { color: '#ce9178' },
-  'token.function': { color: '#dcdcaa' },
-  'token.class-name': { color: '#4ec9b0' },
-  'token.keyword': { color: '#569cd6' },
-  'token.regex': { color: '#d16969' },
-  'token.important': { color: '#569cd6', fontWeight: 'bold' },
-  'token.bold': { fontWeight: 'bold' },
-  'token.italic': { fontStyle: 'italic' }
+  'comment': { color: '#6a9955', fontStyle: 'italic' },
+  'prolog': { color: '#6a9955' },
+  'doctype': { color: '#6a9955' },
+  'cdata': { color: '#6a9955' },
+  'punctuation': { color: '#d4d4d4' },
+  'property': { color: '#9cdcfe' },
+  'tag': { color: '#569cd6' },
+  'boolean': { color: '#569cd6' },
+  'number': { color: '#b5cea8' },
+  'constant': { color: '#4fc1ff' },
+  'symbol': { color: '#4fc1ff' },
+  'selector': { color: '#d7ba7d' },
+  'attr-name': { color: '#92c5f8' },
+  'string': { color: '#ce9178' },
+  'char': { color: '#ce9178' },
+  'builtin': { color: '#4ec9b0' },
+  'inserted': { color: '#4ec9b0' },
+  'operator': { color: '#d4d4d4' },
+  'entity': { color: '#d4d4d4' },
+  'url': { color: '#ce9178' },
+  'variable': { color: '#d4d4d4' },
+  'atrule': { color: '#ce9178' },
+  'attr-value': { color: '#ce9178' },
+  'function': { color: '#dcdcaa' },
+  'class-name': { color: '#4ec9b0' },
+  'keyword': { color: '#569cd6' },
+  'regex': { color: '#d16969' },
+  'important': { color: '#569cd6', fontWeight: 'bold' },
+  'bold': { fontWeight: 'bold' },
+  'italic': { fontStyle: 'italic' }
 };
 
 const CODE_CUSTOM_STYLE: any = {

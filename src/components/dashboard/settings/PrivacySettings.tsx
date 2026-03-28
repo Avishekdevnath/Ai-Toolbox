@@ -97,12 +97,12 @@ export default function PrivacySettings({ className = '' }: PrivacySettingsProps
     <div className={`space-y-6 ${className}`}>
       <div className="flex items-center gap-3">
         <Shield className="w-6 h-6 text-blue-600" />
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
           Privacy Settings
         </h2>
       </div>
-      
-      <p className="text-gray-600 dark:text-gray-400">
+
+      <p className="text-[var(--color-text-secondary)]">
         Manage your privacy preferences and data sharing settings.
       </p>
 
@@ -136,13 +136,13 @@ export default function PrivacySettings({ className = '' }: PrivacySettingsProps
                     <SelectItem key={option.value} value={option.value}>
                       <div>
                         <div className="font-medium">{option.label}</div>
-                        <div className="text-sm text-gray-500">{option.description}</div>
+                        <div className="text-sm text-[var(--color-text-muted)]">{option.description}</div>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 This setting controls who can see your profile information and activity
               </p>
             </div>
@@ -213,9 +213,9 @@ export default function PrivacySettings({ className = '' }: PrivacySettingsProps
             </ul>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">Data Protection</h4>
-            <p className="text-sm text-gray-700">
+          <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-lg p-4">
+            <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Data Protection</h4>
+            <p className="text-sm text-[var(--color-text-secondary)]">
               We follow industry best practices to protect your data. All information is encrypted in transit and at rest, 
               and we regularly audit our security measures to ensure your privacy is protected.
             </p>

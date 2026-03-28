@@ -215,13 +215,13 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
 
   if (submitted) {
     return (
-      <div className="form-luxe flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="form-luxe flex items-center justify-center min-h-screen bg-[var(--color-background)] p-4">
         <div className="text-center max-w-md">
           <div className="bg-green-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
             <CheckCircle size={32} className="text-green-500" />
           </div>
           <h2 className="text-xl font-bold text-green-600 mb-2">Success</h2>
-          <p className="text-gray-600">Your form has been submitted successfully.</p>
+          <p className="text-[var(--color-text-secondary)]">Your form has been submitted successfully.</p>
           {formSchema.settings?.allowMultipleSubmissions ? (
             <button
               className="mt-6 px-4 py-2 bg-black text-white rounded-md"
@@ -252,17 +252,17 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
   // Quiz auth screen
   if (formSchema.type === 'quiz' && !showQuizQuestions) {
     return (
-      <div className="form-luxe min-h-screen bg-gray-50 py-8 px-4">
+      <div className="form-luxe min-h-screen bg-[var(--color-background)] py-8 px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm mb-6 p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{formSchema.title}</h1>
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-sm mb-6 p-8">
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">{formSchema.title}</h1>
             {formSchema.description && (
-              <p className="text-gray-600 mb-4">{formSchema.description}</p>
+              <p className="text-[var(--color-text-secondary)] mb-4">{formSchema.description}</p>
             )}
-            
+
             {/* Show form availability timeframe */}
             {(formSchema.settings?.startAt || formSchema.settings?.endAt) && (
-              <div className="bg-gray-50 border border-gray-200 rounded-md p-3 mb-4 text-sm">
+              <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-md p-3 mb-4 text-sm">
                 <p className="font-medium">Quiz available:</p>
                 <p>
                   {formSchema.settings?.startAt && (
@@ -284,14 +284,14 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
               <div className="space-y-4">
                 {formSchema.settings?.identitySchema?.requireName && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                       Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={authData.name}
                       onChange={(e) => handleAuthChange('name', e.target.value)}
-                      className={`w-full p-2 border ${validationErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                      className={`w-full p-2 border ${validationErrors.name ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                       placeholder="Your full name"
                     />
                     {validationErrors.name && (
@@ -302,14 +302,14 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                 
                 {formSchema.settings?.identitySchema?.requireEmail && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                       Email <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
                       value={authData.email}
                       onChange={(e) => handleAuthChange('email', e.target.value)}
-                      className={`w-full p-2 border ${validationErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                      className={`w-full p-2 border ${validationErrors.email ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                       placeholder="your.email@example.com"
                     />
                     {validationErrors.email && (
@@ -320,14 +320,14 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                 
                 {formSchema.settings?.identitySchema?.requireStudentId && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                       Student ID <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={authData.studentId}
                       onChange={(e) => handleAuthChange('studentId', e.target.value)}
-                      className={`w-full p-2 border ${validationErrors.studentId ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                      className={`w-full p-2 border ${validationErrors.studentId ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                       placeholder="Your student ID"
                     />
                     {validationErrors.studentId && (
@@ -354,17 +354,17 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
 
   // Main form renderer
   return (
-    <div className="form-luxe min-h-screen bg-gray-50 py-8 px-4">
+    <div className="form-luxe min-h-screen bg-[var(--color-background)] py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm mb-6 p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{formSchema.title}</h1>
+        <div className="bg-[var(--color-surface)] rounded-lg shadow-sm mb-6 p-8">
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">{formSchema.title}</h1>
           {formSchema.description && (
-            <p className="text-gray-600 mb-4">{formSchema.description}</p>
+            <p className="text-[var(--color-text-secondary)] mb-4">{formSchema.description}</p>
           )}
-          
+
           {/* Show form availability timeframe */}
           {(formSchema.settings?.startAt || formSchema.settings?.endAt) && (
-            <div className="bg-gray-50 border border-gray-200 rounded-md p-3 mb-4 text-sm">
+            <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-md p-3 mb-4 text-sm">
               <p className="font-medium">Form available:</p>
               <p>
                 {formSchema.settings?.startAt && (
@@ -383,19 +383,19 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
         
         {/* Identity fields are only handled in the quiz auth step; never show for non-quiz */}
         {false && (
-          <div className="bg-white rounded-lg shadow-sm mb-6 p-8">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-sm mb-6 p-8">
             <h2 className="text-lg font-semibold mb-4">Your Information</h2>
             
             {formSchema.settings.identitySchema.requireName && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                   Name {formSchema.settings.identitySchema.requireName && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
                   value={formData.name || ''}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className={`w-full p-2 border ${validationErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                  className={`w-full p-2 border ${validationErrors.name ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   placeholder="Your name"
                 />
                 {validationErrors.name && (
@@ -406,14 +406,14 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
             
             {formSchema.settings.identitySchema.requireEmail && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                   Email {formSchema.settings.identitySchema.requireEmail && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="email"
                   value={formData.email || ''}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  className={`w-full p-2 border ${validationErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                  className={`w-full p-2 border ${validationErrors.email ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   placeholder="your.email@example.com"
                 />
                 {validationErrors.email && (
@@ -424,14 +424,14 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
             
             {formSchema.settings.identitySchema.requireStudentId && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                   Student ID {formSchema.settings.identitySchema.requireStudentId && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
                   value={formData.studentId || ''}
                   onChange={(e) => handleChange('studentId', e.target.value)}
-                  className={`w-full p-2 border ${validationErrors.studentId ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                  className={`w-full p-2 border ${validationErrors.studentId ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   placeholder="Your student ID"
                 />
                 {validationErrors.studentId && (
@@ -447,22 +447,22 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
           {normalizedFields.map((field) => (
             <div 
               key={field.id} 
-              className={`bg-white rounded-lg shadow-sm mb-6 p-8 ${field.type === 'section' ? 'border-t-4 border-black' : ''}`}
+              className={`bg-[var(--color-surface)] rounded-lg shadow-sm mb-6 p-8 ${field.type === 'section' ? 'border-t-4 border-black' : ''}`}
             >
               {field.type !== 'section' && (
                 <div className="mb-2">
-                  <label className="block text-lg font-medium text-gray-900">
+                  <label className="block text-lg font-medium text-[var(--color-text-primary)]">
                     {field.label} {field.required && <span className="text-red-500">*</span>}
                   </label>
                   {field.helpText && (
-                    <p className="text-sm text-gray-500 mt-1 mb-3">{field.helpText}</p>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1 mb-3">{field.helpText}</p>
                   )}
                 </div>
               )}
               
               {/* Section type is just a divider with title */}
               {field.type === 'section' && (
-                <h2 className="text-xl font-bold text-gray-900">{field.label}</h2>
+                <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{field.label}</h2>
               )}
               
               {/* Short text input */}
@@ -473,7 +473,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                     value={formData[field.id] || ''}
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     placeholder={field.placeholder || ''}
-                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   />
                   {validationErrors[field.id] && (
                     <p className="mt-1 text-sm text-red-500 error-message">{validationErrors[field.id]}</p>
@@ -489,7 +489,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     placeholder={field.placeholder || ''}
                     rows={4}
-                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   ></textarea>
                   {validationErrors[field.id] && (
                     <p className="mt-1 text-sm text-red-500 error-message">{validationErrors[field.id]}</p>
@@ -505,7 +505,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                     value={formData[field.id] || ''}
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     placeholder={field.placeholder || 'example@email.com'}
-                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   />
                   {validationErrors[field.id] && (
                     <p className="mt-1 text-sm text-red-500 error-message">{validationErrors[field.id]}</p>
@@ -521,7 +521,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                     value={formData[field.id] || ''}
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     placeholder={field.placeholder || '0'}
-                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   />
                   {validationErrors[field.id] && (
                     <p className="mt-1 text-sm text-red-500 error-message">{validationErrors[field.id]}</p>
@@ -536,7 +536,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                     type="date"
                     value={formData[field.id] || ''}
                     onChange={(e) => handleChange(field.id, e.target.value)}
-                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   />
                   {validationErrors[field.id] && (
                     <p className="mt-1 text-sm text-red-500 error-message">{validationErrors[field.id]}</p>
@@ -550,7 +550,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                   <select
                     value={formData[field.id] || ''}
                     onChange={(e) => handleChange(field.id, e.target.value)}
-                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
+                    className={`w-full p-3 border ${validationErrors[field.id] ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-md focus:outline-none focus:ring-2 focus:ring-black`}
                   >
                     <option value="">Select an option</option>
                     {field.options?.map((option, i) => (
@@ -579,7 +579,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                       />
                       <label 
                         htmlFor={`${field.id}-option-${i}`}
-                        className="text-gray-700 cursor-pointer"
+                        className="text-[var(--color-text-secondary)] cursor-pointer"
                       >
                         {option}
                       </label>
@@ -608,7 +608,7 @@ export default function FormRenderer({ formSchema, formId }: FormRendererProps) 
                       />
                       <label 
                         htmlFor={`${field.id}-option-${i}`}
-                        className="text-gray-700 cursor-pointer"
+                        className="text-[var(--color-text-secondary)] cursor-pointer"
                       >
                         {option}
                       </label>

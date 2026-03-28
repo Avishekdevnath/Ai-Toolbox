@@ -67,7 +67,7 @@ export function HeaderActions() {
     <div className="flex items-center gap-1">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-muted)] rounded-lg transition-colors"
       >
         <Home className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Home</span>
@@ -76,7 +76,7 @@ export function HeaderActions() {
       <Button
         variant="ghost"
         size="icon"
-        className="relative w-8 h-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+        className="relative w-8 h-8 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-muted)]"
         aria-label="Notifications"
       >
         <Bell className="w-4 h-4" />
@@ -90,7 +90,7 @@ export function HeaderActions() {
             variant="ghost"
             size="icon"
             onClick={() => setFeedbackOpen((v) => !v)}
-            className="relative w-8 h-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+            className="relative w-8 h-8 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-muted)]"
             aria-label="Feedback"
             title="Share Feedback"
           >
@@ -98,12 +98,12 @@ export function HeaderActions() {
           </Button>
 
           {feedbackOpen && (
-            <div className="absolute right-0 top-10 w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                <span className="text-sm font-semibold text-slate-800">Share Feedback</span>
+            <div className="absolute right-0 top-10 w-80 bg-[var(--color-surface)] rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden z-50">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-subtle)]">
+                <span className="text-sm font-semibold text-[var(--color-text-primary)]">Share Feedback</span>
                 <button
                   onClick={() => setFeedbackOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
                   aria-label="Close"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -130,29 +130,29 @@ export function HeaderActions() {
         </button>
 
         {profileOpen && (
-          <div className="absolute right-0 top-9 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50">
+          <div className="absolute right-0 top-9 w-48 bg-[var(--color-surface)] rounded-xl shadow-lg border border-[var(--color-border)] py-1 z-50">
             {user?.email && (
-              <div className="px-3 py-2 border-b border-slate-100">
-                <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+              <div className="px-3 py-2 border-b border-[var(--color-border-subtle)]">
+                <p className="text-[11px] text-[var(--color-text-muted)] truncate">{user.email}</p>
               </div>
             )}
             <Link
               href="/dashboard/profile"
               onClick={() => setProfileOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-[13px] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)] transition-colors"
             >
-              <User className="w-3.5 h-3.5 text-slate-400" />
+              <User className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               View Profile
             </Link>
             <Link
               href="/dashboard/settings"
               onClick={() => setProfileOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-[13px] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)] transition-colors"
             >
-              <Settings className="w-3.5 h-3.5 text-slate-400" />
+              <Settings className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               Settings
             </Link>
-            <div className="border-t border-slate-100 mt-1 pt-1">
+            <div className="border-t border-[var(--color-border-subtle)] mt-1 pt-1">
               <button
                 onClick={handleSignOut}
                 disabled={signingOut}

@@ -165,8 +165,8 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
       case 'trending': return 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/20';
       case 'similar': return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20';
       case 'personalized': return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20';
-      case 'category': return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
-      default: return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
+      case 'category': return 'text-[var(--color-text-secondary)] bg-[var(--color-muted)]';
+      default: return 'text-[var(--color-text-secondary)] bg-[var(--color-muted)]';
     }
   };
 
@@ -176,12 +176,12 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
 
   if (loading) {
     return (
-      <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 ${className}`}>
+      <div className={`bg-[var(--color-surface)] rounded-lg shadow-md p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+          <div className="h-6 bg-[var(--color-muted)] rounded w-1/3 mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div key={i} className="h-16 bg-[var(--color-muted)] rounded"></div>
             ))}
           </div>
         </div>
@@ -190,9 +190,9 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 ${className}`}>
+    <div className={`bg-[var(--color-surface)] rounded-lg shadow-md p-6 ${className}`}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center">
           <Sparkles className="h-5 w-5 mr-2 text-purple-600" />
           Smart Recommendations
         </h3>
@@ -212,7 +212,7 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
               selectedCategory === 'all'
                 ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                : 'bg-[var(--color-muted)] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'
             }`}
           >
             All
@@ -224,7 +224,7 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
               className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === category
                   ? 'bg-purple-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-[var(--color-muted)] text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'
               }`}
             >
               {category}
@@ -239,19 +239,19 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
           <Link
             key={index}
             href={recommendation.tool.href}
-            className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-md transition-all duration-200"
+            className="block p-4 border border-[var(--color-border)] rounded-lg hover:border-purple-300 hover:shadow-md transition-all duration-200"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3">
                 <div className="text-2xl">{recommendation.tool.icon}</div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                  <h4 className="font-medium text-[var(--color-text-primary)] mb-1">
                     {recommendation.tool.name}
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-2">
                     {recommendation.tool.description}
                   </p>
-                  <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center space-x-4 text-xs text-[var(--color-text-muted)]">
                     <span className="flex items-center">
                       <TrendingUp className="h-3 w-3 mr-1" />
                       {recommendation.tool.popularity}% popular
@@ -269,14 +269,14 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
                   {getRecommendationIcon(recommendation.type)}
                   <span className="ml-1 capitalize">{recommendation.type}</span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {Math.round(recommendation.confidence * 100)}% match
                 </div>
               </div>
             </div>
             
-            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+            <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+              <p className="text-xs text-[var(--color-text-secondary)]">
                 💡 {recommendation.reason}
               </p>
             </div>
@@ -286,8 +286,8 @@ const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
 
       {filteredRecommendations.length === 0 && (
         <div className="text-center py-8">
-          <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">
+          <Sparkles className="h-12 w-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+          <p className="text-[var(--color-text-muted)]">
             No recommendations available for this category.
           </p>
         </div>

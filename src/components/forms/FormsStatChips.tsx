@@ -19,14 +19,14 @@ export default function FormsStatChips({ stats }: FormsStatChipsProps) {
         return (
           <div
             key={i}
-            className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 flex-1"
+            className="flex items-center gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 flex-1"
           >
             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
               <Icon size={15} className="text-blue-600" />
             </div>
             <div>
-              <p className="text-lg font-semibold text-slate-800 leading-none">{stat.value}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">{stat.label}</p>
+              <p className="text-lg font-semibold text-[var(--color-text-primary)] leading-none">{stat.value}</p>
+              <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{stat.label}</p>
             </div>
           </div>
         );

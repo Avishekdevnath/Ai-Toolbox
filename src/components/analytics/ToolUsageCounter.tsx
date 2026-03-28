@@ -60,8 +60,8 @@ export default function ToolUsageCounter({ toolSlug, toolName, showDetails = fal
       <Card className="w-full">
         <CardContent className="p-4">
           <div className="animate-pulse space-y-2">
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-4 bg-[var(--color-muted)] rounded w-1/2"></div>
+            <div className="h-6 bg-[var(--color-muted)] rounded w-1/4"></div>
           </div>
         </CardContent>
       </Card>
@@ -73,7 +73,7 @@ export default function ToolUsageCounter({ toolSlug, toolName, showDetails = fal
   const getGrowthIcon = (growthRate: number) => {
     if (growthRate > 0) return <TrendingUp className="w-4 h-4 text-green-500" />;
     if (growthRate < 0) return <TrendingDown className="w-4 h-4 text-red-500" />;
-    return <Activity className="w-4 h-4 text-gray-500" />;
+    return <Activity className="w-4 h-4 text-[var(--color-text-muted)]" />;
   };
 
   return (

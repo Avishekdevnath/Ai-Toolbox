@@ -183,7 +183,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
       case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'failed': return <XCircle className="w-4 h-4 text-red-600" />;
       case 'processing': return <RefreshCw className="w-4 h-4 text-yellow-600 animate-spin" />;
-      default: return <AlertCircle className="w-4 h-4 text-gray-600" />;
+      default: return <AlertCircle className="w-4 h-4 text-[var(--color-text-secondary)]" />;
     }
   };
 
@@ -192,7 +192,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
       case 'completed': return 'bg-green-100 text-green-800';
       case 'failed': return 'bg-red-100 text-red-800';
       case 'processing': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-[var(--color-muted)] text-[var(--color-text-primary)]';
     }
   };
 
@@ -220,19 +220,19 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
       <div className="space-y-4 md:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-lg md:text-xl font-semibold">Analysis History</h2>
-          <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
+          <div className="animate-pulse bg-[var(--color-muted)] h-8 w-24 rounded"></div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader className="pb-3">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-[var(--color-muted)] rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-[var(--color-muted)] rounded w-1/2"></div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                <div className="h-6 bg-[var(--color-muted)] rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-[var(--color-muted)] rounded w-full mb-2"></div>
+                <div className="h-8 bg-[var(--color-muted)] rounded w-full"></div>
               </CardContent>
             </Card>
           ))}
@@ -250,7 +250,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
             <History className="w-4 h-4 md:w-5 md:h-5" />
             Analysis History
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">
             View and manage your AI analysis results
           </p>
         </div>
@@ -279,7 +279,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
             <div>
               <label className="text-sm font-medium mb-2 block">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] h-4 w-4" />
                 <Input
                   placeholder="Search analyses..."
                   value={searchTerm}
@@ -293,7 +293,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                className="w-full p-2 border border-[var(--color-border)] rounded-md text-sm"
               >
                 {analysisTypes.map(type => (
                   <option key={type} value={type}>
@@ -307,7 +307,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                className="w-full p-2 border border-[var(--color-border)] rounded-md text-sm"
               >
                 {statuses.map(status => (
                   <option key={status} value={status}>
@@ -368,7 +368,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
                     {item.status}
                   </Badge>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs md:text-sm text-gray-500 mt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs md:text-sm text-[var(--color-text-muted)] mt-2">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     {formatDate(item.createdAt)}
@@ -382,21 +382,21 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
               <CardContent className="pt-0">
                 <div className="space-y-2 md:space-y-3">
                   <div>
-                    <span className="text-xs md:text-sm font-medium text-gray-700">Type:</span>
-                    <span className="text-xs md:text-sm text-gray-600 ml-2 capitalize">{item.analysisType}</span>
+                    <span className="text-xs md:text-sm font-medium text-[var(--color-text-secondary)]">Type:</span>
+                    <span className="text-xs md:text-sm text-[var(--color-text-secondary)] ml-2 capitalize">{item.analysisType}</span>
                   </div>
                   
                   {item.metadata.tokensUsed && (
                     <div>
-                      <span className="text-xs md:text-sm font-medium text-gray-700">Tokens:</span>
-                      <span className="text-xs md:text-sm text-gray-600 ml-2">{item.metadata.tokensUsed.toLocaleString()}</span>
+                      <span className="text-xs md:text-sm font-medium text-[var(--color-text-secondary)]">Tokens:</span>
+                      <span className="text-xs md:text-sm text-[var(--color-text-secondary)] ml-2">{item.metadata.tokensUsed.toLocaleString()}</span>
                     </div>
                   )}
                   
                   {item.metadata.model && (
                     <div>
-                      <span className="text-xs md:text-sm font-medium text-gray-700">Model:</span>
-                      <span className="text-xs md:text-sm text-gray-600 ml-2 truncate">{item.metadata.model}</span>
+                      <span className="text-xs md:text-sm font-medium text-[var(--color-text-secondary)]">Model:</span>
+                      <span className="text-xs md:text-sm text-[var(--color-text-secondary)] ml-2 truncate">{item.metadata.model}</span>
                     </div>
                   )}
 
@@ -434,9 +434,9 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <History className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2">No Analysis History</h3>
-              <p className="text-sm md:text-base text-gray-500 mb-4 px-4">
+              <History className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
+              <h3 className="text-base md:text-lg font-medium text-[var(--color-text-primary)] mb-2">No Analysis History</h3>
+              <p className="text-sm md:text-base text-[var(--color-text-muted)] mb-4 px-4">
                 {history.length === 0 
                   ? "You haven't generated any analyses yet. Start using our AI tools to see your history here."
                   : "No analyses match your current filters. Try adjusting your search criteria."
@@ -485,69 +485,69 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
             {/* Header Information */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <h4 className="font-medium text-gray-900">Tool</h4>
-                <p className="text-gray-600">{selectedAnalysis.toolName}</p>
+                <h4 className="font-medium text-[var(--color-text-primary)]">Tool</h4>
+                <p className="text-[var(--color-text-secondary)]">{selectedAnalysis.toolName}</p>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Type</h4>
-                <p className="text-gray-600 capitalize">{selectedAnalysis.analysisType}</p>
+                <h4 className="font-medium text-[var(--color-text-primary)]">Type</h4>
+                <p className="text-[var(--color-text-secondary)] capitalize">{selectedAnalysis.analysisType}</p>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Status</h4>
+                <h4 className="font-medium text-[var(--color-text-primary)]">Status</h4>
                 <Badge className={getStatusColor(selectedAnalysis.status)}>
                   {selectedAnalysis.status}
                 </Badge>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Processing Time</h4>
-                <p className="text-gray-600">{formatDuration(selectedAnalysis.metadata.processingTime)}</p>
+                <h4 className="font-medium text-[var(--color-text-primary)]">Processing Time</h4>
+                <p className="text-[var(--color-text-secondary)]">{formatDuration(selectedAnalysis.metadata.processingTime)}</p>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Created</h4>
-                <p className="text-gray-600">{formatDate(selectedAnalysis.createdAt)}</p>
+                <h4 className="font-medium text-[var(--color-text-primary)]">Created</h4>
+                <p className="text-[var(--color-text-secondary)]">{formatDate(selectedAnalysis.createdAt)}</p>
               </div>
               {selectedAnalysis.metadata.tokensUsed && (
                 <div>
-                  <h4 className="font-medium text-gray-900">Tokens Used</h4>
-                  <p className="text-gray-600">{selectedAnalysis.metadata.tokensUsed.toLocaleString()}</p>
+                  <h4 className="font-medium text-[var(--color-text-primary)]">Tokens Used</h4>
+                  <p className="text-[var(--color-text-secondary)]">{selectedAnalysis.metadata.tokensUsed.toLocaleString()}</p>
                 </div>
               )}
             </div>
 
             {/* Input Data Section */}
             <div>
-              <h4 className="font-medium text-gray-900 mb-3">Input Data</h4>
-              <div className="bg-gray-50 p-4 rounded-lg border">
+              <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Input Data</h4>
+              <div className="bg-[var(--color-surface-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
                 {selectedAnalysis.analysisType === 'swot' ? (
                   <div className="space-y-3">
                     {selectedAnalysis.inputData.companyName && (
                       <div>
-                        <span className="font-medium text-gray-700">Company:</span>
-                        <span className="ml-2 text-gray-600">{selectedAnalysis.inputData.companyName}</span>
+                        <span className="font-medium text-[var(--color-text-secondary)]">Company:</span>
+                        <span className="ml-2 text-[var(--color-text-secondary)]">{selectedAnalysis.inputData.companyName}</span>
                       </div>
                     )}
                     {selectedAnalysis.inputData.industry && (
                       <div>
-                        <span className="font-medium text-gray-700">Industry:</span>
-                        <span className="ml-2 text-gray-600">{selectedAnalysis.inputData.industry}</span>
+                        <span className="font-medium text-[var(--color-text-secondary)]">Industry:</span>
+                        <span className="ml-2 text-[var(--color-text-secondary)]">{selectedAnalysis.inputData.industry}</span>
                       </div>
                     )}
                     {selectedAnalysis.inputData.description && (
                       <div>
-                        <span className="font-medium text-gray-700">Description:</span>
-                        <p className="mt-1 text-gray-600 text-sm">{selectedAnalysis.inputData.description}</p>
+                        <span className="font-medium text-[var(--color-text-secondary)]">Description:</span>
+                        <p className="mt-1 text-[var(--color-text-secondary)] text-sm">{selectedAnalysis.inputData.description}</p>
                       </div>
                     )}
                     {selectedAnalysis.inputData.businessType && (
                       <div>
-                        <span className="font-medium text-gray-700">Business Type:</span>
-                        <span className="ml-2 text-gray-600">{selectedAnalysis.inputData.businessType}</span>
+                        <span className="font-medium text-[var(--color-text-secondary)]">Business Type:</span>
+                        <span className="ml-2 text-[var(--color-text-secondary)]">{selectedAnalysis.inputData.businessType}</span>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="max-h-40 overflow-y-auto">
-                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                    <pre className="text-sm text-[var(--color-text-secondary)] whitespace-pre-wrap">
                       {JSON.stringify(selectedAnalysis.inputData, null, 2)}
                     </pre>
                   </div>
@@ -557,7 +557,7 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
 
             {/* Results Section */}
             <div>
-              <h4 className="font-medium text-gray-900 mb-3">Analysis Results</h4>
+              <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Analysis Results</h4>
               {selectedAnalysis.analysisType === 'swot' ? (
                 <div className="space-y-4">
                   {/* Strengths */}
@@ -625,29 +625,29 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
                   </div>
                 </div>
               ) : selectedAnalysis.analysisType === 'quote' ? (
-                <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="bg-[var(--color-surface-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
                   <div className="text-center">
-                    <blockquote className="text-lg italic text-gray-700 mb-3">
+                    <blockquote className="text-lg italic text-[var(--color-text-secondary)] mb-3">
                       "{selectedAnalysis.result.quote}"
                     </blockquote>
                     {selectedAnalysis.result.author && (
-                      <p className="text-sm text-gray-600">— {selectedAnalysis.result.author}</p>
+                      <p className="text-sm text-[var(--color-text-secondary)]">— {selectedAnalysis.result.author}</p>
                     )}
                   </div>
                 </div>
               ) : selectedAnalysis.analysisType === 'resume' ? (
-                <div className="bg-gray-50 p-4 rounded-lg border max-h-60 overflow-y-auto">
+                <div className="bg-[var(--color-surface-secondary)] p-4 rounded-lg border border-[var(--color-border)] max-h-60 overflow-y-auto">
                   <div className="space-y-3">
                     {selectedAnalysis.result.feedback && (
                       <div>
-                        <h6 className="font-medium text-gray-700 mb-1">Feedback</h6>
-                        <p className="text-sm text-gray-600">{selectedAnalysis.result.feedback}</p>
+                        <h6 className="font-medium text-[var(--color-text-secondary)] mb-1">Feedback</h6>
+                        <p className="text-sm text-[var(--color-text-secondary)]">{selectedAnalysis.result.feedback}</p>
                       </div>
                     )}
                     {selectedAnalysis.result.suggestions && (
                       <div>
-                        <h6 className="font-medium text-gray-700 mb-1">Suggestions</h6>
-                        <ul className="text-sm text-gray-600 space-y-1">
+                        <h6 className="font-medium text-[var(--color-text-secondary)] mb-1">Suggestions</h6>
+                        <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
                           {selectedAnalysis.result.suggestions.map((suggestion: string, index: number) => (
                             <li key={index} className="flex items-start">
                               <span className="text-blue-500 mr-2">•</span>
@@ -660,8 +660,8 @@ export default function UserAnalysisHistory({ userId }: UserAnalysisHistoryProps
                   </div>
                 </div>
               ) : (
-                <div className="bg-gray-50 p-4 rounded-lg border max-h-60 overflow-y-auto">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                <div className="bg-[var(--color-surface-secondary)] p-4 rounded-lg border border-[var(--color-border)] max-h-60 overflow-y-auto">
+                  <pre className="text-sm text-[var(--color-text-secondary)] whitespace-pre-wrap">
                     {JSON.stringify(selectedAnalysis.result, null, 2)}
                   </pre>
                 </div>

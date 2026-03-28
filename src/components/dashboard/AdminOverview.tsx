@@ -143,7 +143,7 @@ export default function AdminOverview({ userId }: AdminOverviewProps) {
       case 'healthy': return 'text-green-600';
       case 'warning': return 'text-yellow-600';
       case 'error': return 'text-red-600';
-      default: return 'text-gray-600';
+      default: return 'text-[var(--color-text-secondary)]';
     }
   };
 
@@ -152,7 +152,7 @@ export default function AdminOverview({ userId }: AdminOverviewProps) {
       case 'low': return 'bg-green-100 text-green-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'high': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-[var(--color-muted)] text-[var(--color-text-primary)]';
     }
   };
 
@@ -184,17 +184,17 @@ export default function AdminOverview({ userId }: AdminOverviewProps) {
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{stats.systemHealth.uptime}</div>
               <div className="text-sm font-medium">Uptime</div>
-              <div className="text-xs text-gray-500">Last 30 days</div>
+              <div className="text-xs text-[var(--color-text-muted)]">Last 30 days</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{stats.systemHealth.responseTime}ms</div>
               <div className="text-sm font-medium">Response Time</div>
-              <div className="text-xs text-gray-500">Average</div>
+              <div className="text-xs text-[var(--color-text-muted)]">Average</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">{stats.systemHealth.errorRate}%</div>
               <div className="text-sm font-medium">Error Rate</div>
-              <div className="text-xs text-gray-500">Last 24h</div>
+              <div className="text-xs text-[var(--color-text-muted)]">Last 24h</div>
             </div>
           </div>
         </CardContent>
@@ -268,18 +268,18 @@ export default function AdminOverview({ userId }: AdminOverviewProps) {
             <div className="space-y-4">
               {stats.recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Activity className="w-4 h-4 text-gray-600" />
+                  <div className="w-8 h-8 bg-[var(--color-muted)] rounded-full flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-[var(--color-text-secondary)]" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{activity.user}</p>
-                    <p className="text-xs text-gray-500">{activity.action}</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">{activity.action}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge className={getSeverityColor(activity.severity)}>
                       {activity.severity}
                     </Badge>
-                    <span className="hidden sm:inline text-xs text-gray-400">{activity.timestamp}</span>
+                    <span className="hidden sm:inline text-xs text-[var(--color-text-muted)]">{activity.timestamp}</span>
                   </div>
                 </div>
               ))}
@@ -303,7 +303,7 @@ export default function AdminOverview({ userId }: AdminOverviewProps) {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{tool.name}</p>
-                    <p className="text-sm text-gray-500">{tool.usage} uses</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{tool.usage} uses</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <TrendingUp className={`w-4 h-4 ${tool.growth > 0 ? 'text-green-600' : 'text-red-600'}`} />
